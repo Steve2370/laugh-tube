@@ -1,0 +1,99 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: laughtube_nginx
+    ports:
+      - "80:80"
+    volumes:
+        - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+        - ./frontend/dist:/var/www/frontend:ro
+        - ./backend/public:/var/www/backend:ro
+    depends_on:
+      - php
+    restart: always
+    networks:
+      - laugh-tale-network
+
+  encoder:
+    build:
+      context: .
+      dockerfile: docker/encoder/Dockerfile
+    container_name: laugh-tale-encoder
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=laugh_tale
+      - DB_USER=laugh
+      - DB_PASSWORD=laugh
+      - UPLOADS_DIR=/data/uploads/videos
+      - OUTPUT_DIR=/data/videos
+    volumes:
+      - ./backend/public/uploads:/data/uploads
+      - ./backend/videos:/data/videos
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - laugh-tale-network
+
+  php:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: laugh-tale-php
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=laugh_tale
+      - DB_USER=laugh
+      - DB_PASSWORD=laugh
+      - JWT_SECRET=your_secret_key_here_change_in_production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - laugh-tale-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: laugh-tale-postgres
+    environment:
+      POSTGRES_DB: laugh_tale
+      POSTGRES_USER: laugh
+      POSTGRES_PASSWORD: laugh
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-database.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U laugh -d laugh_tale"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - laugh-tale-network
+
+  frontend:
+    image: node:18-alpine
+    container_name: laugh-tale-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      - VITE_API_URL=http://localhost
+    networks:
+      - laugh-tale-network
+
+volumes:
+  postgres-data:
+
+networks:
+  laugh-tale-network:
+    driver: bridge

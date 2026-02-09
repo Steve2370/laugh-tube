@@ -1,0 +1,17 @@
+/vendor/
+
+/uploads/
+.vscode/
+.idea/
+*.log
+
+.env
+.env.local
+
+.DS_Store
+Thumbs.db
+
+client/build/
+client/dist/
+
+node_modules/

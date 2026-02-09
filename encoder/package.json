@@ -1,0 +1,13 @@
+{
+  "name": "laugh-tale-encoder",
+  "version": "1.0.0",
+  "main": "encoder.js",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1"
+  },
+  "scripts": {
+    "start": "node encoder.js"
+  }
+}

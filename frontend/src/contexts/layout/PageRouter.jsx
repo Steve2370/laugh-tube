@@ -1,0 +1,47 @@
+import React, { Suspense, lazy } from 'react';
+import { useNavigation } from '../NavigationContext.jsx';
+import LoadingSpinner from '../common/LoadingSpinner';
+import Chaine from "../../pages/Chaine.jsx";
+
+const Home = lazy(() => import('../../pages/Home'));
+const Login = lazy(() => import('../../pages/Login'));
+const Register = lazy(() => import('../../pages/Register'));
+const Upload = lazy(() => import('../../pages/Upload'));
+const Settings = lazy(() => import('../../pages/Settings'));
+const Video = lazy(() => import('../../pages/Video'));
+const Profile = lazy(() => import('../../pages/Profile'));
+
+const PageRouter = () => {
+    const { currentPage } = useNavigation();
+
+    const renderPage = () => {
+        switch (currentPage) {
+            case 'home':
+                return <Home/>;
+            case 'login':
+                return <Login/>;
+            case 'register':
+                return <Register/>;
+            case 'upload':
+                return <Upload/>;
+            case 'settings':
+                return <Settings/>;
+            case 'video':
+                return <Video/>;
+            case 'profile':
+                return <Profile/>;
+            case 'chaine':
+                return <Chaine/>;
+            default:
+                return <Home/>;
+        }
+    };
+
+    return (
+        <Suspense fallback={<LoadingSpinner />}>
+            {renderPage()}
+        </Suspense>
+    );
+};
+
+export default PageRouter;

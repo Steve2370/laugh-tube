@@ -1,0 +1,185 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Interfaces\DatabaseInterface;
+
+class UserRepository {
+    private DatabaseInterface $db;
+
+    public function __construct(DatabaseInterface $db) {
+        $this->db = $db;
+    }
+
+    public function createUser(array $userData): ?int {
+        $sql = "INSERT INTO users (username, email, password_hash, email_verified, verification_token, verification_token_expires, ip_registration, user_agent_registration, created_at) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) 
+                RETURNING id";
+
+        try {
+            $result = $this->db->fetchOne($sql, [
+                $userData['username'],
+                $userData['email'],
+                $userData['password_hash'],
+                $userData['email_verified'] ?? false,
+                $userData['verification_token'] ?? null,
+                $userData['verification_token_expires'] ?? null,
+                $userData['ip_registration'] ?? null,
+                $userData['user_agent_registration'] ?? null
+            ]);
+
+            return $result ? (int)$result['id'] : null;
+        } catch (\Exception $e) {
+            error_log("Error creating user: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function findById(int $userId): ?array {
+        $sql = "SELECT * FROM users WHERE id = $1 AND deleted_at IS NULL";
+        return $this->db->fetchOne($sql, [$userId]);
+    }
+
+    public function findByEmail(string $email): ?array {
+        $sql = "SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL";
+        return $this->db->fetchOne($sql, [$email]);
+    }
+
+    public function findByUsername(string $username): ?array {
+        $sql = "SELECT * FROM users WHERE username = $1 AND deleted_at IS NULL";
+        return $this->db->fetchOne($sql, [$username]);
+    }
+
+    public function findByVerificationToken(string $token): ?array {
+        $sql = "SELECT * FROM users 
+                WHERE verification_token = $1 
+                AND verification_token_expires > NOW()
+                AND deleted_at IS NULL";
+        return $this->db->fetchOne($sql, [$token]);
+    }
+
+    public function emailExists(string $email): bool {
+        $sql = "SELECT COUNT(*) as count FROM users WHERE email = $1 AND deleted_at IS NULL";
+        $result = $this->db->fetchOne($sql, [$email]);
+        return $result && $result['count'] > 0;
+    }
+
+    public function usernameExists(string $username): bool {
+        $sql = "SELECT COUNT(*) as count FROM users WHERE username = $1 AND deleted_at IS NULL";
+        $result = $this->db->fetchOne($sql, [$username]);
+        return $result && $result['count'] > 0;
+    }
+
+    public function updateEmailVerified(int $userId): bool {
+        $sql = "UPDATE users 
+                SET email_verified = TRUE, 
+                    verification_token = NULL, 
+                    verification_token_expires = NULL,
+                    updated_at = NOW()
+                WHERE id = $1";
+        return $this->db->execute($sql, [$userId]);
+    }
+
+    public function updateVerificationToken(int $userId, string $token, string $expires): bool {
+        $sql = "UPDATE users 
+                SET verification_token = $1, 
+                    verification_token_expires = $2,
+                    updated_at = NOW()
+                WHERE id = $1";
+        return $this->db->execute($sql, [$token, $expires, $userId]);
+    }
+
+    public function updateLastLogin(int $userId): bool {
+        $sql = "UPDATE users 
+                SET last_login = NOW(), 
+                    failed_login_attempts = 0,
+                    account_locked_until = NULL,
+                    updated_at = NOW()
+                WHERE id = $1";
+        return $this->db->execute($sql, [$userId]);
+    }
+
+    public function incrementFailedLogins(int $userId): bool {
+        $sql = "UPDATE users 
+                SET failed_login_attempts = failed_login_attempts + 1,
+                    updated_at = NOW()
+                WHERE id = $1";
+        return $this->db->execute($sql, [$userId]);
+    }
+
+    public function lockAccount(int $userId, int $minutes): bool {
+        $sql = "UPDATE users 
+                SET account_locked_until = NOW() + ($1 || ' minutes')::INTERVAL,
+                    updated_at = NOW()
+                WHERE id = $2";
+        return $this->db->execute($sql, [$minutes, $userId]);
+    }
+
+    public function isAccountLocked(int $userId): bool {
+        $sql = "SELECT account_locked_until FROM users WHERE id = $1";
+        $result = $this->db->fetchOne($sql, [$userId]);
+
+        if (!$result || !$result['account_locked_until']) {
+            return false;
+        }
+
+        return strtotime($result['account_locked_until']) > time();
+    }
+
+    public function update2FASecret(int $userId, string $secret): bool {
+        $sql = "UPDATE users 
+                SET two_fa_secret = $1,
+                    updated_at = NOW()
+                WHERE id = $2";
+        return $this->db->execute($sql, [$secret, $userId]);
+    }
+
+    public function enable2FA(int $userId): bool {
+        $sql = "UPDATE users 
+                SET two_fa_enabled = TRUE,
+                    updated_at = NOW()
+                WHERE id = $1";
+        return $this->db->execute($sql, [$userId]);
+    }
+
+    public function disable2FA(int $userId): bool {
+        $sql = "UPDATE users 
+                SET two_fa_enabled = FALSE,
+                    two_fa_secret = NULL,
+                    updated_at = NOW()
+                WHERE id = $1";
+        return $this->db->execute($sql, [$userId]);
+    }
+
+    public function softDelete(int $userId, ?string $reason = null): bool {
+        $sql = "UPDATE users 
+                SET deleted_at = NOW() + '30 days'::INTERVAL,
+                    deletion_reason = $1,
+                    updated_at = NOW()
+                WHERE id = $2";
+        return $this->db->execute($sql, [$reason, $userId]);
+    }
+
+    public function cancelDeletion(int $userId): bool {
+        $sql = "UPDATE users 
+                SET deleted_at = NULL,
+                    deletion_reason = NULL,
+                    updated_at = NOW()
+                WHERE id = $1";
+        return $this->db->execute($sql, [$userId]);
+    }
+
+    public function hardDelete(int $userId): bool {
+        $sql = "DELETE FROM users WHERE id = $1";
+        return $this->db->execute($sql, [$userId]);
+    }
+
+    public function updatePassword(int $userId, string $passwordHash): bool {
+        $sql = "UPDATE users 
+                SET password_hash = $1,
+                    password_changed_at = NOW(),
+                    updated_at = NOW()
+                WHERE id = $2";
+        return $this->db->execute($sql, [$passwordHash, $userId]);
+    }
+}
