@@ -1,6 +1,6 @@
 class ApiService {
     constructor() {
-        this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost';
+        this.baseUrl = "/api";
         this.tokenKey = 'access_token';
         this.refreshTokenKey = 'refresh_token';
         this.userKey = 'user';
@@ -16,28 +16,42 @@ class ApiService {
 
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
-        const method = (options.method || 'GET').toUpperCase();
 
-        if (!this._checkRateLimit(endpoint)) {
-            throw new Error('Trop de requêtes, veuillez patienter');
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        };
+
+        const token = this.getToken();
+        if (token) {
+            defaultOptions.headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const requestKey = `${method}:${endpoint}`;
-        if (this.requestQueue.has(requestKey)) {
-            console.log('⏳ Requête en cours, attente...', requestKey);
-            fetch('/api/videos').then(r => r.status).then(console.log);
-            return await this.requestQueue.get(requestKey);
+        const finalOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers,
+            },
+        };
+
+        console.log('⏳ Requête en cours, attente...', options.method || 'GET', endpoint);
+        const response = await fetch(url, finalOptions);
+        console.log('✅ Réponse reçue:', response.status);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`);
         }
 
-        const requestPromise = this._executeRequest(endpoint, options);
-        this.requestQueue.set(requestKey, requestPromise);
-
-        try {
-            const result = await requestPromise;
-            return result;
-        } finally {
-            this.requestQueue.delete(requestKey);
+        const contentType = response.headers.get('content-type');
+        if (contentType?.includes('application/json')) {
+            return await response.json();
         }
+
+        return response;
     }
 
     async _executeRequest(endpoint, options = {}, retryCount = 0) {

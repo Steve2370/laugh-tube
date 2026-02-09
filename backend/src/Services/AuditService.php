@@ -2,14 +2,17 @@
 
 namespace App\Services;
 
+use App\Interfaces\DatabaseInterface;
 use App\Repositories\LogRepository;
 use App\Utils\SecurityHelper;
 
 class AuditService {
     private LogRepository $logRepo;
+    private DatabaseInterface $db;
 
-    public function __construct(LogRepository $logRepo) {
+    public function __construct(LogRepository $logRepo, DatabaseInterface $db) {
         $this->logRepo = $logRepo;
+        $this->db = $db;
     }
 
     public function log(string $eventType, ?int $userId = null, ?string $description = null, ?array $additionalData = null): bool {
