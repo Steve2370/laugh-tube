@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:15
     container_name: laughtube_postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -15,7 +15,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     depends_on:
@@ -24,27 +24,30 @@ services:
       - "9000"
 
   frontend:
-    container_name: laughtube_frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    restart: always
-    expose:
-      - "80"
+    image: node:20-alpine
+    container_name: laughtube_frontend_builder
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - frontend_dist:/app/dist
+    command: sh -c "npm ci && npm run build"
+    restart: "no"
 
   nginx:
     image: nginx:alpine
     container_name: laughtube_nginx
-    restart: always
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend:/var/www/html:ro
+      - frontend_dist:/var/www/frontend:ro
     depends_on:
       - backend
       - frontend
 
 volumes:
   postgres_data:
+  frontend_dist:
