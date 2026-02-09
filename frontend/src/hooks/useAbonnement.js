@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
-import userService from '../services/userService.js';
-import { useAuth } from '../contexts/AuthContext.jsx';
+import apiService from '../services/apiService.js';
+import { useAuth } from './useAuth';
 
-export default function useAbonnement(targetUserId) {
-    const { isAuthenticated } = useAuth();
+export function useAbonnement(targetUserId) {
+    const { isAuthenticated, user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [subscribersCount, setSubscribersCount] = useState(0);
     const [isSubscribed, setIsSubscribed] = useState(false);
@@ -19,78 +19,62 @@ export default function useAbonnement(targetUserId) {
         setError(null);
 
         try {
-            const statsData = await userService.getUserStats(targetUserId);
-            const count = statsData?.subscribers_count || 0;
-            setSubscribersCount(count);
+            const countResponse = await apiService.request(`/users/${targetUserId}/subscribers-count`);
+            setSubscribersCount(countResponse.subscribers_count || 0);
 
-            if (isAuthenticated) {
-                const subscribed = await userService.isSubscribed(targetUserId);
-                setIsSubscribed(subscribed);
+            // Vérifier si l'utilisateur actuel est abonné
+            if (isAuthenticated && user) {
+                const statusResponse = await apiService.request(`/users/${targetUserId}/subscribe-status`);
+                setIsSubscribed(statusResponse.is_subscribed || false);
             } else {
                 setIsSubscribed(false);
             }
         } catch (err) {
+            console.error('Error fetching subscription data:', err);
             setError(err.message);
             setSubscribersCount(0);
             setIsSubscribed(false);
         } finally {
             setLoading(false);
         }
-    }, [targetUserId, isAuthenticated]);
-
-    useEffect(() => {
-        refresh();
-    }, [refresh]);
+    }, [targetUserId, isAuthenticated, user]);
 
     const toggle = useCallback(async () => {
         if (!isAuthenticated) {
             throw new Error('AUTH_REQUIRED');
         }
 
-        if (!targetUserId) {
-            return;
-        }
-
         try {
             if (isSubscribed) {
-                await userService.unsubscribe(targetUserId);
+                await apiService.request(`/users/${targetUserId}/unsubscribe`, {
+                    method: 'DELETE'
+                });
                 setIsSubscribed(false);
                 setSubscribersCount(prev => Math.max(0, prev - 1));
             } else {
-                await userService.subscribe(targetUserId);
+                await apiService.request(`/users/${targetUserId}/subscribe`, {
+                    method: 'POST'
+                });
                 setIsSubscribed(true);
                 setSubscribersCount(prev => prev + 1);
             }
         } catch (err) {
+            console.error('Error toggling subscription:', err);
             await refresh();
             throw err;
         }
-    }, [isAuthenticated, targetUserId, isSubscribed, refresh]);
+    }, [isAuthenticated, isSubscribed, targetUserId, refresh]);
 
-    const getSubscribers = useCallback(async (options = {}) => {
-        try {
-            return await userService.getSubscribers(targetUserId, options);
-        } catch (err) {
-            return { success: false, subscribers: [], total: 0 };
-        }
-    }, [targetUserId]);
-
-    const getSubscriptions = useCallback(async (options = {}) => {
-        try {
-            return await userService.getSubscriptions(targetUserId, options);
-        } catch (err) {
-            return { success: false, subscriptions: [], total: 0 };
-        }
-    }, [targetUserId]);
+    useEffect(() => {
+        refresh();
+    }, [refresh]);
 
     return {
         loading,
         subscribersCount,
         isSubscribed,
-        toggle,
         error,
-        getSubscribers,
-        getSubscriptions,
+        toggle,
         refresh
     };
 }
