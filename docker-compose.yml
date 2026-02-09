@@ -15,8 +15,8 @@ services:
   backend:
     container_name: laughtube_backend
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
     env_file:
       - .env
@@ -30,13 +30,11 @@ services:
   frontend:
     container_name: laughtube_frontend
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     restart: always
-    ports:
-      - "5173:80"
-    depends_on:
-      - backend
+    expose:
+      - "80"
 
   nginx:
     image: nginx:alpine
@@ -46,8 +44,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./frontend/dist:/var/www/frontend
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - backend
       - frontend
