@@ -1,0 +1,19 @@
+{
+    "name": "laugh-tale/backend",
+    "description": "Backend API pour Laugh Tale",
+    "type": "project",
+    "require": {
+        "php": "^8.2",
+        "firebase/php-jwt": "^6.10",
+      "ext-pdo": "*",
+      "ext-fileinfo": "*",
+      "ext-mbstring": "*",
+      "ext-pgsql": "*",
+      "ext-ctype": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

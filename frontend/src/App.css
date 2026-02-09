@@ -1,0 +1,179 @@
+
+.app-container {
+    min-height: 100vh;
+    width: 100%;
+}
+
+.page-content {
+    padding-top: 4rem;
+    min-height: 100vh;
+}
+
+.container-centered {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.video-card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
+
+.video-card-image {
+    @apply w-full h-48 object-cover;
+}
+
+.video-card-content {
+    @apply p-4;
+}
+
+.btn-gradient-blue {
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5;
+}
+
+.btn-gradient-purple {
+    @apply bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5;
+}
+
+.input-with-icon {
+    @apply w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all;
+}
+
+.video-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
+}
+
+.auth-page-bg {
+    @apply min-h-screen flex items-center justify-center bg-gradient-to-br pt-16;
+}
+
+.auth-card {
+    @apply bg-white rounded-2xl shadow-2xl p-8 border border-gray-100 w-full max-w-md;
+}
+
+.loading-spinner {
+    @apply animate-spin rounded-full border-b-2;
+}
+
+.loading-container {
+    @apply min-h-screen flex items-center justify-center;
+}
+
+.dropdown-menu {
+    @apply absolute right-0 mt-2 bg-white bg-opacity-95 backdrop-blur-md rounded-lg shadow-lg border border-gray-200 py-1 z-50;
+}
+
+.dropdown-item {
+    @apply w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3 transition-colors;
+}
+
+.transition-smooth {
+    @apply transition-all duration-300 ease-in-out;
+}
+
+.hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+}
+
+.hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+}
+
+.text-gradient-blue {
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent;
+}
+
+.text-gradient-purple {
+    @apply bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent;
+}
+
+.navbar-glass {
+    @apply backdrop-blur-md bg-white bg-opacity-30 shadow-md;
+}
+
+.form-group {
+    @apply mb-4;
+}
+
+.form-label {
+    @apply block text-sm font-semibold text-gray-700 mb-2;
+}
+
+.upload-zone {
+    @apply border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 transition-colors cursor-pointer;
+}
+
+.upload-zone:hover {
+    @apply bg-blue-50;
+}
+
+.progress-bar-container {
+    @apply w-full bg-gray-200 rounded-full h-2;
+}
+
+.progress-bar-fill {
+    @apply bg-blue-600 h-2 rounded-full transition-all duration-300;
+}
+
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+    @apply bg-green-100 text-green-800;
+}
+
+.badge-error {
+    @apply bg-red-100 text-red-800;
+}
+
+.badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-info {
+    @apply bg-blue-100 text-blue-800;
+}
+
+/* Avatar */
+.avatar {
+    @apply rounded-full object-cover;
+}
+
+.avatar-sm {
+    @apply w-6 h-6;
+}
+
+.avatar-md {
+    @apply w-8 h-8;
+}
+
+.avatar-lg {
+    @apply w-12 h-12;
+}
+
+.avatar-xl {
+    @apply w-16 h-16;
+}
+
+.empty-state {
+    @apply text-center py-12;
+}
+
+.empty-state-icon {
+    @apply mx-auto mb-4 text-gray-400;
+}
+
+.empty-state-text {
+    @apply text-gray-500;
+}
+
+@media (max-width: 640px) {
+    .page-content {
+        padding-top: 3.5rem;
+    }
+
+    .auth-card {
+        margin: 1rem;
+    }
+}
