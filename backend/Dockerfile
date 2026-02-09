@@ -1,26 +1,45 @@
 FROM php:8.2-fpm-alpine
 
-# Install dependencies
 RUN apk add --no-cache \
     postgresql-dev \
-    nginx \
-    && docker-php-ext-install pdo pdo_pgsql pgsql
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    zip \
+    unzip \
+    git \
+    curl
 
-# Copy application
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo \
+        pdo_pgsql \
+        gd \
+        exif
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 WORKDIR /var/www/html
+
 COPY . .
 
-# Copy Nginx config
-COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+RUN if [ -f composer.json ]; then composer install --no-dev --optimize-autoloader; fi
 
-# Permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+RUN mkdir -p \
+    uploads/avatars \
+    uploads/covers \
+    uploads/videos \
+    uploads/thumbnails \
+    storage/logs \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 777 uploads storage
 
-# Start script
-COPY docker/start.sh /start.sh
-RUN chmod +x /start.sh
+RUN echo "upload_max_filesize = 500M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 500M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_execution_time = 600" >> /usr/local/etc/php/conf.d/uploads.ini
 
-EXPOSE 80
+EXPOSE 9000
 
-CMD ["/start.sh"]
+CMD ["php-fpm"]
