@@ -7,29 +7,87 @@ namespace Composer\Autoload;
 class ComposerStaticInit276da39cc1e2544ac36f27c66a97396d
 {
     public static $prefixLengthsPsr4 = array (
-        'F' => 
+        'F' =>
         array (
             'Firebase\\JWT\\' => 13,
         ),
-        'A' => 
+        'A' =>
         array (
             'App\\' => 4,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Firebase\\JWT\\' => 
+        'Firebase\\JWT\\' =>
         array (
             0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
         ),
-        'App\\' => 
+        'App\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
     );
 
     public static $classMap = array (
+        'App\\Controllers\\AbonnementController' => __DIR__ . '/../..' . '/src/Controllers/AbonnementController.php',
+        'App\\Controllers\\AuthController' => __DIR__ . '/../..' . '/src/Controllers/AuthController.php',
+        'App\\Controllers\\CommentaireController' => __DIR__ . '/../..' . '/src/Controllers/CommentaireController.php',
+        'App\\Controllers\\NotificationController' => __DIR__ . '/../..' . '/src/Controllers/NotificationController.php',
+        'App\\Controllers\\ReactionController' => __DIR__ . '/../..' . '/src/Controllers/ReactionController.php',
+        'App\\Controllers\\UserController' => __DIR__ . '/../..' . '/src/Controllers/UserController.php',
+        'App\\Controllers\\VideoController' => __DIR__ . '/../..' . '/src/Controllers/VideoController.php',
+        'App\\Interfaces\\DatabaseInterface' => __DIR__ . '/../..' . '/src/Interfaces/DatabaseInterface.php',
+        'App\\Interfaces\\EmailProviderInterface' => __DIR__ . '/../..' . '/src/Interfaces/EmailProviderInterface.php',
+        'App\\Interfaces\\ValidatorInterface' => __DIR__ . '/../..' . '/src/Interfaces/ValidatorInterface.php',
+        'App\\Middleware\\AuthAide' => __DIR__ . '/../..' . '/src/Middleware/AuthAide.php',
+        'App\\Middleware\\AuthMiddleware' => __DIR__ . '/../..' . '/src/Middleware/AuthMiddleware.php',
+        'App\\Middleware\\InputSanitizerMiddleware' => __DIR__ . '/../..' . '/src/Middleware/InputSanitizerMiddleware.php',
+        'App\\Middleware\\RateLimitMiddleware' => __DIR__ . '/../..' . '/src/Middleware/RateLimitMiddleware.php',
+        'App\\Models\\Abonnement' => __DIR__ . '/../..' . '/src/Models/Abonnement.php',
+        'App\\Models\\Commentaire' => __DIR__ . '/../..' . '/src/Models/Commentaire.php',
+        'App\\Models\\Notification' => __DIR__ . '/../..' . '/src/Models/Notification.php',
+        'App\\Models\\Reaction' => __DIR__ . '/../..' . '/src/Models/Reaction.php',
+        'App\\Models\\User' => __DIR__ . '/../..' . '/src/Models/User.php',
+        'App\\Models\\Video' => __DIR__ . '/../..' . '/src/Models/Video.php',
+        'App\\Models\\VideoView' => __DIR__ . '/../..' . '/src/Models/VideoView.php',
+        'App\\Providers\\PostgreSQLDatabase' => __DIR__ . '/../..' . '/src/Providers/PostgreSQLDatabase.php',
+        'App\\Repositories\\LogRepository' => __DIR__ . '/../..' . '/src/Repositories/LogRepository.php',
+        'App\\Repositories\\SessionRepository' => __DIR__ . '/../..' . '/src/Repositories/SessionRepository.php',
+        'App\\Repositories\\UserRepository' => __DIR__ . '/../..' . '/src/Repositories/UserRepository.php',
+        'App\\Services\\AbonnementService' => __DIR__ . '/../..' . '/src/Services/AbonnementService.php',
+        'App\\Services\\AnalyticsService' => __DIR__ . '/../..' . '/src/Services/AnalyticsService.php',
+        'App\\Services\\AuditService' => __DIR__ . '/../..' . '/src/Services/AuditService.php',
+        'App\\Services\\AuthService' => __DIR__ . '/../..' . '/src/Services/AuthService.php',
+        'App\\Services\\CommentaireService' => __DIR__ . '/../..' . '/src/Services/CommentaireService.php',
+        'App\\Services\\EmailService' => __DIR__ . '/../..' . '/src/Services/EmailService.php',
+        'App\\Services\\NotificationCreationService' => __DIR__ . '/../..' . '/src/Services/NotificationCreationService.php',
+        'App\\Services\\NotificationService' => __DIR__ . '/../..' . '/src/Services/NotificationService.php',
+        'App\\Services\\ReactionService' => __DIR__ . '/../..' . '/src/Services/ReactionService.php',
+        'App\\Services\\SessionService' => __DIR__ . '/../..' . '/src/Services/SessionService.php',
+        'App\\Services\\TokenService' => __DIR__ . '/../..' . '/src/Services/TokenService.php',
+        'App\\Services\\TwoFactorService' => __DIR__ . '/../..' . '/src/Services/TwoFactorService.php',
+        'App\\Services\\UploadService' => __DIR__ . '/../..' . '/src/Services/UploadService.php',
+        'App\\Services\\UserService' => __DIR__ . '/../..' . '/src/Services/UserService.php',
+        'App\\Services\\ValidationService' => __DIR__ . '/../..' . '/src/Services/ValidationService.php',
+        'App\\Services\\VideoAnalyticsService' => __DIR__ . '/../..' . '/src/Services/VideoAnalyticsService.php',
+        'App\\Services\\VideoService' => __DIR__ . '/../..' . '/src/Services/VideoService.php',
+        'App\\Services\\VideoStreamService' => __DIR__ . '/../..' . '/src/Services/VideoStreamService.php',
+        'App\\Utils\\JsonResponse' => __DIR__ . '/../..' . '/src/Utils/JsonResponse.php',
+        'App\\Utils\\Router' => __DIR__ . '/../..' . '/src/Utils/Router.php',
+        'App\\Utils\\SecurityHelper' => __DIR__ . '/../..' . '/src/Utils/SecurityHelper.php',
+        'App\\Utils\\TokenGenerator' => __DIR__ . '/../..' . '/src/Utils/TokenGenerator.php',
+        'App\\Validators\\EmailValidator' => __DIR__ . '/../..' . '/src/Validators/EmailValidator.php',
+        'App\\Validators\\PasswordValidator' => __DIR__ . '/../..' . '/src/Validators/PasswordValidator.php',
+        'App\\Validators\\UsernameValidator' => __DIR__ . '/../..' . '/src/Validators/UsernameValidator.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Firebase\\JWT\\BeforeValidException' => __DIR__ . '/..' . '/firebase/php-jwt/src/BeforeValidException.php',
+        'Firebase\\JWT\\CachedKeySet' => __DIR__ . '/..' . '/firebase/php-jwt/src/CachedKeySet.php',
+        'Firebase\\JWT\\ExpiredException' => __DIR__ . '/..' . '/firebase/php-jwt/src/ExpiredException.php',
+        'Firebase\\JWT\\JWK' => __DIR__ . '/..' . '/firebase/php-jwt/src/JWK.php',
+        'Firebase\\JWT\\JWT' => __DIR__ . '/..' . '/firebase/php-jwt/src/JWT.php',
+        'Firebase\\JWT\\JWTExceptionWithPayloadInterface' => __DIR__ . '/..' . '/firebase/php-jwt/src/JWTExceptionWithPayloadInterface.php',
+        'Firebase\\JWT\\Key' => __DIR__ . '/..' . '/firebase/php-jwt/src/Key.php',
+        'Firebase\\JWT\\SignatureInvalidException' => __DIR__ . '/..' . '/firebase/php-jwt/src/SignatureInvalidException.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
