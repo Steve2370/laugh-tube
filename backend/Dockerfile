@@ -14,6 +14,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo \
         pdo_pgsql \
+        pgsql \
         gd \
         exif
 
@@ -23,7 +24,10 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN if [ -f composer.json ]; then composer install --no-dev --optimize-autoloader; fi
+RUN if [ -f composer.json ]; then \
+        composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-pgsql || \
+        composer install --no-dev --optimize-autoloader; \
+    fi
 
 RUN mkdir -p \
     uploads/avatars \
