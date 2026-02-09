@@ -1,92 +1,56 @@
-version: "3.8"
-
 services:
-
   postgres:
     image: postgres:15
-    container_name: laughtube-db
+    container_name: laughtube_postgres
     restart: always
     environment:
-      POSTGRES_DB: laugh_tale
-      POSTGRES_USER: laugh
-      POSTGRES_PASSWORD: laugh
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - laughtube-network
-
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:5432:5432"
-
+      - "5432:5432"
 
   backend:
+    container_name: laughtube_backend
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: laughtube-api
+      context: .
+      dockerfile: backend/Dockerfile
     restart: always
+    env_file:
+      - .env
     depends_on:
       - postgres
-    env_file:
-      - ./.env
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: laugh_tale
-      DB_USER: laugh
-      DB_PASSWORD: laugh
-
-      APP_ENV: production
-      FRONTEND_URL: https://laughtube.ca
-      APP_URL: https://api.laughtube.ca
-
-      DO_SPACES_BUCKET: laughtube-videos
-      DO_SPACES_REGION: nyc3
     volumes:
       - ./backend:/var/www/html
-      - upload-data:/var/www/html/uploads
-    networks:
-      - laughtube-network
-
     expose:
-      - "80"
+      - "9000"
 
   frontend:
+    container_name: laughtube_frontend
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: laughtube-frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     restart: always
-    env_file:
-      - ./.env
-    environment:
-      VITE_API_URL: https://api.laughtube.ca
-      VITE_CDN_URL: https://videos.laughtube.ca
-    networks:
-      - laughtube-network
-
-    expose:
-      - "80"
-
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
 
   nginx:
     image: nginx:alpine
-    container_name: laughtube-nginx
+    container_name: laughtube_nginx
     restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/dist:/var/www/frontend
     depends_on:
       - backend
       - frontend
-    ports:
-      - "80:80"
-    volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    networks:
-      - laughtube-network
 
 volumes:
-  postgres-data:
-  upload-data:
-
-networks:
-  laughtube-network:
-    driver: bridge
+  postgres_data:
