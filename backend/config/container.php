@@ -24,6 +24,7 @@ use App\Services\ReactionService;
 use App\Services\TokenService;
 use App\Services\TwoFactorService;
 use App\Services\UploadService;
+use App\Services\UserService;
 use App\Services\ValidationService;
 use App\Services\VideoService;
 
@@ -53,6 +54,10 @@ $container->set(DatabaseInterface::class, function() {
 
 $container->set(User::class, function($c) {
     return new User($c->get(DatabaseInterface::class));
+});
+
+$container->set(UserService::class, function($c) {
+    return new UserService($c->get(User::class));
 });
 
 $container->set(Video::class, function($c) {
