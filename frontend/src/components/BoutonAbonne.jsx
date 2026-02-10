@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import useAbonnement from '../hooks/useAbonnement';
+import { useAbonnement } from '../hooks/useAbonnement';
 import { useToast } from '../contexts/ToastContext';
 
 export default function BoutonAbonne({ targetUserId }) {
