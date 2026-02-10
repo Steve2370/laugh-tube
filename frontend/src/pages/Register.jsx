@@ -81,7 +81,11 @@ const Register = () => {
             <div className="w-full max-w-md px-6">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
                     <div className="text-center mb-8">
-                        <img src="/src/assets/Laugh Tale Version2.png" alt="LaughTale" className="mx-auto" />
+                        <img
+                            src="/Laugh Tale Version2.png"
+                            alt="Laugh Tube Logo"
+                            className="h-12 w-auto scale-125 object-contain"
+                        />
                         <h2 className="mt-4 text-3xl font-bold text-gray-900 mb-2">
                             Inscription
                         </h2>
