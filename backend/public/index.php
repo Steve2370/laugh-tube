@@ -91,7 +91,7 @@ try {
     $videoModel        = $container->get(Video::class);
     $commentModel      = $container->get(Commentaire::class);
     $reactionModel     = $container->get(Reaction::class);
-    $videoViewModel    = $container->get(VideoView::class);
+//    $videoViewModel    = $container->get(VideoView::class);
     $notificationModel = $container->get(Notification::class);
 
     $tokenService       = new TokenService();
