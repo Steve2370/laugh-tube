@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Interfaces\DatabaseInterface;
-use Database;
-use PDO;
 
 class Video
 {
-    public function __construct(DatabaseInterface $db) {}
+    private DatabaseInterface $db;
+
+    public function __construct(DatabaseInterface $db)
+    {
+        $this->db = $db;
+    }
 
     public function create(int $userId, string $title, string $description, string $filename): ?int
     {
