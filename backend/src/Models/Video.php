@@ -8,7 +8,7 @@ use PDO;
 
 class Video
 {
-    public function __construct(private DatabaseInterface $db) {}
+    public function __construct(DatabaseInterface $db) {}
 
     public function create(int $userId, string $title, string $description, string $filename): ?int
     {
