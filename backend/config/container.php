@@ -45,6 +45,15 @@ $container = new class {
     }
 };
 
+$container->set(DatabaseInterface::class, function () {
+    static $db = null;
+    if ($db !== null) return $db;
+
+    $config = require __DIR__ . '/database.php';
+    return $db = new PostgreSQLDatabase($config);
+});
+
+
 $container->set(DatabaseInterface::class, function() {
     $config = require __DIR__ . '/database.php';
     $db = new PostgreSQLDatabase($config);

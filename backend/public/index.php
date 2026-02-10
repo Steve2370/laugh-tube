@@ -99,7 +99,6 @@ try {
     $validationService = new ValidationService();
     $uploadService = new UploadService();
     $videoStreamService = new VideoStreamService($db);
-
     $twoFactorService = $container->get(TwoFactorService::class);
 
     $authService = $container->get(AuthService::class);
@@ -276,9 +275,13 @@ try {
         $videoController->upload(); return;
     }
 
-    if ($uri === '/videos' && $method === 'GET') {
-        $videoController->list(); return;
+    elseif ($uri === '/videos' && $method === 'GET') {
+        $videoService = $container->get(VideoService::class);
+        $videoController = new VideoController($videoService, $analyticsService, $authMiddleware, $auditService, $db);
+        $videoController->list();
+        return;
     }
+
 
     if ($uri === '/videos/trending' && $method === 'GET') {
         $videoController->trending(); return;
