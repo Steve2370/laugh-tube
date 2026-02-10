@@ -1,5 +1,6 @@
 <?php
 
+use App\Controllers\AuthController;
 use App\Interfaces\DatabaseInterface;
 use App\Middleware\AuthMiddleware;
 use App\Models\Abonnement;
@@ -152,6 +153,15 @@ $container->set(AuthService::class, function($c) {
         $c->get(ValidationService::class),
         $c->get(SessionRepository::class),
         $c->get(AuditService::class)
+    );
+});
+
+$container->set(AuthController::class, function($c) {
+    return new AuthController(
+        $c->get(AuthService::class),
+        $c->get(ValidationService::class),
+        $c->get(AuditService::class),
+        $c->get(AuthMiddleware::class)
     );
 });
 
