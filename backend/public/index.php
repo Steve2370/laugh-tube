@@ -113,8 +113,8 @@ try {
 
     $reactionController = $container->get(ReactionController::class);
 
-    // $reactionService = new ReactionService($reactionModel, $videoModel);
-    // $reactionController = new ReactionController($reactionService, $authMiddleware, $auditService, $db);
+     $reactionService = new ReactionService($reactionModel, $videoModel);
+     $reactionController = new ReactionController($reactionService, $authMiddleware, $auditService, $db);
 
     $authController = $container->get(AuthController::class);
 

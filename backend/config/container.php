@@ -1,6 +1,7 @@
 <?php
 
 use App\Controllers\AuthController;
+use App\Controllers\ReactionController;
 use App\Interfaces\DatabaseInterface;
 use App\Middleware\AuthMiddleware;
 use App\Models\Abonnement;
@@ -9,6 +10,7 @@ use App\Models\Notification;
 use App\Models\Reaction;
 use App\Models\User;
 use App\Models\Video;
+use App\Models\VideoView;
 use App\Providers\PostgreSQLDatabase;
 use App\Repositories\LogRepository;
 use App\Repositories\SessionRepository;
@@ -37,19 +39,22 @@ $container = new class {
         unset($this->instances[$id]);
     }
 
+    public function has(string $id): bool {
+        return isset($this->instances[$id]) || isset($this->factories[$id]);
+    }
+
     public function get(string $id) {
         if (isset($this->instances[$id])) {
             return $this->instances[$id];
         }
-
         if (!isset($this->factories[$id])) {
             throw new Exception("Service {$id} not found in container");
         }
-
         $this->instances[$id] = ($this->factories[$id])($this);
         return $this->instances[$id];
     }
 };
+
 
 $container->set(DatabaseInterface::class, function() {
     $config = require __DIR__ . '/database.php';
@@ -71,9 +76,32 @@ $container->set(User::class, function($c) {
     return new User($c->get(DatabaseInterface::class));
 });
 
-$container->set(UserService::class, function($c) {
-    return new UserService($c->get(User::class));
+$container->set(VideoView::class, function($c) {
+    return new VideoView($c->get(DatabaseInterface::class));
 });
+
+$container->set(ReactionController::class, function($c) {
+    return new ReactionController(
+        $c->get(ReactionService::class),
+        $c->get(AuthMiddleware::class),
+        $c->get(AuditService::class),
+    );
+});
+
+
+$container->set(UserService::class, function($c) {
+    return new UserService(
+        $c->get(User::class),
+        $c->get(Video::class),
+        $c->get(VideoView::class),
+        $c->get(DatabaseInterface::class),
+        $c->get(ValidationService::class),
+        $c->get(AuditService::class),
+        $c->has(NotificationCreationService::class) ? $c->get(NotificationCreationService::class) : null,
+        $c->has(UploadService::class) ? $c->get(UploadService::class) : null
+    );
+});
+
 
 $container->set(Video::class, function($c) {
     return new Video($c->get(DatabaseInterface::class));
