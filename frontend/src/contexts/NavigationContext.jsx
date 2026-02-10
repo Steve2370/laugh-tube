@@ -1,61 +1,104 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useCallback,
+    useEffect,
+    useMemo,
+} from "react";
 
 const NavigationContext = createContext(null);
 
-export const NavigationProvider = ({ children }) => {
-    const [currentPage, setCurrentPage] = useState('home');
-    const [selectedVideo, setSelectedVideo] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [navigationHistory, setNavigationHistory] = useState(['home']);
+const getPageFromHash = () => {
+    const hash = window.location.hash || "";
+    const page = hash.replace(/^#\//, "").trim();
+    return page || "home";
+};
 
-    const navigateTo = useCallback((page) => {
-        setCurrentPage(page);
-        setNavigationHistory(prev => [...prev, page]);
+const setHashPage = (page) => {
+    window.location.hash = `#/${page}`;
+};
+
+export const NavigationProvider = ({ children }) => {
+    const [currentPage, setCurrentPage] = useState(getPageFromHash());
+    const [selectedVideo, setSelectedVideo] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [navigationHistory, setNavigationHistory] = useState([getPageFromHash()]);
+
+    useEffect(() => {
+        const onHashChange = () => {
+            const page = getPageFromHash();
+            setCurrentPage(page);
+            setNavigationHistory((prev) => {
+                if (prev[prev.length - 1] === page) return prev;
+                return [...prev, page];
+            });
+        };
+
+        window.addEventListener("hashchange", onHashChange);
+
+        const initial = getPageFromHash();
+        if (!window.location.hash) setHashPage(initial);
+
+        return () => window.removeEventListener("hashchange", onHashChange);
     }, []);
 
-    const navigateToVideo = useCallback((videoId, videoData = null) => {
-        const video = videoData || {
-            id: videoId,
-            title: 'Chargement en cours...',
-        };
-        setSelectedVideo(video);
-        navigateTo('video');
-    }, [navigateTo]);
+    const navigateTo = useCallback((page) => {
+        setHashPage(page);
+    }, []);
+
+    const navigateToVideo = useCallback(
+        (videoId, videoData = null) => {
+            const video = videoData || { id: videoId, title: "Chargement en cours..." };
+            setSelectedVideo(video);
+            setHashPage("video");
+        },
+        []
+    );
 
     const goBack = useCallback(() => {
         if (navigationHistory.length > 1) {
-            const newHistory = [...navigationHistory];
-            newHistory.pop();
-            const previousPage = newHistory[newHistory.length - 1];
-            setNavigationHistory(newHistory);
-            setCurrentPage(previousPage);
+            window.history.back();
         } else {
-            setCurrentPage('home');
+            setHashPage("home");
         }
-    }, [navigationHistory]);
+    }, [navigationHistory.length]);
 
     const goHome = useCallback(() => {
-        setCurrentPage('home');
-        setNavigationHistory(['home']);
         setSelectedVideo(null);
+        setNavigationHistory(["home"]);
+        setHashPage("home");
     }, []);
 
     const updateSearch = useCallback((query) => {
         setSearchQuery(query);
     }, []);
 
-    const value = {
-        currentPage,
-        selectedVideo,
-        searchQuery,
-        navigationHistory,
-        navigateTo,
-        navigateToVideo,
-        goBack,
-        goHome,
-        updateSearch,
-        setSelectedVideo,
-    };
+    const value = useMemo(
+        () => ({
+            currentPage,
+            selectedVideo,
+            searchQuery,
+            navigationHistory,
+            navigateTo,
+            navigateToVideo,
+            goBack,
+            goHome,
+            updateSearch,
+            setSelectedVideo,
+        }),
+        [
+            currentPage,
+            selectedVideo,
+            searchQuery,
+            navigationHistory,
+            navigateTo,
+            navigateToVideo,
+            goBack,
+            goHome,
+            updateSearch,
+        ]
+    );
 
     return (
         <NavigationContext.Provider value={value}>
@@ -66,12 +109,8 @@ export const NavigationProvider = ({ children }) => {
 
 export const useNavigation = () => {
     const context = useContext(NavigationContext);
-
     if (!context) {
-        throw new Error(
-            "useNavigation must be used inside a NavigationProvider"
-        );
+        throw new Error("useNavigation must be used inside a NavigationProvider");
     }
-
     return context;
 };
