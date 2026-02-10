@@ -75,9 +75,7 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
 
 if (str_starts_with($uri, '/api/')) {
     $uri = substr($uri, 4);
-    if ($uri === '') {
-        $uri = '/';
-    }
+    if ($uri === '') $uri = '/';
 }
 
 error_log("API Call: $method $uri");
