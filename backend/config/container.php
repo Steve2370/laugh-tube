@@ -22,6 +22,7 @@ use App\Services\NotificationCreationService;
 use App\Services\NotificationService;
 use App\Services\ReactionService;
 use App\Services\TokenService;
+use App\Services\TwoFactorService;
 use App\Services\UploadService;
 use App\Services\ValidationService;
 use App\Services\VideoService;
@@ -194,6 +195,14 @@ $container->set(AuthMiddleware::class, function($c) {
         $c->get(SessionRepository::class),
         $c->get(DatabaseInterface::class),
         $c->get(AuditService::class)
+    );
+});
+
+$container->set(TwoFactorService::class, function($c) {
+    return new TwoFactorService(
+        $c->get(User::class),
+        $c->get(DatabaseInterface::class),
+        $c->get(AuditService::class),
     );
 });
 
