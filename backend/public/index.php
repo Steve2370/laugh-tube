@@ -97,7 +97,8 @@ try {
     $tokenService = new TokenService();
     $validationService = new ValidationService();
     $uploadService = new UploadService();
-    $videoStreamService = $container->get(VideoStreamService::class);
+    $db = $container->get(DatabaseInterface::class);
+    $videoStreamService = new VideoStreamService($db);
 
     $twoFactorService = $container->get(TwoFactorService::class);
 
@@ -296,13 +297,13 @@ try {
     }
 
     if (preg_match('#^/videos/(\d+)/play$#', $uri, $matches) && $method === 'GET') {
-        $videoStreamService = new VideoStreamService();
+        $videoStreamService = new VideoStreamService($db);
         $videoStreamService->stream((int)$matches[1]);
         return;
     }
 
     if (preg_match('#^/videos/(\d+)/play$#', $uri, $matches) && $method === 'GET') {
-        $videoStreamService = new VideoStreamService();
+        $videoStreamService = new VideoStreamService($db);
         $videoStreamService->serveThumbnail((int)$matches[1]);
         return;
     }

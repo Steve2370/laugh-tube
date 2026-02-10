@@ -1,9 +1,11 @@
 <?php
 namespace App\Services;
 
+use AllowDynamicProperties;
 use App\Interfaces\DatabaseInterface;
 use App\Models\Video;
 
+#[AllowDynamicProperties]
 class VideoStreamService
 {
     private const CHUNK_SIZE = 1024 * 256;
@@ -11,14 +13,14 @@ class VideoStreamService
     private const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
     public function __construct(
-        private ?Video $videoModel = null,
-        private ?string $videosDir = null,
-        private ?string $thumbsDir = null,
-        DatabaseInterface $db
+        DatabaseInterface $db,
+        ?Video $videoModel = null,
+        ?string $videosDir = null,
+        ?string $thumbsDir = null
     ) {
         $this->videoModel = $videoModel ?? new Video($db);
-        $this->videosDir = $videosDir ?? ($_ENV['OUTPUT_DIR'] ?? __DIR__ . '/../../videos');
-        $this->thumbsDir = $thumbsDir ?? ($this->videosDir . '/thumbs');
+        $this->videosDir  = $videosDir ?? ($_ENV['OUTPUT_DIR'] ?? __DIR__ . '/../../videos');
+        $this->thumbsDir  = $thumbsDir ?? ($this->videosDir . '/thumbs');
     }
 
     public function stream(int $videoId): void
