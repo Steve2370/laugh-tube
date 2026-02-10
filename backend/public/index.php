@@ -86,18 +86,18 @@ function isDev(): bool
 try {
 
     $container = require __DIR__ . '/../config/container.php';
+    $db = $container->get(DatabaseInterface::class);
 
     $userModel = $container->get(User::class);
     $videoModel = $container->get(Video::class);
     $commentModel = $container->get(Commentaire::class);
     $reactionModel = $container->get(Reaction::class);
-    $videoModel = new Video($this->db);
+    $videoModel = new Video($db);
     $notificationModel = $container->get(Notification::class);
 
     $tokenService = new TokenService();
     $validationService = new ValidationService();
     $uploadService = new UploadService();
-    $db = $container->get(DatabaseInterface::class);
     $videoStreamService = new VideoStreamService($db);
 
     $twoFactorService = $container->get(TwoFactorService::class);
