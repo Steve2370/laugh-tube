@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 
 require_once __DIR__ . '/../bootstrap.php';
 
+use App\Controllers\AuthController;
 use App\Controllers\VideoController;
 use App\Controllers\CommentaireController;
 use App\Controllers\NotificationController;
@@ -34,6 +35,7 @@ try {
     $videoService = $container->get(VideoService::class);
     $analyticsService = $container->get(AnalyticsService::class);
     $auditService = $container->get(AuditService::class);
+    $authController = $container->get(AuthController::class);
     $commentaireService = $container->get(CommentaireService::class);
     $notificationService = $container->get(NotificationService::class);
     $db = $container->get(DatabaseInterface::class);
@@ -69,7 +71,12 @@ try {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+
+if (str_starts_with($uri, '/api/')) {
+    $uri = substr($uri, 4);
+    if ($uri === '') $uri = '/';
+}
 
 error_log("API Call: $method $uri");
 
@@ -83,9 +90,19 @@ try {
     elseif (preg_match('#^/videos/(\d+)$#', $uri, $matches) && $method === 'GET') {
         $videoController->getVideo((int)$matches[1]);
     }
+
+    if ($uri === '/login' && $method === 'POST') {
+        $authController->login();
+    }
+
+    elseif ($uri === '/register' && $method === 'POST') {
+        $authController->register();
+    }
+
     elseif (preg_match('#^/videos/(\d+)/comments$#', $uri, $matches) && $method === 'GET') {
         $commentController->list((int)$matches[1]);
     }
+
     elseif (preg_match('#^/videos/(\d+)/comments$#', $uri, $matches) && $method === 'POST') {
         $commentController->create((int)$matches[1]);
     }
