@@ -80,13 +80,15 @@ const Register = () => {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-pink-50 pt-16">
             <div className="w-full max-w-md px-6">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-                    <div className="text-center mb-8">
-                        <img
-                            src="/Laugh Tale Version2.png"
-                            alt="Laugh Tube Logo"
-                            className="h-12 w-auto scale-125 object-contain"
-                        />
-                        <h2 className="mt-4 text-3xl font-bold text-gray-900 mb-2">
+                    <div className="flex flex-col items-center mb-8">
+                        <div className="mb-8 flex justify-center">
+                            <img
+                                src="/Laugh Tale Version2.png"
+                                alt="Laugh Tube Logo"
+                                className="h-12 w-auto scale-125 object-contain"
+                            />
+                        </div>
+                        <h2 className="mt-2 text-3xl font-bold text-gray-900 mb-2">
                             Inscription
                         </h2>
                         <p className="text-gray-500">
