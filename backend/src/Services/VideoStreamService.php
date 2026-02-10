@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Interfaces\DatabaseInterface;
 use App\Models\Video;
 
 class VideoStreamService
@@ -12,9 +13,10 @@ class VideoStreamService
     public function __construct(
         private ?Video $videoModel = null,
         private ?string $videosDir = null,
-        private ?string $thumbsDir = null
+        private ?string $thumbsDir = null,
+        DatabaseInterface $db
     ) {
-        $this->videoModel = $videoModel ?? new Video();
+        $this->videoModel = $videoModel ?? new Video($db);
         $this->videosDir = $videosDir ?? ($_ENV['OUTPUT_DIR'] ?? __DIR__ . '/../../videos');
         $this->thumbsDir = $thumbsDir ?? ($this->videosDir . '/thumbs');
     }
