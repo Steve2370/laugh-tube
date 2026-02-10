@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useUserProfile } from '../hooks/useUserProfile';
+import {useAbonnement} from '../hooks/useAbonnement.js';
 import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
@@ -14,7 +14,6 @@ import {
     Video,
     Play,
 } from 'lucide-react';
-import useAbonnement from '../hooks/useAbonnement.js';
 
 const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
     const [coverPreview, setCoverPreview] = useState(null);
