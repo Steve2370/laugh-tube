@@ -71,7 +71,7 @@ export default function Navbar() {
                             className="text-black flex items-center"
                         >
                             <img
-                                src="/src/assets/Laugh Tale Version2.png"
+                                src="/frontend/src/assets/Laugh Tale Version2.png"
                                 alt="Laugh Tale Logo"
                                 className="h-12 w-auto scale-125 object-contain"
                             />
