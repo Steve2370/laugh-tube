@@ -78,3 +78,5 @@ export function useAbonnement(targetUserId) {
         refresh
     };
 }
+
+export default useAbonnement;
