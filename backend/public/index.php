@@ -87,36 +87,36 @@ try {
 
     $container = require __DIR__ . '/../config/container.php';
 
-    $userModel         = $container->get(User::class);
-    $videoModel        = $container->get(Video::class);
-    $commentModel      = $container->get(Commentaire::class);
-    $reactionModel     = $container->get(Reaction::class);
-//    $videoViewModel    = $container->get(VideoView::class);
+    $userModel = $container->get(User::class);
+    $videoModel = $container->get(Video::class);
+    $commentModel = $container->get(Commentaire::class);
+    $reactionModel = $container->get(Reaction::class);
+    $videoModel = new Video($this->db);
     $notificationModel = $container->get(Notification::class);
 
-    $tokenService       = new TokenService();
-    $validationService  = new ValidationService();
-    $uploadService      = new UploadService();
-    $videoStreamService = new VideoStreamService();
+    $tokenService = new TokenService();
+    $validationService = new ValidationService();
+    $uploadService = new UploadService();
+    $videoStreamService = $container->get(VideoStreamService::class);
 
-    $twoFactorService   = $container->get(TwoFactorService::class);
+    $twoFactorService = $container->get(TwoFactorService::class);
 
-    $authService        = $container->get(AuthService::class);
-    $authMiddleware     = $container->get(AuthMiddleware::class);
-    $auditService       = $container->get(AuditService::class);
-    $db                 = $container->get(DatabaseInterface::class);
-    $videoService       = $container->get(VideoService::class);
+    $authService = $container->get(AuthService::class);
+    $authMiddleware = $container->get(AuthMiddleware::class);
+    $auditService = $container->get(AuditService::class);
+    $db = $container->get(DatabaseInterface::class);
+    $videoService = $container->get(VideoService::class);
     $commentaireService = $container->get(CommentaireService::class);
-    $userService        = $container->get(UserService::class);
-    $analyticsService   = $container->get(AnalyticsService::class);
-    $notificationService= $container->get(NotificationService::class);
+    $userService = $container->get(UserService::class);
+    $analyticsService = $container->get(AnalyticsService::class);
+    $notificationService = $container->get(NotificationService::class);
 
     $reactionController = $container->get(ReactionController::class);
 
     // $reactionService = new ReactionService($reactionModel, $videoModel);
     // $reactionController = new ReactionController($reactionService, $authMiddleware, $auditService, $db);
 
-    $authController  = $container->get(AuthController::class);
+    $authController = $container->get(AuthController::class);
 
     $videoController = new VideoController(
         $videoService,
@@ -295,11 +295,16 @@ try {
         $videoController->userVideos((int)$m[1]); return;
     }
 
-    if (preg_match('#^/videos/(\d+)/play$#', $uri, $m) && $method === 'GET') {
-        $videoStreamService->stream((int)$m[1]); return;
+    if (preg_match('#^/videos/(\d+)/play$#', $uri, $matches) && $method === 'GET') {
+        $videoStreamService = new VideoStreamService();
+        $videoStreamService->stream((int)$matches[1]);
+        return;
     }
-    if (preg_match('#^/videos/(\d+)/thumbnail$#', $uri, $m) && $method === 'GET') {
-        $videoStreamService->serveThumbnail((int)$m[1]); return;
+
+    if (preg_match('#^/videos/(\d+)/play$#', $uri, $matches) && $method === 'GET') {
+        $videoStreamService = new VideoStreamService();
+        $videoStreamService->serveThumbnail((int)$matches[1]);
+        return;
     }
 
     if ($uri === '/videos/cleanup-sessions' && $method === 'POST') {
