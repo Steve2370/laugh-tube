@@ -29,29 +29,35 @@ use App\Services\ValidationService;
 use App\Services\VideoService;
 
 $container = new class {
-    private array $services = [];
+    private array $factories = [];
+    private array $instances = [];
 
     public function set(string $id, callable $factory): void {
-        $this->services[$id] = $factory;
+        $this->factories[$id] = $factory;
+        unset($this->instances[$id]);
     }
 
     public function get(string $id) {
-        if (!isset($this->services[$id])) {
+        if (isset($this->instances[$id])) {
+            return $this->instances[$id];
+        }
+
+        if (!isset($this->factories[$id])) {
             throw new Exception("Service {$id} not found in container");
         }
 
-        $factory = $this->services[$id];
-        return $factory($this);
+        $this->instances[$id] = ($this->factories[$id])($this);
+        return $this->instances[$id];
     }
 };
 
-$container->set(DatabaseInterface::class, function () {
-    static $db = null;
-    if ($db !== null) return $db;
-
+$container->set(DatabaseInterface::class, function() {
     $config = require __DIR__ . '/database.php';
-    return $db = new PostgreSQLDatabase($config);
+    $db = new PostgreSQLDatabase($config);
+    $db->connect();
+    return $db;
 });
+
 
 
 $container->set(DatabaseInterface::class, function() {
@@ -91,10 +97,6 @@ $container->set(Abonnement::class, function($c) {
 
 $container->set(UserRepository::class, function($c) {
     return new UserRepository($c->get(DatabaseInterface::class));
-});
-
-$container->set(Video::class, function($c) {
-    return new Video($c->get(DatabaseInterface::class));
 });
 
 $container->set(SessionRepository::class, function($c) {
