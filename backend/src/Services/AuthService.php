@@ -64,16 +64,16 @@ class AuthService
         $accessToken = $this->tokenService->generateToken($user);
         $refreshToken = $this->tokenService->generateRefreshToken($user);
 
-        try {
-            $this->sessionRepository->createSession(
-                $user['id'],
-                $refreshToken,
-                $_SERVER['REMOTE_ADDR'] ?? null,
-                $_SERVER['HTTP_USER_AGENT'] ?? null
-            );
-        } catch (\Exception $e) {
-            error_log("AuthService::login - Session creation error: " . $e->getMessage());
-        }
+//        try {
+//            $this->sessionRepository->createSession(
+//                $user['id'],
+//                $refreshToken,
+//                $_SERVER['REMOTE_ADDR'] ?? null,
+//                $_SERVER['HTTP_USER_AGENT'] ?? null
+//            );
+//        } catch (\Exception $e) {
+//            error_log("AuthService::login - Session creation error: " . $e->getMessage());
+//        }
 
 //        $this->auditService->logSecurityEvent(
 //            $user['id'],
