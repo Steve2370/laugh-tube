@@ -19,13 +19,28 @@ class AuthController
     public function register(): void
     {
         try {
-            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $raw = file_get_contents('php://input');
+            $data = json_decode($raw, true);
+
+            if (!is_array($data)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Body JSON invalide'
+                ]);
+                return;
+            }
+
 
             $username = SecurityHelper::sanitizeInput($data['username'] ?? '');
             $email = SecurityHelper::sanitizeInput($data['email'] ?? '');
             $password = $data['password'] ?? '';
 
-            $validationErrors = $this->validationService->validateRegistration($username, $email, $password);
+            $validationErrors = $this->validationService->validateRegistration([
+                'username' => $username,
+                'email' => $email,
+                'password' => $password
+            ]);
 
             if (!empty($validationErrors)) {
                 http_response_code(400);

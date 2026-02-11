@@ -81,7 +81,7 @@ const Register = () => {
             <div className="w-full max-w-md px-6">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
                     <div className="flex flex-col items-center mb-8">
-                        <div className="mb-8 flex justify-center">
+                        <div className="mb-2 flex justify-center">
                             <img
                                 src="/Laugh Tale Version2.png"
                                 alt="Laugh Tube Logo"
