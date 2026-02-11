@@ -13,7 +13,7 @@ class AuthService
     private UserRepository $userRepo;
     private LogRepository $logRepo;
     public function __construct(
-        UserRepository $userModel,
+        private UserRepository $userModel,
         LogRepository $logRepo,
         private TokenService $tokenService,
         private ValidationService $validationService,
@@ -104,7 +104,6 @@ class AuthService
 
     public function register(string $username, string $email, string $password): array
     {
-        // Validation
         $validationErrors = $this->validationService->validateRegistrationData($username, $email, $password);
         if (!empty($validationErrors)) {
             return [
@@ -122,8 +121,18 @@ class AuthService
                     'message' => 'Un utilisateur avec cet email ou ce nom existe déjà'
                 ];
             }
+            $userData = [
+                'username' => $username,
+                'email' => $email,
+                'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                'email_verified' => false,
+                'verification_token' => bin2hex(random_bytes(32)),
+                'verification_token_expires' => date('Y-m-d H:i:s', time() + 3600),
+                'ip_registration' => $_SERVER['REMOTE_ADDR'] ?? null,
+                'user_agent_registration' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ];
 
-            $userId = $this->userModel->create($username, $email, $password);
+            $userId = $this->userModel->createUser($userData);
 
             if (!$userId) {
                 return [
@@ -135,7 +144,6 @@ class AuthService
 
             $user = $this->userModel->findById($userId);
 
-            // Générer token de vérification email
             $verificationToken = bin2hex(random_bytes(32));
             $this->userModel->saveEmailVerificationToken($userId, $verificationToken);
 
@@ -146,12 +154,15 @@ class AuthService
             $refreshToken = $this->tokenService->generateRefreshToken($user);
 
             try {
-                $this->sessionRepository->createSession(
-                    $userId,
-                    $refreshToken,
-                    $_SERVER['REMOTE_ADDR'] ?? null,
-                    $_SERVER['HTTP_USER_AGENT'] ?? null
-                );
+                $sessionData = [
+                    'user_id' => $userId,
+                    'token' => $refreshToken,
+                    'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+                    'expires_at' => date('Y-m-d H:i:s', time() + 60 * 60 * 24 * 30)
+                ];
+
+                $this->sessionRepository->createSession($sessionData);
             } catch (\Exception $e) {
                 error_log("AuthService::register - Session creation error: " . $e->getMessage());
             }

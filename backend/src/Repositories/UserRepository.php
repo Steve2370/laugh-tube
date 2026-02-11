@@ -64,6 +64,15 @@ class UserRepository {
         return $result && $result['count'] > 0;
     }
 
+    public function existsByEmailOrUsername(string $email, string $username): bool
+    {
+        $sql = "SELECT id FROM users 
+                WHERE (email = $1 OR username = $2) AND deleted_at IS NULL";
+
+        $result = $this->db->fetchOne($sql, [$email, $username]);
+        return $result !== null;
+    }
+
     public function usernameExists(string $username): bool {
         $sql = "SELECT COUNT(*) as count FROM users WHERE username = $1 AND deleted_at IS NULL";
         $result = $this->db->fetchOne($sql, [$username]);
@@ -181,5 +190,9 @@ class UserRepository {
                     updated_at = NOW()
                 WHERE id = $2";
         return $this->db->execute($sql, [$passwordHash, $userId]);
+    }
+
+    public function saveEmailVerificationToken(int $userId, string $verificationToken)
+    {
     }
 }
