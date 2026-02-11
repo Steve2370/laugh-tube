@@ -24,27 +24,27 @@ class UserRepository {
             )
             RETURNING id";
 
-        $params = [
-            ':username' => $userData['username'] ?? null,
-            ':email' => $userData['email'] ?? null,
-            ':password_hash' => $userData['password_hash'] ?? null,
-            ':email_verified' => $userData['email_verified'] ?? false,
-            ':verification_token' => $userData['verification_token'] ?? null,
-            ':verification_token_expires' => $userData['verification_token_expires'] ?? null,
-            ':ip_registration' => $userData['ip_registration'] ?? null,
-            ':user_agent_registration' => $userData['user_agent_registration'] ?? null,
-        ];
+        $pdo = $this->db->getConnection();
 
-        error_log("CREATEUSER params=" . json_encode($params));
+        $emailVerified = (bool)($userData['email_verified'] ?? false);
+
+        $stmt = $pdo->prepare($sql);
+
+        $stmt->bindValue(':username', $userData['username'] ?? null, \PDO::PARAM_STR);
+        $stmt->bindValue(':email', $userData['email'] ?? null, \PDO::PARAM_STR);
+        $stmt->bindValue(':password_hash', $userData['password_hash'] ?? null, \PDO::PARAM_STR);
+
+        $stmt->bindValue(':email_verified', $emailVerified, \PDO::PARAM_BOOL);
+
+        $stmt->bindValue(':verification_token', $userData['verification_token'] ?? null, \PDO::PARAM_STR);
+        $stmt->bindValue(':verification_token_expires', $userData['verification_token_expires'] ?? null, \PDO::PARAM_STR);
+        $stmt->bindValue(':ip_registration', $userData['ip_registration'] ?? null, \PDO::PARAM_STR);
+        $stmt->bindValue(':user_agent_registration', $userData['user_agent_registration'] ?? null, \PDO::PARAM_STR);
 
         try {
-            $pdo = $this->db->getConnection();
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-
+            $stmt->execute();
             $id = $stmt->fetchColumn();
             return $id !== false ? (int)$id : null;
-
         } catch (\Throwable $e) {
             error_log("Error creating user (PDO): " . $e->getMessage());
             return null;
