@@ -89,7 +89,7 @@ $container->set(ReactionController::class, function($c) {
 });
 
 
-$container->set(UserService::class, function($c) {
+$container->set(UserService::class, function ($c) {
     return new UserService(
         $c->get(User::class),
         $c->get(Video::class),
@@ -97,10 +97,15 @@ $container->set(UserService::class, function($c) {
         $c->get(DatabaseInterface::class),
         $c->get(ValidationService::class),
         $c->get(AuditService::class),
-        $c->has(NotificationCreationService::class) ? $c->get(NotificationCreationService::class) : null,
-        $c->has(UploadService::class) ? $c->get(UploadService::class) : null
+        $c->has(NotificationCreationService::class)
+            ? $c->get(NotificationCreationService::class)
+            : null,
+        $c->has(UploadService::class)
+            ? $c->get(UploadService::class)
+            : null
     );
 });
+
 
 
 $container->set(Video::class, function($c) {
