@@ -41,6 +41,11 @@ class AuthController
                 'email' => $email,
                 'password' => $password
             ]);
+            error_log("REGISTER raw=" . substr($raw, 0, 500));
+            error_log("REGISTER decoded keys=" . implode(',', array_keys($data ?? [])));
+            error_log("REGISTER username=[" . ($data['username'] ?? 'MISSING') . "] email=[" . ($data['email'] ?? 'MISSING') . "]");
+            error_log("REGISTER content-type=" . ($_SERVER['CONTENT_TYPE'] ?? 'none'));
+
 
             if (!empty($validationErrors)) {
                 http_response_code(400);
