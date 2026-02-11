@@ -154,8 +154,8 @@ class AuthService
                 ];
             }
 
-            $verificationToken = bin2hex(random_bytes(32));
-            $this->userModel->saveEmailVerificationToken($userId, $verificationToken);
+//            $verificationToken = bin2hex(random_bytes(32));
+//            $this->userModel->saveEmailVerificationToken($userId, $verificationToken);
 
             // TODO: Envoyer email de vérification
             // $this->emailService->sendVerificationEmail($email, $verificationToken);
