@@ -52,10 +52,25 @@ class UserRepository {
     }
 
 
-    public function findById(int $userId): ?array {
-        $sql = "SELECT * FROM users WHERE id = $1 AND deleted_at IS NULL";
-        return $this->db->fetchOne($sql, [$userId]);
+    public function findById(int $id): ?array
+    {
+        $sql = "SELECT id, username, email, role, profile_image, email_verified
+            FROM users
+            WHERE id = :id
+            LIMIT 1";
+
+        try {
+            $pdo = $this->db->getConnection();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $row ?: null;
+        } catch (\Throwable $e) {
+            error_log("findById error: " . $e->getMessage());
+            return null;
+        }
     }
+
 
     public function findByEmail(string $email): ?array {
         $sql = "SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL";

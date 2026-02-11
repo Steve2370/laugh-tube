@@ -143,6 +143,16 @@ class AuthService
             }
 
             $user = $this->userModel->findById($userId);
+            if (!$user) {
+                $user = [
+                    'id' => $userId,
+                    'username' => $username,
+                    'email' => $email,
+                    'role' => 'membre',
+                    'profile_image' => null,
+                    'email_verified' => false
+                ];
+            }
 
             $verificationToken = bin2hex(random_bytes(32));
             $this->userModel->saveEmailVerificationToken($userId, $verificationToken);
