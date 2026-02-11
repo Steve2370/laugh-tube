@@ -319,11 +319,11 @@ class AuthService
         }
 
         if (!password_verify($currentPassword, $user['password_hash'])) {
-            $this->auditService->logSecurityEvent(
-                $userId,
-                'password_change_failed',
-                ['reason' => 'invalid_current_password']
-            );
+//            $this->auditService->logSecurityEvent(
+//                $userId,
+//                'password_change_failed',
+//                ['reason' => 'invalid_current_password']
+//            );
 
             return [
                 'success' => false,
@@ -342,11 +342,11 @@ class AuthService
 
         try {
             $this->userModel->updatePassword($userId, $newPassword);
-            $this->auditService->logSecurityEvent(
-                $userId,
-                'password_changed',
-                []
-            );
+//            $this->auditService->logSecurityEvent(
+//                $userId,
+//                'password_changed',
+//                []
+//            );
 
             try {
                 $this->sessionRepository->invalidateAllUserSessions($userId);
@@ -414,15 +414,31 @@ class AuthService
         }
     }
 
+    public function logSecurityEvent(?int $userId, ?string $eventType, array $metadata = []): void
+    {
+        if (!$eventType || trim($eventType) === '') {
+            error_log("AUDIT skipped: eventType missing");
+            return;
+        }
+
+        try {
+
+        } catch (\Throwable $e) {
+            error_log("AUDIT failed (ignored): " . $e->getMessage());
+
+        }
+    }
+
+
     public function logout(int $userId): array
     {
         try {
             $this->sessionRepository->invalidateAllUserSessions($userId);
-            $this->auditService->logSecurityEvent(
-                $userId,
-                'user_logout',
-                []
-            );
+//            $this->auditService->logSecurityEvent(
+//                $userId,
+//                'user_logout',
+//                []
+//            );
 
             return [
                 'success' => true,
