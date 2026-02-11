@@ -10,7 +10,6 @@ class AuthMiddleware
 {
     private ?array $user = null;
     private ?string $token = null;
-    private ?int $userId = null;
 
     public function __construct(
         private TokenService $tokenService,
@@ -23,59 +22,61 @@ class AuthMiddleware
     {
     }
 
-    public function getUserId(): ?int
-    {
-        return $this->userId;
-    }
-
     public static function requireAuth()
     {
     }
 
-    public function handle(): ?array
+    public function handle(): bool
     {
         error_log("AUTHMIDDLEWARE auth_header=" . ($_SERVER['HTTP_AUTHORIZATION'] ?? 'MISSING'));
+        error_log("AUTHMIDDLEWARE headers=" . json_encode(function_exists('getallheaders') ? getallheaders() : []));
 
         try {
-            $token = $this->getTokenFromRequest();
-            if (!$token) return null;
+            $this->token = $this->getTokenFromRequest();
+            if (!$this->token) {
+                return false;
+            }
 
-            $payload = $this->tokenService->validateToken($token);
-            if (!$payload) return null;
+            $payload = $this->tokenService->validateToken($this->token);
+
+            if (!$payload) {
+                return false;
+            }
 
             $userId = $payload['sub'] ?? null;
-            if (!$userId) return null;
+
+            if (!$userId) {
+                return false;
+            }
 
             $userCheck = $this->db->fetchOne(
-                "SELECT id, username, email, role, email_verified, two_fa_enabled, deleted_at
-             FROM users
-             WHERE id = :id
-             LIMIT 1",
-                [':id' => (int)$userId]
+                "SELECT id, deleted_at FROM users WHERE id = $1",
+                [$userId]
             );
 
             if (!$userCheck || $userCheck['deleted_at'] !== null) {
-                return null;
+                return false;
             }
 
             if (isset($payload['session_id'])) {
                 $session = $this->sessionRepository->findById($payload['session_id']);
-                if (!$session || empty($session['is_valid'])) return null;
-                if ((int)$session['user_id'] !== (int)$userId) return null;
+
+                if (!$session || !$session['is_valid']) {
+                    return false;
+                }
+
+                if ($session['user_id'] != $userId) {
+                    return false;
+                }
             }
 
-            return [
-                'user_id' => (int)$userCheck['id'],
-                'username' => $userCheck['username'] ?? ($payload['username'] ?? null),
-                'email' => $userCheck['email'] ?? null,
-                'role' => $userCheck['role'] ?? ($payload['role'] ?? 'membre'),
-                'email_verified' => (bool)($userCheck['email_verified'] ?? false),
-                'two_fa_enabled' => (bool)($userCheck['two_fa_enabled'] ?? false),
-            ];
+            $this->user = $payload;
 
-        } catch (\Throwable $e) {
+            return true;
+
+        } catch (\Exception $e) {
             error_log("AuthMiddleware::handle - Error: " . $e->getMessage());
-            return null;
+            return false;
         }
     }
 
