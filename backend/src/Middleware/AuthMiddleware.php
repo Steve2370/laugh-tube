@@ -28,6 +28,9 @@ class AuthMiddleware
 
     public function handle(): bool
     {
+        error_log("AUTHMIDDLEWARE FILE=" . __FILE__);
+        error_log("AUTHMIDDLEWARE CLASS=" . __CLASS__);
+
         try {
             $this->token = $this->getTokenFromRequest();
             if (!$this->token) {
