@@ -28,9 +28,6 @@ class AuthMiddleware
 
     public function handle(): bool
     {
-        error_log("AUTHMIDDLEWARE auth_header=" . ($_SERVER['HTTP_AUTHORIZATION'] ?? 'MISSING'));
-        error_log("AUTHMIDDLEWARE headers=" . json_encode(function_exists('getallheaders') ? getallheaders() : []));
-
         try {
             $this->token = $this->getTokenFromRequest();
             if (!$this->token) {
