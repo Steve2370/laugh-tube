@@ -11,10 +11,16 @@ class UserRepository {
         $this->db = $db;
     }
 
-    public function createUser(array $userData): ?int {
-        $sql = "INSERT INTO users (username, email, password_hash, email_verified, verification_token, verification_token_expires, ip_registration, user_agent_registration, created_at) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) 
-                RETURNING id";
+    public function createUser(array $userData): ?int
+    {
+        $sql = "INSERT INTO users (
+                username, email, password_hash, email_verified,
+                verification_token, verification_token_expires,
+                ip_registration, user_agent_registration, created_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+            RETURNING id";
+
         $params = [
             $userData['username'] ?? null,
             $userData['email'] ?? null,
@@ -27,6 +33,7 @@ class UserRepository {
         ];
 
         error_log("CREATEUSER params=" . json_encode($params));
+
         $conn = $this->db->getConnection();
         $result = pg_query_params($conn, $sql, $params);
 
@@ -34,27 +41,9 @@ class UserRepository {
             error_log("PG ERROR: " . pg_last_error($conn));
             return null;
         }
+
         $row = pg_fetch_assoc($result);
         return $row ? (int)$row['id'] : null;
-
-
-        try {
-            $result = $this->db->fetchOne($sql, [
-                $userData['username'],
-                $userData['email'],
-                $userData['password_hash'],
-                $userData['email_verified'] ?? false,
-                $userData['verification_token'] ?? null,
-                $userData['verification_token_expires'] ?? null,
-                $userData['ip_registration'] ?? null,
-                $userData['user_agent_registration'] ?? null
-            ]);
-
-            return $result ? (int)$result['id'] : null;
-        } catch (\Exception $e) {
-            error_log("Error creating user: " . $e->getMessage());
-            return null;
-        }
     }
 
     public function findById(int $userId): ?array {
