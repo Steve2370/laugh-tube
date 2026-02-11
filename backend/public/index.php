@@ -167,7 +167,11 @@ try {
     }
 
     if ($uri === '/register' && $method === 'POST') {
-        $authController->register(); return;
+        $authController->register();
+        error_log("DEBUG index.php uri=" . ($_SERVER['REQUEST_URI'] ?? 'null') .
+            " method=" . ($_SERVER['REQUEST_METHOD'] ?? 'null'));
+
+        return;
     }
 
     if ($uri === '/auth/refresh' && $method === 'POST') {
