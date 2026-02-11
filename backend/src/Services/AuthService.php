@@ -123,11 +123,11 @@ class AuthService
             }
             $userData = [
                 'username' => $username,
-                'email' => null,
+                'email' => $email,
                 'password_hash' => password_hash($password, PASSWORD_DEFAULT),
                 'email_verified' => true,
-                'verification_token' => bin2hex(random_bytes(32)),
-                'verification_token_expires' => date('Y-m-d H:i:s', time() + 3600),
+                'verification_token' => bin2hex(random_bytes(32)) ?? null,
+                'verification_token_expires' => date('Y-m-d H:i:s', time() + 3600) ?? null,
                 'ip_registration' => $_SERVER['REMOTE_ADDR'] ?? null,
                 'user_agent_registration' => $_SERVER['HTTP_USER_AGENT'] ?? null,
             ];
