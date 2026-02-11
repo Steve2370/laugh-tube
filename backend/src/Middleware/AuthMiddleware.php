@@ -30,51 +30,82 @@ class AuthMiddleware
     {
         error_log("AUTHMIDDLEWARE FILE=" . __FILE__);
         error_log("AUTHMIDDLEWARE CLASS=" . __CLASS__);
+        error_log("AUTHMIDDLEWARE auth_header=" . ($_SERVER['HTTP_AUTHORIZATION'] ?? 'MISSING'));
 
         try {
             $this->token = $this->getTokenFromRequest();
             if (!$this->token) {
+                error_log("AUTHMIDDLEWARE token_extracted=NO");
                 return false;
             }
+            error_log("AUTHMIDDLEWARE token_extracted=YES");
 
             $payload = $this->tokenService->validateToken($this->token);
+            error_log("AUTHMIDDLEWARE payload=" . json_encode($payload));
 
-            if (!$payload) {
+            if (!is_array($payload)) {
                 return false;
             }
 
             $userId = $payload['sub'] ?? null;
-
-            if (!$userId) {
+            if (!$userId || !is_numeric($userId)) {
+                error_log("AUTHMIDDLEWARE missing_or_invalid_sub");
                 return false;
             }
+            $userId = (int)$userId;
 
             $userCheck = $this->db->fetchOne(
-                "SELECT id, deleted_at FROM users WHERE id = $1",
+                "SELECT id, username, email, role, email_verified, two_fa_enabled, deleted_at
+             FROM users
+             WHERE id = $1
+             LIMIT 1",
                 [$userId]
             );
 
-            if (!$userCheck || $userCheck['deleted_at'] !== null) {
+            if (!$userCheck || !empty($userCheck['deleted_at'])) {
+                error_log("AUTHMIDDLEWARE user_not_found_or_deleted userId={$userId}");
                 return false;
             }
 
-            if (isset($payload['session_id'])) {
-                $session = $this->sessionRepository->findById($payload['session_id']);
+            if (!empty($payload['session_id'])) {
+                $sessionId = $payload['session_id'];
 
-                if (!$session || !$session['is_valid']) {
+                $session = $this->sessionRepository->findById($sessionId);
+
+                if (!$session) {
+                    error_log("AUTHMIDDLEWARE session_not_found session_id={$sessionId}");
                     return false;
                 }
 
-                if ($session['user_id'] != $userId) {
+                if (empty($session['is_valid'])) {
+                    error_log("AUTHMIDDLEWARE session_invalid session_id={$sessionId}");
+                    return false;
+                }
+
+                if ((int)($session['user_id'] ?? 0) !== $userId) {
+                    error_log("AUTHMIDDLEWARE session_user_mismatch session_user_id=" . ($session['user_id'] ?? 'null') . " token_sub={$userId}");
                     return false;
                 }
             }
 
-            $this->user = $payload;
+            $this->user = [
+                'user_id' => $userId,
+                'username' => $userCheck['username'] ?? ($payload['username'] ?? null),
+                'email' => $userCheck['email'] ?? null,
+                'role' => $userCheck['role'] ?? ($payload['role'] ?? 'membre'),
+                'email_verified' => (bool)($userCheck['email_verified'] ?? false),
+                'two_fa_enabled' => (bool)($userCheck['two_fa_enabled'] ?? false),
+
+                'sub' => $userId,
+                'session_id' => $payload['session_id'] ?? null,
+                'iat' => $payload['iat'] ?? null,
+                'exp' => $payload['exp'] ?? null,
+                'jti' => $payload['jti'] ?? null,
+            ];
 
             return true;
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log("AuthMiddleware::handle - Error: " . $e->getMessage());
             return false;
         }
