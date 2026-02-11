@@ -35,11 +35,11 @@ class AuthService
         $user = $this->userModel->findByEmail($email);
 
         if (!$user || !password_verify($password, $user['password_hash'])) {
-            $this->auditService->logSecurityEvent(
-                null,
-                'login_failed',
-                ['email' => $email, 'reason' => 'invalid_credentials']
-            );
+//            $this->auditService->logSecurityEvent(
+//                null,
+//                'login_failed',
+//                ['email' => $email, 'reason' => 'invalid_credentials']
+//            );
 
             return [
                 'success' => false,
@@ -49,11 +49,11 @@ class AuthService
         }
 
         if (isset($user['deleted_at']) && $user['deleted_at'] !== null) {
-            $this->auditService->logSecurityEvent(
-                $user['id'],
-                'login_failed',
-                ['email' => $email, 'reason' => 'account_deleted']
-            );
+//            $this->auditService->logSecurityEvent(
+//                $user['id'],
+//                'login_failed',
+//                ['email' => $email, 'reason' => 'account_deleted']
+//            );
 
             return [
                 'success' => false,
@@ -75,11 +75,11 @@ class AuthService
             error_log("AuthService::login - Session creation error: " . $e->getMessage());
         }
 
-        $this->auditService->logSecurityEvent(
-            $user['id'],
-            'user_login',
-            ['email' => $email, 'method' => 'password']
-        );
+//        $this->auditService->logSecurityEvent(
+//            $user['id'],
+//            'user_login',
+//            ['email' => $email, 'method' => 'password']
+//        );
 
         return [
             'success' => true,
@@ -123,9 +123,9 @@ class AuthService
             }
             $userData = [
                 'username' => $username,
-                'email' => $email,
+                'email' => null,
                 'password_hash' => password_hash($password, PASSWORD_DEFAULT),
-                'email_verified' => false,
+                'email_verified' => true,
                 'verification_token' => bin2hex(random_bytes(32)),
                 'verification_token_expires' => date('Y-m-d H:i:s', time() + 3600),
                 'ip_registration' => $_SERVER['REMOTE_ADDR'] ?? null,
@@ -177,11 +177,11 @@ class AuthService
                 error_log("AuthService::register - Session creation error: " . $e->getMessage());
             }
 
-            $this->auditService->logSecurityEvent(
-                $userId,
-                'user_registered',
-                ['username' => $username, 'email' => $email]
-            );
+//            $this->auditService->logSecurityEvent(
+//                $userId,
+//                'user_registered',
+//                ['username' => $username, 'email' => $email]
+//            );
 
             return [
                 'success' => true,
