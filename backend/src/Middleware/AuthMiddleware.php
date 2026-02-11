@@ -56,37 +56,22 @@ class AuthMiddleware
 
             $userCheck = $this->db->fetchOne(
                 "SELECT id, username, email, role, email_verified, two_fa_enabled, deleted_at
-             FROM users
-             WHERE id = $1
-             LIMIT 1",
-                [$userId]
+            FROM users
+            WHERE id = :id
+            LIMIT 1",
+                [':id' => (int)$userId]
             );
 
-            if (!$userCheck || !empty($userCheck['deleted_at'])) {
-                error_log("AUTHMIDDLEWARE user_not_found_or_deleted userId={$userId}");
+            if (!$userCheck) {
+                error_log("AUTHMIDDLEWARE user_not_found userId={$userId}");
                 return false;
             }
 
-            if (!empty($payload['session_id'])) {
-                $sessionId = $payload['session_id'];
-
-                $session = $this->sessionRepository->findById($sessionId);
-
-                if (!$session) {
-                    error_log("AUTHMIDDLEWARE session_not_found session_id={$sessionId}");
-                    return false;
-                }
-
-                if (empty($session['is_valid'])) {
-                    error_log("AUTHMIDDLEWARE session_invalid session_id={$sessionId}");
-                    return false;
-                }
-
-                if ((int)($session['user_id'] ?? 0) !== $userId) {
-                    error_log("AUTHMIDDLEWARE session_user_mismatch session_user_id=" . ($session['user_id'] ?? 'null') . " token_sub={$userId}");
-                    return false;
-                }
+            if (!empty($userCheck['deleted_at'])) {
+                error_log("AUTHMIDDLEWARE user_deleted userId={$userId}");
+                return false;
             }
+
 
             $this->user = [
                 'user_id' => $userId,
