@@ -319,11 +319,11 @@ class AuthService
         }
 
         if (!password_verify($currentPassword, $user['password_hash'])) {
-//            $this->auditService->logSecurityEvent(
-//                $userId,
-//                'password_change_failed',
-//                ['reason' => 'invalid_current_password']
-//            );
+            $this->auditService->logSecurityEvent(
+                $userId,
+                'password_change_failed',
+                ['reason' => 'invalid_current_password']
+            );
 
             return [
                 'success' => false,
@@ -342,11 +342,11 @@ class AuthService
 
         try {
             $this->userModel->updatePassword($userId, $newPassword);
-//            $this->auditService->logSecurityEvent(
-//                $userId,
-//                'password_changed',
-//                []
-//            );
+            $this->auditService->logSecurityEvent(
+                $userId,
+                'password_changed',
+                []
+            );
 
             try {
                 $this->sessionRepository->invalidateAllUserSessions($userId);
@@ -414,44 +414,15 @@ class AuthService
         }
     }
 
-    public function logSecurityEvent(?int $userId, ?string $eventType, array $metadata = []): void
-    {
-        if (!$eventType || trim($eventType) === '') {
-            error_log("AUDIT skipped: eventType missing");
-            return;
-        }
-
-        try {
-            $sql = "INSERT INTO audit_logs (user_id, event_type, ip_address, user_agent, metadata, created_at)
-        VALUES (:user_id, :event_type, :ip, :ua, :metadata, NOW())";
-
-            $pdo = $this->db->getConnection();
-            $stmt = $pdo->prepare($sql);
-
-            $stmt->bindValue(':user_id', $userId, $userId === null ? \PDO::PARAM_NULL : \PDO::PARAM_INT);
-            $stmt->bindValue(':event_type', $eventType, \PDO::PARAM_STR);
-            $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR'] ?? null, \PDO::PARAM_STR);
-            $stmt->bindValue(':ua', $_SERVER['HTTP_USER_AGENT'] ?? null, \PDO::PARAM_STR);
-            $stmt->bindValue(':metadata', json_encode($metadata, JSON_UNESCAPED_UNICODE), \PDO::PARAM_STR);
-
-            $stmt->execute();
-
-        } catch (\Throwable $e) {
-            error_log("AUDIT failed (ignored): " . $e->getMessage());
-
-        }
-    }
-
-
     public function logout(int $userId): array
     {
         try {
             $this->sessionRepository->invalidateAllUserSessions($userId);
-//            $this->auditService->logSecurityEvent(
-//                $userId,
-//                'user_logout',
-//                []
-//            );
+            $this->auditService->logSecurityEvent(
+                $userId,
+                'user_logout',
+                []
+            );
 
             return [
                 'success' => true,
