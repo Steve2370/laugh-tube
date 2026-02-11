@@ -45,6 +45,8 @@ class AuthController
             error_log("REGISTER decoded keys=" . implode(',', array_keys($data ?? [])));
             error_log("REGISTER username=[" . ($data['username'] ?? 'MISSING') . "] email=[" . ($data['email'] ?? 'MISSING') . "]");
             error_log("REGISTER content-type=" . ($_SERVER['CONTENT_TYPE'] ?? 'none'));
+            error_log("REGISTER sanitized username=<$username> email=<$email> pass_len=" . strlen($password));
+
 
 
             if (!empty($validationErrors)) {
