@@ -13,6 +13,7 @@ class UserRepository {
 
     public function createUser(array $userData): ?int
     {
+        error_log("CREATEUSER HIT file=" . __FILE__ . " line=" . __LINE__);
         $sql = "INSERT INTO users (
                 username, email, password_hash, email_verified,
                 verification_token, verification_token_expires,
