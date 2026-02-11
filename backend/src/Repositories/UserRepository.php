@@ -72,10 +72,25 @@ class UserRepository {
     }
 
 
-    public function findByEmail(string $email): ?array {
-        $sql = "SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL";
-        return $this->db->fetchOne($sql, [$email]);
+    public function findByEmail(string $email): ?array
+    {
+        $sql = "SELECT id, username, email, password_hash, role, profile_image, email_verified, deleted_at, two_fa_enabled
+            FROM users
+            WHERE email = :email
+            LIMIT 1";
+
+        try {
+            $pdo = $this->db->getConnection();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':email' => $email]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $row ?: null;
+        } catch (\Throwable $e) {
+            error_log("findByEmail error: " . $e->getMessage());
+            return null;
+        }
     }
+
 
     public function findByUsername(string $username): ?array {
         $sql = "SELECT * FROM users WHERE username = $1 AND deleted_at IS NULL";

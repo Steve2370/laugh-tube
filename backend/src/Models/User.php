@@ -12,13 +12,23 @@ class User
 
     public function findByEmail(string $email): ?array
     {
-        $sql = "SELECT id, username, email, password_hash, role, profile_image, profile_cover, bio, 
-                       created_at, email_verified, two_fa_enabled, deleted_at
-                FROM users 
-                WHERE email = $1 AND deleted_at IS NULL";
+        $sql = "SELECT id, username, email, password_hash, role, profile_image, email_verified, deleted_at, two_fa_enabled
+            FROM users
+            WHERE email = :email
+            LIMIT 1";
 
-        return $this->db->fetchOne($sql, [$email]);
+        try {
+            $pdo = $this->db->getConnection();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':email' => $email]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $row ?: null;
+        } catch (\Throwable $e) {
+            error_log("findByEmail error: " . $e->getMessage());
+            return null;
+        }
     }
+
 
     public function findById(int $id): ?array
     {
