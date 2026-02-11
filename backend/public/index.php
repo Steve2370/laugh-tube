@@ -370,21 +370,32 @@ try {
     }
 
     if ($uri === '/notifications' && $method === 'GET') {
-        $user = AuthMiddleware::requireAuth();
-        $notificationController->getNotifications($user['sub']); return;
+        $user = $authMiddleware->handle();
+        if (!$user) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Non authentifié']);
+            return;
+        }
+        $notificationController->list();
+        return;
     }
+
+
     if ($uri === '/notifications/unread-count' && $method === 'GET') {
         $user = AuthMiddleware::requireAuth();
         $notificationController->getUnreadCount($user['sub']); return;
     }
+
     if (preg_match('#^/notifications/(\d+)/read$#', $uri, $m) && $method === 'PUT') {
         $user = AuthMiddleware::requireAuth();
         $notificationController->markAsRead((int)$m[1], $user['sub']); return;
     }
+
     if ($uri === '/notifications/mark-all-read' && $method === 'PUT') {
         $user = AuthMiddleware::requireAuth();
         $notificationController->markAllAsRead($user['sub']); return;
     }
+
     if (preg_match('#^/notifications/(\d+)$#', $uri, $m) && $method === 'DELETE') {
         $user = AuthMiddleware::requireAuth();
         $notificationController->deleteNotification((int)$m[1], $user['sub']); return;
