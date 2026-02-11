@@ -26,75 +26,45 @@ class AuthMiddleware
     {
     }
 
-    public function handle(): bool
+    public function handle(): ?array
     {
-        error_log("AUTHMIDDLEWARE FILE=" . __FILE__);
-        error_log("AUTHMIDDLEWARE CLASS=" . __CLASS__);
-        error_log("AUTHMIDDLEWARE auth_header=" . ($_SERVER['HTTP_AUTHORIZATION'] ?? 'MISSING'));
-
         try {
-            $this->token = $this->getTokenFromRequest();
-            if (!$this->token) {
-                error_log("AUTHMIDDLEWARE token_extracted=NO");
-                return false;
-            }
-            error_log("AUTHMIDDLEWARE token_extracted=YES");
+            $token = $this->getTokenFromRequest();
+            if (!$token) return null;
 
-            $payload = $this->tokenService->validateToken($this->token);
-            error_log("AUTHMIDDLEWARE payload=" . json_encode($payload));
-
-            if (!is_array($payload)) {
-                return false;
-            }
+            $payload = $this->tokenService->validateToken($token);
+            if (!$payload) return null;
 
             $userId = $payload['sub'] ?? null;
-            if (!$userId || !is_numeric($userId)) {
-                error_log("AUTHMIDDLEWARE missing_or_invalid_sub");
-                return false;
-            }
-            $userId = (int)$userId;
+            if (!$userId) return null;
 
             $userCheck = $this->db->fetchOne(
                 "SELECT id, username, email, role, email_verified, two_fa_enabled, deleted_at
-            FROM users
-            WHERE id = :id
-            LIMIT 1",
-                [':id' => (int)$userId]
+             FROM users
+             WHERE id = $1
+             LIMIT 1",
+                [(int)$userId]
             );
 
-            if (!$userCheck) {
-                error_log("AUTHMIDDLEWARE user_not_found userId={$userId}");
-                return false;
+            if (!$userCheck || $userCheck['deleted_at'] !== null) {
+                return null;
             }
 
-            if (!empty($userCheck['deleted_at'])) {
-                error_log("AUTHMIDDLEWARE user_deleted userId={$userId}");
-                return false;
-            }
-
-
-            $this->user = [
-                'user_id' => $userId,
-                'username' => $userCheck['username'] ?? ($payload['username'] ?? null),
-                'email' => $userCheck['email'] ?? null,
-                'role' => $userCheck['role'] ?? ($payload['role'] ?? 'membre'),
-                'email_verified' => (bool)($userCheck['email_verified'] ?? false),
-                'two_fa_enabled' => (bool)($userCheck['two_fa_enabled'] ?? false),
-
-                'sub' => $userId,
-                'session_id' => $payload['session_id'] ?? null,
-                'iat' => $payload['iat'] ?? null,
-                'exp' => $payload['exp'] ?? null,
-                'jti' => $payload['jti'] ?? null,
+            return [
+                'user_id' => (int)$userCheck['id'],
+                'username' => $userCheck['username'],
+                'email' => $userCheck['email'],
+                'role' => $userCheck['role'],
+                'email_verified' => (bool)$userCheck['email_verified'],
+                'two_fa_enabled' => (bool)$userCheck['two_fa_enabled'],
             ];
-
-            return true;
 
         } catch (\Throwable $e) {
             error_log("AuthMiddleware::handle - Error: " . $e->getMessage());
-            return false;
+            return null;
         }
     }
+
 
     public function handleOptional(): bool
     {
