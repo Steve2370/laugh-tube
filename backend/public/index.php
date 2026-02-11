@@ -370,16 +370,9 @@ try {
     }
 
     if ($uri === '/notifications' && $method === 'GET') {
-        $user = $authMiddleware->handle();
-        if (!$user) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'error' => 'Non authentifié']);
-            return;
-        }
-        $notificationController->list();
-        return;
+        $user = AuthMiddleware::requireAuth();
+        $notificationController->getNotifications($user['sub']); return;
     }
-
 
     if ($uri === '/notifications/unread-count' && $method === 'GET') {
         $user = AuthMiddleware::requireAuth();
