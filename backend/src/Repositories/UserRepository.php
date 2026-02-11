@@ -13,39 +13,44 @@ class UserRepository {
 
     public function createUser(array $userData): ?int
     {
-        error_log("CREATEUSER HIT file=" . __FILE__ . " line=" . __LINE__);
         $sql = "INSERT INTO users (
                 username, email, password_hash, email_verified,
                 verification_token, verification_token_expires,
                 ip_registration, user_agent_registration, created_at
+            ) VALUES (
+                :username, :email, :password_hash, :email_verified,
+                :verification_token, :verification_token_expires,
+                :ip_registration, :user_agent_registration, NOW()
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
             RETURNING id";
 
         $params = [
-            $userData['username'] ?? null,
-            $userData['email'] ?? null,
-            $userData['password_hash'] ?? null,
-            $userData['email_verified'] ?? false,
-            $userData['verification_token'] ?? null,
-            $userData['verification_token_expires'] ?? null,
-            $userData['ip_registration'] ?? null,
-            $userData['user_agent_registration'] ?? null,
+            ':username' => $userData['username'] ?? null,
+            ':email' => $userData['email'] ?? null,
+            ':password_hash' => $userData['password_hash'] ?? null,
+            ':email_verified' => $userData['email_verified'] ?? false,
+            ':verification_token' => $userData['verification_token'] ?? null,
+            ':verification_token_expires' => $userData['verification_token_expires'] ?? null,
+            ':ip_registration' => $userData['ip_registration'] ?? null,
+            ':user_agent_registration' => $userData['user_agent_registration'] ?? null,
         ];
 
         error_log("CREATEUSER params=" . json_encode($params));
 
-        $conn = $this->db->getConnection();
-        $result = pg_query_params($conn, $sql, $params);
+        try {
+            $pdo = $this->db->getConnection();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
 
-        if (!$result) {
-            error_log("PG ERROR: " . pg_last_error($conn));
+            $id = $stmt->fetchColumn();
+            return $id !== false ? (int)$id : null;
+
+        } catch (\Throwable $e) {
+            error_log("Error creating user (PDO): " . $e->getMessage());
             return null;
         }
-
-        $row = pg_fetch_assoc($result);
-        return $row ? (int)$row['id'] : null;
     }
+
 
     public function findById(int $userId): ?array {
         $sql = "SELECT * FROM users WHERE id = $1 AND deleted_at IS NULL";
