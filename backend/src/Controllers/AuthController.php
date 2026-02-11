@@ -112,16 +112,10 @@ class AuthController
             $result = $this->authService->login($email, $password);
 
             if (!$result['success']) {
-                $this->auditService->logSecurityEvent(
-                    null,
-                    'login_failed',
-                    ['email' => $email, 'reason' => $result['message']]
-                );
-
                 http_response_code($result['code'] ?? 401);
                 echo json_encode([
                     'success' => false,
-                    'error' => $result['message']
+                    'error' => $result['message'] ?? 'Erreur login'
                 ]);
                 return;
             }
@@ -135,8 +129,9 @@ class AuthController
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'token' => $result['token'],
-                'user' => $result['user']
+                'token' => $result['data']['access_token'] ?? null,
+                'refresh_token' => $result['data']['refresh_token'] ?? null,
+                'user' => $result['data']['user'] ?? null
             ]);
 
         } catch (\Exception $e) {
