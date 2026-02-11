@@ -422,6 +422,19 @@ class AuthService
         }
 
         try {
+            $sql = "INSERT INTO audit_logs (user_id, event_type, ip_address, user_agent, metadata, created_at)
+        VALUES (:user_id, :event_type, :ip, :ua, :metadata, NOW())";
+
+            $pdo = $this->db->getConnection();
+            $stmt = $pdo->prepare($sql);
+
+            $stmt->bindValue(':user_id', $userId, $userId === null ? \PDO::PARAM_NULL : \PDO::PARAM_INT);
+            $stmt->bindValue(':event_type', $eventType, \PDO::PARAM_STR);
+            $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR'] ?? null, \PDO::PARAM_STR);
+            $stmt->bindValue(':ua', $_SERVER['HTTP_USER_AGENT'] ?? null, \PDO::PARAM_STR);
+            $stmt->bindValue(':metadata', json_encode($metadata, JSON_UNESCAPED_UNICODE), \PDO::PARAM_STR);
+
+            $stmt->execute();
 
         } catch (\Throwable $e) {
             error_log("AUDIT failed (ignored): " . $e->getMessage());
