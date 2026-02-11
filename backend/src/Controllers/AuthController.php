@@ -233,12 +233,9 @@ class AuthController
         try {
             $currentUser = $this->authMiddleware->handle();
 
-            if (!$currentUser) {
+            if (!is_array($currentUser)) {
                 http_response_code(401);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Non authentifié'
-                ]);
+                echo json_encode(['success' => false, 'error' => 'Non authentifié']);
                 return;
             }
 
