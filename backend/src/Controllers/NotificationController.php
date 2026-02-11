@@ -17,8 +17,10 @@ class NotificationController
     public function list(): void
     {
         try {
-            if (!$this->authMiddleware->handle()) {
+            $user = $this->authMiddleware->handle();
+            if (!$user) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
             }
 
             $userId = $this->authMiddleware->getUserId();
@@ -41,8 +43,9 @@ class NotificationController
 
     public function getNotifications(int $userId): void
     {
-        $this->list();
+        $this->list($userId);
     }
+
 
     public function getUnreadCount(): void
     {

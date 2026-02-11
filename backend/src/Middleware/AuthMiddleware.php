@@ -10,6 +10,7 @@ class AuthMiddleware
 {
     private ?array $user = null;
     private ?string $token = null;
+    private ?int $userId = null;
 
     public function __construct(
         private TokenService $tokenService,
@@ -20,6 +21,11 @@ class AuthMiddleware
 
     public static function optionalAuth()
     {
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->userId;
     }
 
     public static function requireAuth()
