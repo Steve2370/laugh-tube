@@ -231,9 +231,14 @@ class AuthController
     public function me(): void
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            if (!$this->authMiddleware->handle()) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'error' => 'Non authentifié']);
+                return;
+            }
 
-            if (!is_array($currentUser)) {
+            $currentUser = $this->authMiddleware->getUser(); // <= IMPORTANT
+            if (!$currentUser) {
                 http_response_code(401);
                 echo json_encode(['success' => false, 'error' => 'Non authentifié']);
                 return;
@@ -251,14 +256,10 @@ class AuthController
                     'two_fa_enabled' => $currentUser['two_fa_enabled']
                 ]
             ]);
-
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log("AuthController::me - Error: " . $e->getMessage());
             http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Erreur lors de la récupération du profil'
-            ]);
+            echo json_encode(['success' => false, 'error' => 'Erreur lors de la récupération du profil']);
         }
     }
 
