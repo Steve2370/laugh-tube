@@ -2,20 +2,16 @@
 
 namespace App\Services;
 
-use App\Interfaces\DatabaseInterface;
 use App\Repositories\LogRepository;
 use App\Repositories\SessionRepository;
 use App\Repositories\UserRepository;
-
 use PDOException;
 
 class AuthService
 {
-
     public function __construct(
         private UserRepository $userModel,
         private LogRepository $logRepo,
-        private DatabaseInterface $db,
         private TokenService $tokenService,
         private ValidationService $validationService,
         private SessionRepository $sessionRepository,
@@ -383,42 +379,44 @@ class AuthService
 
     public function verifyEmail(string $token): array
     {
-        $token = trim($token);
-
-        if ($token === '') {
-            return ['success' => false, 'code' => 400, 'message' => 'Token manquant'];
+        if (empty($token)) {
+            return [
+                'success' => false,
+                'code' => 400,
+                'message' => 'Token manquant'
+            ];
         }
 
-        $sql = "SELECT id
-            FROM users
-            WHERE verification_token = $1
-              AND verification_token_expires > NOW()
-            LIMIT 1";
+        try {
+            $user = $this->userModel->findByVerificationToken($token);
 
-        $row = $this->db->fetchOne($sql, [$token]);
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'code' => 400,
+                    'message' => 'Token invalide ou expiré'
+                ];
+            }
 
-        if (!$row) {
-            return ['success' => false, 'code' => 400, 'message' => 'Token invalide ou expiré'];
+            $this->userModel->updateEmailVerified($user['id']);
+            $this->auditService->logEmailVerified((int)$user['id']);
+
+            return [
+                'success' => true,
+                'userId' => $user['id'],
+                'message' => 'Email vérifié avec succès'
+            ];
+
+        } catch (\Exception $e) {
+            error_log("AuthService::verifyEmail - Error: " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'code' => 500,
+                'message' => 'Erreur lors de la vérification'
+            ];
         }
-
-        $userId = (int)$row['id'];
-
-        $update = "UPDATE users
-               SET email_verified = true,
-                   verification_token = NULL,
-                   verification_token_expires = NULL,
-                   updated_at = NOW()
-               WHERE id = $1";
-
-        $ok = $this->db->execute($update, [$userId]);
-
-        if (!$ok) {
-            return ['success' => false, 'code' => 500, 'message' => 'Erreur lors de la validation'];
-        }
-
-        return ['success' => true, 'code' => 200, 'message' => 'Email vérifié avec succès'];
     }
-
 
     public function logout(int $userId): array
     {
