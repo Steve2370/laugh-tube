@@ -121,8 +121,8 @@ class EmailService {
                 <img 
                     src="/logo.png" 
                     alt="LaughTube Logo"
-                    width="150"
-                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                    width="250"
+                    style="display:block; margin:0 auto; max-width:250px; height:auto;"
                 >
             </div>
         <h1>Laugh Tube</h1>
@@ -169,8 +169,8 @@ HTML;
                 <img 
                     src="/logo.png" 
                     alt="LaughTube Logo"
-                    width="150"
-                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                    width="250"
+                    style="display:block; margin:0 auto; max-width:250px; height:auto;"
                 >
             </div>
             <h1>Bienvenue sur Laugh Tube !</h1>
@@ -228,8 +228,8 @@ HTML;
                 <img 
                     src="/logo.png" 
                     alt="LaughTube Logo"
-                    width="150"
-                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                    width="250"
+                    style="display:block; margin:0 auto; max-width:250px; height:auto;"
                 >
             </div>
             <h1>Authentification 2FA Activée</h1>
@@ -275,8 +275,8 @@ HTML;
                 <img 
                     src="/logo.png" 
                     alt="LaughTube Logo"
-                    width="150"
-                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                    width="250"
+                    style="display:block; margin:0 auto; max-width:250px; height:auto;"
                 >
             </div>
             <h1>Réinitialisation de mot de passe</h1>
@@ -323,8 +323,8 @@ HTML;
                 <img 
                     src="/logo.png" 
                     alt="LaughTube Logo"
-                    width="150"
-                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                    width="250"
+                    style="display:block; margin:0 auto; max-width:250px; height:auto;"
                 >
             </div>
             <h1>Suppression de compte programmée</h1>
