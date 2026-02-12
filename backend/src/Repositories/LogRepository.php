@@ -11,14 +11,23 @@ class LogRepository {
         $this->db = $db;
     }
 
-    public function logSecurityEvent(array $logData): bool {
+    public function logSecurityEvent(array $logData): bool
+    {
         $sql = "INSERT INTO security_logs (user_id, event_type, description, ip_address, user_agent, additional_data, created_at) 
-                VALUES ($1, $2, $3, $4, $5, $6, NOW())";
+            VALUES ($1, $2, $3, $4, $5, $6, NOW())";
+
+        $eventType = $logData['event_type'] ?? $logData['eventType'] ?? null;
+        $userId    = $logData['user_id'] ?? $logData['userId'] ?? null;
+
+        if (!$eventType) {
+            error_log("logSecurityEvent missing event_type. Provided keys=" . implode(',', array_keys($logData)));
+            return false;
+        }
 
         try {
             return $this->db->execute($sql, [
-                $logData['user_id'] ?? null,
-                $logData['event_type'],
+                $userId ? (int)$userId : null,
+                (string)$eventType,
                 $logData['description'] ?? null,
                 $logData['ip_address'] ?? null,
                 $logData['user_agent'] ?? null,
