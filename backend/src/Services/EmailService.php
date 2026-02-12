@@ -125,7 +125,6 @@ class EmailService {
                     style="display:block; margin:0 auto; max-width:250px; height:auto;"
                 >
             </div>
-        <h1>Laugh Tube</h1>
         </div>
         <div class="content">
             <h2>Bonjour {$username} !</h2>
