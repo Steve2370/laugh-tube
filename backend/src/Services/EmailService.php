@@ -2,37 +2,27 @@
 
 namespace App\Services;
 
+use App\Interfaces\EmailProviderInterface;
 use App\Repositories\LogRepository;
-use Exception;
 
 class EmailService {
+
     private LogRepository $logRepo;
-    private array $config;
-    private PHPMailer $mailer;
+    private EmailProviderInterface $provider;
+    private string $baseUrl;
 
-    public function __construct(LogRepository $logRepo, array $config) {
+    public function __construct(
+        LogRepository $logRepo,
+        EmailProviderInterface $provider,
+        string $baseUrl
+    ) {
         $this->logRepo = $logRepo;
-        $this->config = $config;
-        $this->initMailer();
-    }
-
-    private function initMailer(): void {
-        $this->mailer = new PHPMailer(true);
-
-        $this->mailer->isSMTP();
-        $this->mailer->Host = $this->config['smtp_host'];
-        $this->mailer->SMTPAuth = true;
-        $this->mailer->Username = $this->config['smtp_username'];
-        $this->mailer->Password = $this->config['smtp_password'];
-        $this->mailer->SMTPSecure = $this->config['smtp_secure'];
-        $this->mailer->Port = $this->config['smtp_port'];
-        $this->mailer->CharSet = 'UTF-8';
-
-        $this->mailer->setFrom($this->config['from_email'], $this->config['from_name']);
+        $this->provider = $provider;
+        $this->baseUrl = $baseUrl;
     }
 
     public function sendVerificationEmail(int $userId, string $email, string $username, string $token): bool {
-        $verificationUrl = $this->config['base_url'] . '/verify-email.php?token=' . $token;
+        $verificationUrl = $this->baseUrl . '/verify-email.php?token=' . $token;
 
         $subject = 'Vérifiez votre adresse email - Laugh Tale';
         $body = $this->getVerificationEmailTemplate($username, $verificationUrl);
@@ -55,7 +45,7 @@ class EmailService {
     }
 
     public function sendPasswordResetEmail(int $userId, string $email, string $username, string $token): bool {
-        $resetUrl = $this->config['base_url'] . '/reset-password.php?token=' . $token;
+        $resetUrl = $this->baseUrl . '/reset-password.php?token=' . $token;
 
         $subject = 'Réinitialisation de votre mot de passe - Laugh Tube';
         $body = $this->getPasswordResetTemplate($username, $resetUrl);
@@ -64,7 +54,7 @@ class EmailService {
     }
 
     public function sendAccountDeletionEmail(int $userId, string $email, string $username, string $deletionDate): bool {
-        $cancelUrl = $this->config['base_url'] . '/cancel-deletion.php';
+        $cancelUrl = $this->baseUrl . '/cancel-deletion.php';
 
         $subject = 'Confirmation de suppression de compte - Laugh Tube';
         $body = $this->getAccountDeletionTemplate($username, $deletionDate, $cancelUrl);
@@ -73,6 +63,7 @@ class EmailService {
     }
 
     private function send(int $userId, string $to, string $subject, string $body, string $emailType): bool {
+
         $emailId = $this->logRepo->logEmail([
             'user_id' => $userId,
             'email_type' => $emailType,
@@ -82,28 +73,24 @@ class EmailService {
             'status' => 'pending'
         ]);
 
-        try {
-            $this->mailer->clearAddresses();
-            $this->mailer->addAddress($to);
-            $this->mailer->Subject = $subject;
-            $this->mailer->isHTML(true);
-            $this->mailer->Body = $body;
+        $success = $this->provider->sendEmail($to, $subject, $body, true);
 
-            $this->mailer->send();
-
+        if ($success) {
             if ($emailId) {
                 $this->logRepo->updateEmailStatus($emailId, 'sent');
             }
-
             return true;
-        } catch (Exception $e) {
-            if ($emailId) {
-                $this->logRepo->updateEmailStatus($emailId, 'failed', $e->getMessage());
-            }
-
-            error_log("Email sending failed: " . $e->getMessage());
-            return false;
         }
+
+        if ($emailId) {
+            $this->logRepo->updateEmailStatus(
+                $emailId,
+                'failed',
+                $this->provider->getLastError()
+            );
+        }
+
+        return false;
     }
 
     private function getVerificationEmailTemplate(string $username, string $verificationUrl): string {
@@ -124,11 +111,13 @@ class EmailService {
 <body>
     <div class="container">
         <div class="header">
-            <img
-                src="src/assets/Laugh Tale Verson 2.png"
-                alt="Laugh Tube logo"
-                class="logo"
-            />
+            <div className="mb-2 flex justify-center">
+                <img
+                   src="/Laugh Tale Version2.png"
+                   alt="Laugh Tube Logo"
+                   className="h-12 w-auto scale-125 object-contain"
+                />
+            </div>
         <h1>Laugh Tube</h1>
         </div>
         <div class="content">
@@ -169,11 +158,13 @@ HTML;
 <body>
     <div class="container">
         <div class="header">
-            <img
-                src="src/assets/Laugh Tale Verson 2.png"
-                alt="Laugh Tube logo"
-                class="logo"
-            />
+            <div className="mb-2 flex justify-center">
+                <img
+                   src="/Laugh Tale Version2.png"
+                   alt="Laugh Tube Logo"
+                   className="h-12 w-auto scale-125 object-contain"
+                />
+            </div>
             <h1>Bienvenue sur Laugh Tube !</h1>
         </div>
         <div class="content">
@@ -225,11 +216,13 @@ HTML;
 <body>
     <div class="container">
         <div class="header">
-            <img
-                src="src/assets/Laugh Tale Verson 2.png"
-                alt="Laugh Tube logo"
-                class="logo"
-            />
+            <div className="mb-2 flex justify-center">
+                <img
+                   src="/Laugh Tale Version2.png"
+                   alt="Laugh Tube Logo"
+                   className="h-12 w-auto scale-125 object-contain"
+                />
+            </div>
             <h1>Authentification 2FA Activée</h1>
         </div>
         <div class="content">
@@ -269,11 +262,13 @@ HTML;
 <body>
     <div class="container">
         <div class="header">
-            <img
-                src="src/assets/Laugh Tale Verson 2.png"
-                alt="Laugh Tube logo"
-                class="logo"
-            />
+            <div className="mb-2 flex justify-center">
+                <img
+                   src="/Laugh Tale Version2.png"
+                   alt="Laugh Tube Logo"
+                   className="h-12 w-auto scale-125 object-contain"
+                />
+            </div>
             <h1>Réinitialisation de mot de passe</h1>
         </div>
         <div class="content">
@@ -314,11 +309,13 @@ HTML;
 <body>
     <div class="container">
         <div class="header">
-            <img
-                src="src/assets/Laugh Tale Verson 2.png"
-                alt="Laugh Tube logo"
-                class="logo"
-            />
+            <div className="mb-2 flex justify-center">
+                <img
+                   src="/Laugh Tale Version2.png"
+                   alt="Laugh Tube Logo"
+                   className="h-12 w-auto scale-125 object-contain"
+                />
+            </div>
             <h1>Suppression de compte programmée</h1>
         </div>
         <div class="content">

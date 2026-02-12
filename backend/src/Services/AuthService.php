@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Repositories\LogRepository;
 use App\Repositories\SessionRepository;
 use App\Repositories\UserRepository;
@@ -10,14 +9,13 @@ use PDOException;
 
 class AuthService
 {
-    private UserRepository $userRepo;
-    private LogRepository $logRepo;
     public function __construct(
         private UserRepository $userModel,
-        LogRepository $logRepo,
+        private LogRepository $logRepo,
         private TokenService $tokenService,
         private ValidationService $validationService,
         private SessionRepository $sessionRepository,
+        private EmailService $emailService,
         private AuditService $auditService
     ) {}
 
@@ -34,12 +32,37 @@ class AuthService
 
         $user = $this->userModel->findByEmail($email);
 
+        if ($user && !empty($user['account_locked_until']) && strtotime($user['account_locked_until']) > time()) {
+            $this->auditService->logSuspiciousActivity(
+                (int)$user['id'],
+                'Tentative de connexion sur compte verrouillé',
+                ['email' => $email, 'locked_until' => $user['account_locked_until']]
+            );
+
+            return [
+                'success' => false,
+                'code' => 423,
+                'message' => 'Compte temporairement verrouillé. Réessayez plus tard.'
+            ];
+        }
+
         if (!$user || !password_verify($password, $user['password_hash'])) {
-//            $this->auditService->logSecurityEvent(
-//                null,
-//                'login_failed',
-//                ['email' => $email, 'reason' => 'invalid_credentials']
-//            );
+            $this->auditService->logLoginFailed($email);
+
+            if ($user) {
+                $currentAttempts = (int)($user['failed_login_attempts'] ?? 0);
+                $nextAttempts = $currentAttempts + 1;
+                $this->userModel->incrementFailedLogins((int)$user['id']);
+
+                if ($nextAttempts >= 5) {
+                    $this->userModel->lockAccount((int)$user['id'], 15);
+                    $this->auditService->logSuspiciousActivity(
+                        (int)$user['id'],
+                        'Compte verrouillé après trop de tentatives de connexion',
+                        ['attempts' => $nextAttempts]
+                    );
+                }
+            }
 
             return [
                 'success' => false,
@@ -49,11 +72,7 @@ class AuthService
         }
 
         if (isset($user['deleted_at']) && $user['deleted_at'] !== null) {
-//            $this->auditService->logSecurityEvent(
-//                $user['id'],
-//                'login_failed',
-//                ['email' => $email, 'reason' => 'account_deleted']
-//            );
+            $this->auditService->logSuspiciousActivity((int)$user['id'], 'Connexion refusée: compte désactivé', ['email' => $email]);
 
             return [
                 'success' => false,
@@ -61,25 +80,25 @@ class AuthService
                 'message' => 'Ce compte a été désactivé'
             ];
         }
+
         $accessToken = $this->tokenService->generateToken($user);
         $refreshToken = $this->tokenService->generateRefreshToken($user);
 
-//        try {
-//            $this->sessionRepository->createSession(
-//                $user['id'],
-//                $refreshToken,
-//                $_SERVER['REMOTE_ADDR'] ?? null,
-//                $_SERVER['HTTP_USER_AGENT'] ?? null
-//            );
-//        } catch (\Exception $e) {
-//            error_log("AuthService::login - Session creation error: " . $e->getMessage());
-//        }
+        try {
+            $sessionData = [
+                'user_id' => (int)$user['id'],
+                'token' => $refreshToken,
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+                'expires_at' => date('Y-m-d H:i:s', time() + 60 * 60 * 24 * 30)
+            ];
+            $this->sessionRepository->createSession($sessionData);
+        } catch (\Exception $e) {
+            error_log("AuthService::login - Session creation error: " . $e->getMessage());
+        }
 
-//        $this->auditService->logSecurityEvent(
-//            $user['id'],
-//            'user_login',
-//            ['email' => $email, 'method' => 'password']
-//        );
+        $this->auditService->logLoginSuccess((int)$user['id']);
+        $this->userModel->updateLastLogin((int)$user['id']);
 
         return [
             'success' => true,
@@ -121,13 +140,14 @@ class AuthService
                     'message' => 'Un utilisateur avec cet email ou ce nom existe déjà'
                 ];
             }
+
             $userData = [
                 'username' => $username,
                 'email' => $email,
                 'password_hash' => password_hash($password, PASSWORD_DEFAULT),
-                'email_verified' => true,
-                'verification_token' => bin2hex(random_bytes(32)) ?? null,
-                'verification_token_expires' => date('Y-m-d H:i:s', time() + 3600) ?? null,
+                'email_verified' => false,
+                'verification_token' => bin2hex(random_bytes(32)),
+                'verification_token_expires' => date('Y-m-d H:i:s', time() + 3600),
                 'ip_registration' => $_SERVER['REMOTE_ADDR'] ?? null,
                 'user_agent_registration' => $_SERVER['HTTP_USER_AGENT'] ?? null,
             ];
@@ -142,23 +162,19 @@ class AuthService
                 ];
             }
 
-            $user = $this->userModel->findById($userId);
-            if (!$user) {
-                $user = [
-                    'id' => $userId,
-                    'username' => $username,
-                    'email' => $email,
-                    'role' => 'membre',
-                    'profile_image' => null,
-                    'email_verified' => false
-                ];
-            }
+            $user = $this->userModel->findById($userId) ?: [
+                'id' => $userId,
+                'username' => $username,
+                'email' => $email,
+                'role' => 'membre',
+                'profile_image' => null,
+                'email_verified' => false
+            ];
 
-//            $verificationToken = bin2hex(random_bytes(32));
-//            $this->userModel->saveEmailVerificationToken($userId, $verificationToken);
+            $verificationToken = $userData['verification_token'];
+            $this->userModel->saveEmailVerificationToken($userId, $verificationToken);
 
-            // TODO: Envoyer email de vérification
-            // $this->emailService->sendVerificationEmail($email, $verificationToken);
+            $this->emailService->sendVerificationEmail($userId, $email, $username, $verificationToken);
 
             $accessToken = $this->tokenService->generateToken($user);
             $refreshToken = $this->tokenService->generateRefreshToken($user);
@@ -177,11 +193,7 @@ class AuthService
                 error_log("AuthService::register - Session creation error: " . $e->getMessage());
             }
 
-//            $this->auditService->logSecurityEvent(
-//                $userId,
-//                'user_registered',
-//                ['username' => $username, 'email' => $email]
-//            );
+            $this->auditService->logUserRegistered($userId, $email);
 
             return [
                 'success' => true,
@@ -257,6 +269,7 @@ class AuthService
                 'message' => 'Compte désactivé'
             ];
         }
+
         $newAccessToken = $this->tokenService->generateToken($user);
 
         return [
@@ -308,6 +321,7 @@ class AuthService
                 'errors' => $errors
             ];
         }
+
         $user = $this->userModel->findById($userId);
 
         if (!$user) {
@@ -319,11 +333,7 @@ class AuthService
         }
 
         if (!password_verify($currentPassword, $user['password_hash'])) {
-            $this->auditService->logSecurityEvent(
-                $userId,
-                'password_change_failed',
-                ['reason' => 'invalid_current_password']
-            );
+            $this->auditService->log('password_change_failed', $userId, 'Mot de passe actuel invalide');
 
             return [
                 'success' => false,
@@ -341,12 +351,9 @@ class AuthService
         }
 
         try {
-            $this->userModel->updatePassword($userId, $newPassword);
-            $this->auditService->logSecurityEvent(
-                $userId,
-                'password_changed',
-                []
-            );
+            $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+            $this->userModel->updatePassword($userId, $newHash);
+            $this->auditService->logPasswordChanged($userId);
 
             try {
                 $this->sessionRepository->invalidateAllUserSessions($userId);
@@ -381,7 +388,7 @@ class AuthService
         }
 
         try {
-            $user = $this->userModel->findByEmailVerificationToken($token);
+            $user = $this->userModel->findByVerificationToken($token);
 
             if (!$user) {
                 return [
@@ -390,12 +397,9 @@ class AuthService
                     'message' => 'Token invalide ou expiré'
                 ];
             }
-            $this->userModel->markEmailAsVerified($user['id']);
-            $this->auditService->logSecurityEvent(
-                $user['id'],
-                'email_verified',
-                ['email' => $user['email']]
-            );
+
+            $this->userModel->updateEmailVerified($user['id']);
+            $this->auditService->logEmailVerified((int)$user['id']);
 
             return [
                 'success' => true,
@@ -418,11 +422,7 @@ class AuthService
     {
         try {
             $this->sessionRepository->invalidateAllUserSessions($userId);
-            $this->auditService->logSecurityEvent(
-                $userId,
-                'user_logout',
-                []
-            );
+            $this->auditService->logLogout($userId);
 
             return [
                 'success' => true,
@@ -440,7 +440,55 @@ class AuthService
         }
     }
 
-    public function deleteAccount($user_id, string $param, null $param1)
+    public function deleteAccount(int $userId, ?string $reason = null): array
     {
+        $user = $this->userModel->findById($userId);
+        if (!$user) {
+            return [
+                'success' => false,
+                'code' => 404,
+                'message' => 'Utilisateur introuvable'
+            ];
+        }
+
+        try {
+            $ok = $this->userModel->softDelete($userId, $reason);
+            if (!$ok) {
+                return [
+                    'success' => false,
+                    'code' => 500,
+                    'message' => 'Impossible de planifier la suppression du compte'
+                ];
+            }
+
+            try {
+                $this->sessionRepository->invalidateAllUserSessions($userId);
+            } catch (\Exception $e) {
+                error_log("AuthService::deleteAccount - Session invalidation error: " . $e->getMessage());
+            }
+
+            $this->auditService->logAccountDeletionRequested($userId);
+
+            $deletionDate = date('Y-m-d', time() + 60 * 60 * 24 * 30);
+
+            $this->emailService->sendAccountDeletionEmail(
+                $userId,
+                $user['email'],
+                $user['username'],
+                $deletionDate
+            );
+
+            return [
+                'success' => true,
+                'message' => 'Suppression du compte programmée. Un email de confirmation a été envoyé.'
+            ];
+        } catch (\Throwable $e) {
+            error_log("AuthService::deleteAccount - Error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'code' => 500,
+                'message' => 'Erreur lors de la suppression du compte'
+            ];
+        }
     }
 }

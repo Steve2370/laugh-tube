@@ -1,14 +1,9 @@
 <?php
 
 return [
-    'smtp_host' => 'smtp.gmail.com',
-    'smtp_port' => 587,
-    'smtp_secure' => 'tls',
-    'smtp_username' => 'votre-email@gmail.com',
-    'smtp_password' => 'votre-app-password',
-
-    'from_email' => 'noreply@laughtale.com',
+    'resend_api_key' => 're_EcEdy8PN_HasUQDovvodHbjPdi83feH8q',
+    'from_email' => 'noreply@laughtube.ca',
     'from_name' => 'Laugh Tube',
 
-    'base_url' => 'http://localhost:8000'
+    'base_url' => 'http://laughtube.ca'
 ];

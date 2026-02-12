@@ -3,6 +3,7 @@
 use App\Controllers\AuthController;
 use App\Controllers\ReactionController;
 use App\Interfaces\DatabaseInterface;
+use App\Interfaces\EmailProviderInterface;
 use App\Middleware\AuthMiddleware;
 use App\Models\Abonnement;
 use App\Models\Commentaire;
@@ -20,9 +21,11 @@ use App\Services\AnalyticsService;
 use App\Services\AuditService;
 use App\Services\AuthService;
 use App\Services\CommentaireService;
+use App\Services\EmailService;
 use App\Services\NotificationCreationService;
 use App\Services\NotificationService;
 use App\Services\ReactionService;
+use App\Services\ResendEmailProvider;
 use App\Services\TokenService;
 use App\Services\TwoFactorService;
 use App\Services\UploadService;
@@ -55,6 +58,7 @@ $container = new class {
     }
 };
 
+$config = require __DIR__ . '/../config/email.php';
 
 $container->set(DatabaseInterface::class, function() {
     $config = require __DIR__ . '/database.php';
@@ -195,16 +199,18 @@ $container->set(AnalyticsService::class, function($c) {
     );
 });
 
-$container->set(AuthService::class, function($c) {
+$container->set(AuthService::class, function($c) use ($config) {
     return new AuthService(
         $c->get(UserRepository::class),
         $c->get(LogRepository::class),
         $c->get(TokenService::class),
         $c->get(ValidationService::class),
         $c->get(SessionRepository::class),
+        $c->get(EmailService::class),
         $c->get(AuditService::class)
     );
 });
+
 
 $container->set(AuthController::class, function($c) {
     return new AuthController(
@@ -222,6 +228,18 @@ $container->set(CommentaireService::class, function($c) {
         $c->get(User::class),
         $c->get(DatabaseInterface::class),
         $c->get(NotificationCreationService::class)
+    );
+});
+
+$container->set(EmailProviderInterface::class, function($c) use ($config) {
+    return new ResendEmailProvider($config);
+});
+
+$container->set(EmailService::class, function($c) use ($config) {
+    return new EmailService(
+        $c->get(LogRepository::class),
+        $c->get(EmailProviderInterface::class),
+        $config['base_url']
     );
 });
 
