@@ -39,25 +39,16 @@ class LogRepository {
         }
     }
 
-    public function logEmail(array $emailData): ?int
-    {
+    public function logEmail(array $emailData): ?int {
         $sql = "INSERT INTO email_logs (user_id, email_type, recipient, subject, body, status, created_at) 
             VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
             RETURNING id";
 
-        $userId = $emailData['user_id'] ?? $emailData['userId'] ?? null;
         $emailType = $emailData['email_type'] ?? $emailData['emailType'] ?? $emailData['type'] ?? null;
+        $userId    = $emailData['user_id'] ?? $emailData['userId'] ?? null;
 
         if (!$emailType) {
             error_log("logEmail missing email_type. Provided keys=" . implode(',', array_keys($emailData)));
-            $emailType = 'unknown';
-        }
-
-        $recipient = $emailData['recipient'] ?? $emailData['to'] ?? null;
-        $subject   = $emailData['subject'] ?? null;
-
-        if (!$recipient || !$subject) {
-            error_log("logEmail missing recipient/subject. keys=" . implode(',', array_keys($emailData)));
             return null;
         }
 
@@ -65,8 +56,8 @@ class LogRepository {
             $result = $this->db->fetchOne($sql, [
                 $userId ? (int)$userId : null,
                 (string)$emailType,
-                (string)$recipient,
-                (string)$subject,
+                $emailData['recipient'] ?? $emailData['to'] ?? null,
+                $emailData['subject'] ?? null,
                 $emailData['body'] ?? null,
                 $emailData['status'] ?? 'pending'
             ]);
