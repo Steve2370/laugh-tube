@@ -33,9 +33,7 @@ class UserRepository {
         $stmt->bindValue(':username', $userData['username'] ?? null, \PDO::PARAM_STR);
         $stmt->bindValue(':email', $userData['email'] ?? null, \PDO::PARAM_STR);
         $stmt->bindValue(':password_hash', $userData['password_hash'] ?? null, \PDO::PARAM_STR);
-
         $stmt->bindValue(':email_verified', $emailVerified, \PDO::PARAM_BOOL);
-
         $stmt->bindValue(':verification_token', $userData['verification_token'] ?? null, \PDO::PARAM_STR);
         $stmt->bindValue(':verification_token_expires', $userData['verification_token_expires'] ?? null, \PDO::PARAM_STR);
         $stmt->bindValue(':ip_registration', $userData['ip_registration'] ?? null, \PDO::PARAM_STR);
@@ -50,7 +48,6 @@ class UserRepository {
             return null;
         }
     }
-
 
     public function findById(int $id): ?array
     {
@@ -71,10 +68,10 @@ class UserRepository {
         }
     }
 
-
     public function findByEmail(string $email): ?array
     {
-        $sql = "SELECT id, username, email, password_hash, role, profile_image, email_verified, deleted_at, two_fa_enabled
+        $sql = "SELECT id, username, email, password_hash, role, profile_image, email_verified, deleted_at, two_fa_enabled,
+                       failed_login_attempts, account_locked_until
             FROM users
             WHERE email = :email
             LIMIT 1";
@@ -90,7 +87,6 @@ class UserRepository {
             return null;
         }
     }
-
 
     public function findByUsername(string $username): ?array {
         $sql = "SELECT * FROM users WHERE username = $1 AND deleted_at IS NULL";
@@ -141,7 +137,7 @@ class UserRepository {
                 SET verification_token = $1, 
                     verification_token_expires = $2,
                     updated_at = NOW()
-                WHERE id = $1";
+                WHERE id = $3";
         return $this->db->execute($sql, [$token, $expires, $userId]);
     }
 
@@ -239,7 +235,16 @@ class UserRepository {
         return $this->db->execute($sql, [$passwordHash, $userId]);
     }
 
-    public function saveEmailVerificationToken(int $userId, string $verificationToken)
+    public function saveEmailVerificationToken(int $userId, string $verificationToken): bool
     {
+        $expires = date('Y-m-d H:i:s', time() + 3600);
+
+        $sql = "UPDATE users
+                SET verification_token = $1,
+                    verification_token_expires = $2,
+                    updated_at = NOW()
+                WHERE id = $3";
+
+        return $this->db->execute($sql, [$verificationToken, $expires, $userId]);
     }
 }

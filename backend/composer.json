@@ -9,7 +9,8 @@
       "ext-fileinfo": "*",
       "ext-mbstring": "*",
       "ext-pgsql": "*",
-      "ext-ctype": "*"
+      "ext-ctype": "*",
+      "ext-curl": "*"
     },
     "autoload": {
         "psr-4": {
