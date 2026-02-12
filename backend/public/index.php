@@ -225,12 +225,15 @@ try {
     if (($uri === '/users/me/avatar' || $uri === '/profile/upload-image') && $method === 'POST') {
         $userController->uploadAvatar(); return;
     }
+
     if (($uri === '/users/me/cover' || $uri === '/profile/upload-cover') && $method === 'POST') {
         $userController->uploadCover(); return;
     }
+
     if (($uri === '/profile' || $uri === '/users/profile/update') && $method === 'PUT') {
         $userController->updateProfile(); return;
     }
+
     if (($uri === '/users/me/bio' || $uri === '/users/me/bio') && $method === 'PUT') {
         $userController->updateBio(); return;
     }
@@ -318,15 +321,19 @@ try {
     if ($uri === '/videos/cleanup-sessions' && $method === 'POST') {
         $videoController->cleanupSessions(); return;
     }
+
     if (preg_match('#^/videos/(\d+)/views$#', $uri, $m) && $method === 'GET') {
         $videoController->getViews((int)$m[1]); return;
     }
+
     if (preg_match('#^/videos/(\d+)/viewed$#', $uri, $m) && $method === 'GET') {
         $videoController->checkViewed((int)$m[1]); return;
     }
+
     if (preg_match('#^/videos/(\d+)/record-view$#', $uri, $m) && $method === 'POST') {
         $videoController->recordView((int)$m[1]); return;
     }
+
     if (preg_match('#^/videos/(\d+)/analytics$#', $uri, $m) && $method === 'GET') {
         $videoController->getAnalytics((int)$m[1]); return;
     }
@@ -334,12 +341,14 @@ try {
     if (preg_match('#^/videos/(\d+)/like$#', $uri, $m) && $method === 'POST') {
         $reactionController->like((int)$m[1]); return;
     }
+
     if (preg_match('#^/videos/(\d+)/dislike$#', $uri, $m) && $method === 'POST') {
         $reactionController->dislike((int)$m[1]); return;
     }
     if (preg_match('#^/videos/(\d+)/my-reaction$#', $uri, $m) && $method === 'GET') {
         $reactionController->status((int)$m[1]); return;
     }
+
     if (preg_match('#^/videos/(\d+)/reactions$#', $uri, $m) && $method === 'GET') {
         $reactionController->counts((int)$m[1]); return;
     }
