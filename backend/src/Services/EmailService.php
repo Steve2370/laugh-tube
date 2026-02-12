@@ -26,6 +26,7 @@ class EmailService {
 
         $subject = 'Vérifiez votre adresse email - Laugh Tale';
         $body = $this->getVerificationEmailTemplate($username, $verificationUrl);
+        $body = str_replace('src="/logo.png"', 'src="'.$this->baseUrl.'/logo.png"', $body);
 
         return $this->send($userId, $email, $subject, $body, 'verification');
     }
