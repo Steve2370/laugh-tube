@@ -60,7 +60,7 @@ const Register = () => {
             const result = await register(username, email, password);
 
             if (result.success) {
-                toast.success('Inscription réussie ! Bienvenue sur LaughTale');
+                toast.success('Inscription réussie ! Bienvenue sur Laugh Tube');
                 window.location.hash = '#/home';
             } else {
                 toast.error(result.error || "Erreur lors de l'inscription");
