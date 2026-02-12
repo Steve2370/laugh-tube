@@ -400,6 +400,10 @@ class AuthService
 
             $this->userModel->updateEmailVerified($user['id']);
             $this->auditService->logEmailVerified((int)$user['id']);
+            $token = trim($token);
+            if (!preg_match('/^[a-f0-9]{64}$/i', $token)) {
+                return ['success'=>false,'code'=>400,'message'=>'Token invalide ou expiré'];
+            }
 
             return [
                 'success' => true,

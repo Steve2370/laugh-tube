@@ -95,11 +95,11 @@ class UserRepository {
 
     public function findByVerificationToken(string $token): ?array {
         $sql = "SELECT * FROM users 
-                WHERE verification_token = $1 
-                AND verification_token_expires > NOW()
-                AND deleted_at IS NULL";
+            WHERE verification_token = $1 
+              AND verification_token_expires > NOW()";
         return $this->db->fetchOne($sql, [$token]);
     }
+
 
     public function emailExists(string $email): bool {
         $sql = "SELECT COUNT(*) as count FROM users WHERE email = $1 AND deleted_at IS NULL";
