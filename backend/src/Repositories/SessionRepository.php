@@ -11,24 +11,22 @@ class SessionRepository {
         $this->db = $db;
     }
 
-    public function createSession(array $sessionData): ?string
-    {
-        $sql = "INSERT INTO sessions (user_id, token, ip_address, user_agent, expires_at, created_at, last_activity) 
-            VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) 
+    public function createSession(array $sessionData): ?string {
+        $sql = "INSERT INTO sessions (user_id, token, ip_address, user_agent, expires_at, created_at, last_activity)
+            VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
             RETURNING token";
 
         $userId = $sessionData['user_id'] ?? $sessionData['userId'] ?? null;
-        $token  = $sessionData['token'] ?? null;
 
-        if (!$userId || !$token) {
-            error_log("createSession missing required fields: user_id/token. Provided keys=" . implode(',', array_keys($sessionData)));
+        if (!$userId) {
+            error_log("createSession missing user_id. Provided keys=" . implode(',', array_keys($sessionData)));
             return null;
         }
 
         try {
             $result = $this->db->fetchOne($sql, [
                 (int)$userId,
-                (string)$token,
+                $sessionData['token'] ?? null,
                 $sessionData['ip_address'] ?? null,
                 $sessionData['user_agent'] ?? null,
                 $sessionData['expires_at'] ?? null
@@ -40,7 +38,6 @@ class SessionRepository {
             return null;
         }
     }
-
 
     public function findByToken(string $token): ?array {
         $sql = "SELECT s.*, u.id as user_id, u.username, u.email, u.role, u.two_fa_enabled
