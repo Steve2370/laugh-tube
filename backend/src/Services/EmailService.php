@@ -20,13 +20,18 @@ class EmailService {
         $this->provider = $provider;
         $this->baseUrl = $baseUrl;
     }
-
-    public function sendVerificationEmail(int $userId, string $email, string $username, string $token): bool {
-        $verificationUrl = $this->baseUrl . '/verify-email.php?token=' . $token;
+    public function sendVerificationEmail(int $userId, string $email, string $username, string $token): bool
+    {
+        $verificationUrl = $this->baseUrl . '/verify-email.php?token=' . urlencode($token);
 
         $subject = 'Vérifiez votre adresse email - Laugh Tale';
         $body = $this->getVerificationEmailTemplate($username, $verificationUrl);
-        $body = str_replace('src="/logo.png"', 'src="'.$this->baseUrl.'/logo.png"', $body);
+
+        $body = preg_replace(
+            '#src=(["\'])/logo\.png\1#',
+            'src="'.$this->baseUrl.'/logo.png"',
+            $body
+        );
 
         return $this->send($userId, $email, $subject, $body, 'verification');
     }
@@ -113,11 +118,12 @@ class EmailService {
     <div class="container">
         <div class="header">
             <div className="mb-2 flex justify-center">
-                <img
-                   src="/logo.png"
-                   alt="Laugh Tube Logo"
-                   className="h-12 w-auto scale-125 object-contain"
-                />
+                <img 
+                    src="/logo.png" 
+                    alt="LaughTube Logo"
+                    width="150"
+                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                >
             </div>
         <h1>Laugh Tube</h1>
         </div>
@@ -160,11 +166,12 @@ HTML;
     <div class="container">
         <div class="header">
             <div className="mb-2 flex justify-center">
-                <img
-                   src="/logo.png"
-                   alt="Laugh Tube Logo"
-                   className="h-12 w-auto scale-125 object-contain"
-                />
+                <img 
+                    src="/logo.png" 
+                    alt="LaughTube Logo"
+                    width="150"
+                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                >
             </div>
             <h1>Bienvenue sur Laugh Tube !</h1>
         </div>
@@ -218,11 +225,12 @@ HTML;
     <div class="container">
         <div class="header">
             <div className="mb-2 flex justify-center">
-                <img
-                   src="/logo.png"
-                   alt="Laugh Tube Logo"
-                   className="h-12 w-auto scale-125 object-contain"
-                />
+                <img 
+                    src="/logo.png" 
+                    alt="LaughTube Logo"
+                    width="150"
+                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                >
             </div>
             <h1>Authentification 2FA Activée</h1>
         </div>
@@ -264,11 +272,12 @@ HTML;
     <div class="container">
         <div class="header">
             <div className="mb-2 flex justify-center">
-                <img
-                   src="/logo.png"
-                   alt="Laugh Tube Logo"
-                   className="h-12 w-auto scale-125 object-contain"
-                />
+                <img 
+                    src="/logo.png" 
+                    alt="LaughTube Logo"
+                    width="150"
+                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                >
             </div>
             <h1>Réinitialisation de mot de passe</h1>
         </div>
@@ -311,11 +320,12 @@ HTML;
     <div class="container">
         <div class="header">
             <div className="mb-2 flex justify-center">
-                <img
-                   src="/logo.png"
-                   alt="Laugh Tube Logo"
-                   className="h-12 w-auto scale-125 object-contain"
-                />
+                <img 
+                    src="/logo.png" 
+                    alt="LaughTube Logo"
+                    width="150"
+                    style="display:block; margin:0 auto; max-width:150px; height:auto;"
+                >
             </div>
             <h1>Suppression de compte programmée</h1>
         </div>
