@@ -227,7 +227,9 @@ class ApiService {
         if (accessToken) {
             this.setToken(accessToken);
             this.setRefreshToken(refreshToken);
-            this.setUser(response.user);
+            const me = await this.request('/me', { method: 'GET' });
+            this.setUser(me.user ?? me.data?.user ?? me.data ?? me);
+
             console.log('Inscription réussie');
         }
 
