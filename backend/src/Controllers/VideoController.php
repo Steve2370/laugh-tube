@@ -25,17 +25,19 @@ class VideoController
         try {
             if (!$this->authMiddleware->handle()) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
             }
 
             $userId = $this->authMiddleware->getUserId();
 
             if (!isset($_FILES['video']) || $_FILES['video']['error'] !== UPLOAD_ERR_OK) {
                 JsonResponse::badRequest(['error' => 'Fichier vidéo manquant']);
+                return;
             }
 
             $file = $_FILES['video'];
 
-            $allowedMimes = ['video/mp4', 'video/webm', 'video/ogg'];
+            $allowedMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
             $maxSize = 500 * 1024 * 1024;
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -43,34 +45,46 @@ class VideoController
             finfo_close($finfo);
 
             if (!in_array($mimeType, $allowedMimes, true)) {
-                JsonResponse::badRequest(['error' => 'Format vidéo invalide (MP4, WebM ou OGG uniquement)']);
+                JsonResponse::badRequest(['error' => 'Format vidéo invalide (MP4, WebM, OGG, MOV, AVI, MKV uniquement)']);
+                return;
             }
 
             if ($file['size'] > $maxSize) {
                 JsonResponse::badRequest(['error' => 'Fichier trop volumineux (max 500MB)']);
+                return;
             }
 
-            $title = SecurityHelper::sanitizeInput($_POST['title'] ?? 'Sans titre');
+            $title = SecurityHelper::sanitizeInput($_POST['title'] ?? '');
             $description = SecurityHelper::sanitizeInput($_POST['description'] ?? '');
 
-            $result = $this->videoService->createVideo($userId, $title, $description, $file);
-
-            if (!$result['success']) {
-                JsonResponse::serverError(['error' => $result['message']]);
+            if (empty(trim($title))) {
+                JsonResponse::badRequest(['error' => 'Titre obligatoire']);
+                return;
             }
 
+            $result = $this->videoService->creationVideo($userId, $title, $description, $file);
+
+            if (!$result['success']) {
+                $code = $result['code'] ?? 500;
+                http_response_code($code);
+                JsonResponse::sendWithCors(['error' => $result['message'] ?? 'Erreur lors de la création'], $code);
+                return;
+            }
             $this->auditService->logSecurityEvent($userId, 'video_uploaded', [
-                'video_id' => $result['videoId'],
-                'title' => $title
+                'video_id' => $result['data']['video_id'] ?? null,
+                'title' => $title,
+                'filename' => $result['data']['filename'] ?? null
             ]);
 
             JsonResponse::created([
                 'message' => 'Vidéo uploadée avec succès',
-                'video_id' => $result['videoId']
+                'video_id' => $result['data']['video_id'],
+                'filename' => $result['data']['filename']
             ]);
 
         } catch (\Exception $e) {
             error_log("VideoController::upload - Error: " . $e->getMessage());
+            error_log("VideoController::upload - Stack: " . $e->getTraceAsString());
             JsonResponse::serverError(['error' => 'Erreur lors de l\'upload']);
         }
     }
