@@ -93,12 +93,18 @@ class UserRepository {
         return $this->db->fetchOne($sql, [$username]);
     }
 
-    public function findByVerificationToken(string $token): ?array {
-        $sql = "SELECT * FROM users 
-            WHERE verification_token = $1 
-              AND verification_token_expires > NOW()";
-        return $this->db->fetchOne($sql, [$token]);
+    public function findByVerificationToken(string $token): ?array
+    {
+        $sql = "SELECT * FROM users
+            WHERE verification_token = :token
+              AND verification_token_expires > NOW()
+              AND deleted_at IS NULL";
+
+        return $this->db->fetchOne($sql, [
+            ':token' => $token
+        ]);
     }
+
 
 
     public function emailExists(string $email): bool {
