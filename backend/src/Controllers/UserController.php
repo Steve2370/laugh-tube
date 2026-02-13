@@ -4,12 +4,14 @@ namespace App\Controllers;
 
 use App\Middleware\AuthAide;
 use App\Utils\JsonResponse;
+use App\Services\abonnementService;
 
 class UserController
 {
     private $userService;
     private $uploadService;
     private $userModel;
+    public $abonnementService;
 
     public function __construct($userService, $uploadService, $userModel)
     {
@@ -64,6 +66,22 @@ class UserController
         } catch (\Exception $e) {
             error_log('Upload avatar error: ' . $e->getMessage());
             JsonResponse::serverError(['error' => 'Erreur lors de l\'upload de l\'avatar']);
+        }
+    }
+
+    public function getSubscribersCount(int $userId): void
+    {
+        try {
+            $count = $this->abonnementService->getSubscribersCount($userId);
+
+            JsonResponse::success([
+                'count' => $count,
+                'user_id' => $userId
+            ]);
+
+        } catch (\Exception $e) {
+            error_log("UserController::getSubscribersCount - Error: " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
         }
     }
 
@@ -364,21 +382,21 @@ class UserController
         }
     }
 
-    public function getSubscribersCount(int $userId)
-    {
-        try {
-            $count = $this->userModel->getSubscribersCount($userId);
-
-            JsonResponse::success([
-                'user_id' => $userId,
-                'subscribers_count' => $count
-            ]);
-
-        } catch (\Exception $e) {
-            error_log('Get subscribers count error: ' . $e->getMessage());
-            JsonResponse::serverError(['error' => 'Erreur lors de la récupération du nombre d\'abonnés']);
-        }
-    }
+//    public function getSubscribersCount(int $userId)
+//    {
+//        try {
+//            $count = $this->userModel->getSubscribersCount($userId);
+//
+//            JsonResponse::success([
+//                'user_id' => $userId,
+//                'subscribers_count' => $count
+//            ]);
+//
+//        } catch (\Exception $e) {
+//            error_log('Get subscribers count error: ' . $e->getMessage());
+//            JsonResponse::serverError(['error' => 'Erreur lors de la récupération du nombre d\'abonnés']);
+//        }
+//    }
 
     public function getSubscribeStatus(int $targetUserId, $currentUserId = null)
     {

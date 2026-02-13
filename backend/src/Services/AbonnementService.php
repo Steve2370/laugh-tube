@@ -57,7 +57,6 @@ class AbonnementService
         return [
             'is_subscribed' => $this->abonnementModel->isAbonne($subscriberId, $targetUserId),
             'subscribers_count' => $this->abonnementModel->conterAbonnes($targetUserId),
-            // Compatibilité avec ancien format
             'isAbonne' => $this->abonnementModel->isAbonne($subscriberId, $targetUserId),
             'nbAbonnes' => $this->abonnementModel->conterAbonnes($targetUserId)
         ];

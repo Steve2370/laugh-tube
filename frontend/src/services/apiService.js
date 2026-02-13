@@ -300,6 +300,14 @@ class ApiService {
         });
     }
 
+    getProfileImageUrl(userId) {
+        return `${this.baseURL}/uploads/profiles/${userId}.jpg`;
+    }
+
+    getCoverImageUrl(userId) {
+        return `${this.baseURL}/uploads/covers/${userId}.jpg`;
+    }
+
     async getVideoViews(videoId) {
         const response = await this.request(`/videos/${videoId}/views`);
         return response.data || response;
