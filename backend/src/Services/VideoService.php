@@ -59,7 +59,7 @@ class VideoService
 
             if ($this->notificationCreator) {
                 try {
-                    $this->notificationCreator->notifyVideoUpload($userId, $videoId, $title);
+                    $this->notificationCreator->notifyVideoUpload($userId, $videoId, $filename, $title);
                 } catch (\Exception $e) {
                     error_log("VideoService::creationVideo - Notification error: " . $e->getMessage());
                 }
@@ -268,7 +268,6 @@ class VideoService
         bool $completed
     ): array {
         try {
-            // Vérifier que la vidéo existe
             $video = $this->videoModel->findById($videoId);
 
             if (!$video) {
@@ -280,7 +279,6 @@ class VideoService
                 ];
             }
 
-            // Vérifier si déjà vu
             $checkSql = "SELECT COUNT(*) as count
                          FROM video_views
                          WHERE video_id = $1
@@ -291,7 +289,6 @@ class VideoService
             $alreadyViewed = (int)($existing['count'] ?? 0) > 0;
 
             if ($alreadyViewed) {
-                // Mettre à jour
                 $updateSql = "UPDATE video_views
                               SET watch_time = $1,
                                   watch_percentage = $2,
@@ -317,7 +314,6 @@ class VideoService
                 ];
             }
 
-            // Insérer nouvelle vue
             $insertSql = "INSERT INTO video_views 
                           (video_id, user_id, session_id, watch_time, watch_percentage, completed, viewed_at)
                           VALUES ($1, $2, $3, $4, $5, $6, NOW())";
@@ -331,7 +327,6 @@ class VideoService
                 $completed
             ]);
 
-            // Incrémenter les vues
             $this->videoModel->incrementViews($videoId);
 
             return [
@@ -352,9 +347,6 @@ class VideoService
         }
     }
 
-    /**
-     * ✅ BONUS - Obtenir les vidéos tendances
-     */
     public function getTrendingVideos(int $limit = 10, int $period = 7): array
     {
         try {
@@ -395,13 +387,9 @@ class VideoService
         }
     }
 
-    /**
-     * ✅ BONUS - Mettre à jour les métadonnées
-     */
     public function updateMetadata(int $videoId, int $userId, string $title, ?string $description = null): array
     {
         try {
-            // Vérifier ownership
             $video = $this->videoModel->findById($videoId);
 
             if (!$video || $video['user_id'] != $userId) {
@@ -412,7 +400,6 @@ class VideoService
                 ];
             }
 
-            // Validation
             $errors = $this->validationService->validateVideoMetadata($title, $description);
 
             if (!empty($errors)) {
@@ -423,7 +410,6 @@ class VideoService
                 ];
             }
 
-            // Update
             $sql = "UPDATE videos 
                     SET title = $1, description = $2, updated_at = NOW()
                     WHERE id = $3";
@@ -451,9 +437,6 @@ class VideoService
         }
     }
 
-    /**
-     * ✅ BONUS - Rechercher des vidéos
-     */
     public function searchVideos(string $query, int $limit = 20, int $offset = 0): array
     {
         try {
