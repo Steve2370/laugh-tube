@@ -159,7 +159,7 @@ export default function Navbar() {
                                             <div className="py-1">
                                                 <button
                                                     onClick={() =>
-                                                        handleDropdownItemClick(() => navigateTo(`profile/${user.id}`))
+                                                        handleDropdownItemClick(() => navigateTo("profile"))
                                                     }
                                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:bg-opacity-50 flex items-center gap-3 transition-colors"
                                                 >
