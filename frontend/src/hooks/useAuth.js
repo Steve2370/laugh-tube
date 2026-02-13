@@ -8,8 +8,16 @@ export const useAuth = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        checkAuth();
-    }, []);
+        const onAuthChanged = () => checkAuth();
+        window.addEventListener("auth-changed", onAuthChanged);
+        window.addEventListener("storage", onAuthChanged);
+
+        return () => {
+            window.removeEventListener("auth-changed", onAuthChanged);
+            window.removeEventListener("storage", onAuthChanged);
+        };
+    }, [checkAuth]);
+
 
     const checkAuth = useCallback(async () => {
         try {
