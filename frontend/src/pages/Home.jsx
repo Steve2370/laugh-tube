@@ -201,17 +201,17 @@ const EmptyState = ({ searchTerm, isAuthenticated, navigateTo }) => {
             <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
                 <Play className="mx-auto h-24 w-24 text-gray-300 mb-4" />
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Aucune vidéo disponible
+                    Aucune punchline disponible
                 </h3>
                 <p className="text-gray-600 mb-8">
-                    Soyez le premier à partager une vidéo avec la communauté !
+                    Soyez le premier à partager une punchline avec la communauté !
                 </p>
                 <button
                     onClick={() => navigateTo('upload')}
                     className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg inline-flex items-center gap-2"
                 >
                     <Play size={20} />
-                    Uploader ma première vidéo
+                    Uploader ma première punchline
                 </button>
             </div>
         );
@@ -220,7 +220,7 @@ const EmptyState = ({ searchTerm, isAuthenticated, navigateTo }) => {
             <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
                 <Play className="mx-auto h-24 w-24 text-gray-300 mb-4" />
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Aucune vidéo disponible
+                    Aucune punchline disponible
                 </h3>
                 <p className="text-gray-600 mb-8">
                     Connectez-vous pour être le premier à partager du contenu !
