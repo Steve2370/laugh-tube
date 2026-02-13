@@ -160,7 +160,7 @@ class VideoService {
     async _uploadWithProgress(endpoint, formData, onProgress) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            const token = apiService.getToken();
+            const token = apiService.uploadVideo();
             if (token) {
                 xhr.setRequestHeader('Authorization', `Bearer ${token}`);
             }
