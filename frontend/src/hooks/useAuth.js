@@ -46,6 +46,7 @@ export const useAuth = () => {
                     user_id: response.user_id
                 };
             }
+            await new Promise(resolve => setTimeout(resolve, 100));
 
             await checkAuth();
             return { success: true, requires_2fa: false };
@@ -81,6 +82,7 @@ export const useAuth = () => {
             setError(null);
 
             await apiService.register(username, email, password);
+            await new Promise(resolve => setTimeout(resolve, 100));
             await checkAuth();
 
             return { success: true };
