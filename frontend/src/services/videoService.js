@@ -160,10 +160,6 @@ class VideoService {
     async _uploadWithProgress(endpoint, formData, onProgress) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            const token = apiService.uploadVideo();
-            if (token) {
-                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-            }
 
             if (typeof onProgress === 'function') {
                 xhr.upload.addEventListener('progress', (event) => {
@@ -200,8 +196,22 @@ class VideoService {
                 reject(new Error('Timeout lors de l\'upload'));
             });
 
-            const baseUrl = apiService.baseUrl || import.meta.env.VITE_API_URL || 'http://localhost';
-            xhr.open('POST', `${baseUrl}${endpoint}`);
+            const baseUrl = window.location.origin;
+            const fullUrl = `${baseUrl}/api${endpoint}`;
+
+            console.log('📤 Upload URL:', fullUrl);
+
+            xhr.open('POST', fullUrl);
+
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                console.log('🔐 Token ajouté');
+            } else {
+                console.warn('⚠️ Pas de token trouvé!');
+            }
+
+            console.log('Envoi du FormData...');
             xhr.send(formData);
         });
     }
@@ -417,12 +427,12 @@ class VideoService {
     }
 
     _validateVideoFile(file) {
-        const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+        const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
         const maxSize = 500 * 1024 * 1024; // 500 MB
 
         if (!allowedTypes.includes(file.type)) {
             throw new Error(
-                'Format de vidéo non supporté. Utilisez MP4, WebM ou OGG.'
+                'Format de vidéo non supporté. Utilisez MP4, WebM, OGG, MOV, AVI ou MKV.'
             );
         }
 
