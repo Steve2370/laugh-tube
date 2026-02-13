@@ -13,15 +13,15 @@ const Upload = () => {
     const [uploading, setUploading] = useState(false);
 
     const { uploadVideo } = useVideos();
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user, loading } = useAuth();
     const toast = useToast();
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!loading && !isAuthenticated) {
             toast.error("Vous devez être connecté pour uploader une vidéo");
             window.location.hash = '#/login';
         }
-    }, [isAuthenticated, toast]);
+    }, [isAuthenticated, loading, toast]);
 
     const validateFile = (file) => {
         const maxSize = 500 * 1024 * 1024;
@@ -115,6 +115,17 @@ const Upload = () => {
         window.location.hash = `#/${page}`;
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Chargement...</p>
+                </div>
+            </div>
+        );
+    }
+
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -170,13 +181,11 @@ const Upload = () => {
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Donnez un titre accrocheur à votre vidéo"
                                 className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                minLength={3}
                                 maxLength={100}
-                                required
                                 disabled={uploading}
+                                required
                             />
-                            <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
-                                <span>3-100 caractères</span>
+                            <div className="mt-1 flex justify-end text-xs text-gray-500">
                                 <span className={title.length > 90 ? 'text-orange-500 font-medium' : ''}>
                                     {title.length}/100
                                 </span>
@@ -297,7 +306,7 @@ const Upload = () => {
                                     <Check size={20} className="text-white" />
                                 </div>
                                 <p className="font-medium text-green-900">
-                                    Vidéo uploadée avec succès !
+                                    Punchline uploadée avec succès !
                                 </p>
                             </div>
                         )}
@@ -310,7 +319,7 @@ const Upload = () => {
                             >
                                 {uploading
                                     ? `Upload en cours... ${uploadProgress}%`
-                                    : 'Publier la vidéo'}
+                                    : 'Publier la puchline'}
                             </button>
                             <button
                                 type="button"
