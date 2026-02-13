@@ -167,6 +167,10 @@ class ApiService {
         }
     }
 
+    async getCurrentUser() {
+        return this.getMe();
+    }
+
     clearAuth() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');

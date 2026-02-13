@@ -27,10 +27,11 @@ class NotificationController
             $offset = max(0, (int)($_GET['offset'] ?? 0));
 
             $result = $this->notificationService->getUserNotifications($userId, $limit, $offset);
+            $unreadCount = $this->notificationService->getUnreadCount($userId);
 
             JsonResponse::success([
                 'notifications' => $result['notifications'],
-                'unread_count' => $result['unread_count']
+                'unread_count' => $unreadCount
             ]);
 
         } catch (\Exception $e) {
