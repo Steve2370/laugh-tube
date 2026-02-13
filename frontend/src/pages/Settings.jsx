@@ -24,21 +24,15 @@ const Settings = () => {
 
     const [activeTab, setActiveTab] = useState('profile');
     const [loading, setLoading] = useState(false);
-
-    // Profile
     const [username, setUsername] = useState(user?.username || '');
     const [email, setEmail] = useState(user?.email || '');
     const [bio, setBio] = useState('');
-
-    // Security - Change Password
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-    // Security - 2FA
     const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
     const [show2FASetup, setShow2FASetup] = useState(false);
     const [qrCodeUrl, setQrCodeUrl] = useState('');
