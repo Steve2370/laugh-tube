@@ -312,8 +312,7 @@ class ApiService {
     }
 
     async getMe() {
-        const res = await this.request('/me');
-        return res.user ?? res.data?.user ?? res.data ?? res;
+        return await this.request('/me');
     }
 
     async getUserProfile(userId) {
@@ -500,8 +499,8 @@ class ApiService {
 
     setToken(token) {
         localStorage.setItem(this.tokenKey, token);
-        window.dispatchEvent(new Event("auth-changed"));
     }
+
     getRefreshToken() {
         return localStorage.getItem(this.refreshTokenKey);
     }
@@ -512,10 +511,8 @@ class ApiService {
         }
     }
 
-
     setUser(user) {
         localStorage.setItem(this.userKey, JSON.stringify(user));
-        window.dispatchEvent(new Event("auth-changed"));
     }
 
     getCurrentUser() {
@@ -532,26 +529,19 @@ class ApiService {
         localStorage.removeItem(this.tokenKey);
         localStorage.removeItem(this.refreshTokenKey);
         localStorage.removeItem(this.userKey);
-        window.dispatchEvent(new Event("auth-changed"));
     }
 
     isAuthenticated() {
         const token = this.getToken();
         if (!token) return false;
 
-        const parts = token.split('.');
-        if (parts.length !== 3) return true;
-
         try {
-            const payload = JSON.parse(atob(parts[1]));
+            const payload = JSON.parse(atob(token.split('.')[1]));
             const now = Date.now() / 1000;
-
-            if (!payload.exp) return true;
-
             return payload.exp > now;
         } catch (error) {
-            console.warn("Token non décodable, on garde la session côté client.");
-            return true;
+            this.clearAuth();
+            return false;
         }
     }
 
