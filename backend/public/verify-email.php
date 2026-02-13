@@ -20,10 +20,10 @@ try {
     $db = $container->get(DatabaseInterface::class);
     $auditService = $container->get(AuditService::class);
 
-    $token = SecurityHelper::sanitizeInput($_GET['token'] ?? '');
+    $token = trim($_GET['token'] ?? '');
 
-    if (empty($token)) {
-        JsonResponse::badRequest(['error' => 'Token manquant']);
+    if ($token === '' || !preg_match('/^[a-f0-9]{64}$/i', $token)) {
+        JsonResponse::badRequest(['error' => 'Token invalide']);
     }
 
     $result = $authService->verifyEmail($token);
