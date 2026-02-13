@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost';
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost' : window.location.origin;
+
+console.log('API_URL:', API_URL);
 
 class ApiService {
     constructor() {
