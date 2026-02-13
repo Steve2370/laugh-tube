@@ -195,8 +195,12 @@ class ApiService {
 
         const response = await this.request('/login', {
             method: 'POST',
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password }),
+            skipAuth: true,
         });
+        console.log('🔍 Login response complète:', response);
+        console.log('🔍 response.data:', response.data);
+        console.log('🔍 response.access_token:', response.access_token);
 
         const accessToken = response.access_token || response.token;
         const refreshToken = response.refresh_token || response.refreshToken;
@@ -205,7 +209,15 @@ class ApiService {
             this.setToken(accessToken);
             this.setRefreshToken(refreshToken);
             this.setUser(response.user);
+            localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('refresh_token', refreshToken);
+            console.log('✅ Tokens sauvegardés:', {
+                access: accessToken.substring(0, 20) + '...',
+                refresh: refreshToken?.substring(0, 20) + '...'
+            });
             console.log('Authentification réussie');
+        } else {
+            console.error('❌ PAS DE TOKEN DANS LA RÉPONSE!');
         }
 
         if (response.requires_2fa) {
@@ -242,7 +254,9 @@ class ApiService {
         const response = await this.request('/register', {
             method: 'POST',
             body: JSON.stringify({ username, email, password }),
+            skipAuth: true,
         });
+        console.log('🔍 Register response complète:', response);
 
         const accessToken = response.access_token || response.token;
         const refreshToken = response.refresh_token || response.refreshToken;
@@ -252,8 +266,13 @@ class ApiService {
             this.setRefreshToken(refreshToken);
             const me = await this.request('/me', { method: 'GET' });
             this.setUser(me.user ?? me.data?.user ?? me.data ?? me);
+            localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('refresh_token', refreshToken);
+            console.log('✅ Tokens sauvegardés après inscription');
 
             console.log('Inscription réussie');
+        } else {
+            console.error('❌ PAS DE TOKEN DANS LA RÉPONSE REGISTER!');
         }
 
         return response;
