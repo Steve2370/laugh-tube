@@ -17,41 +17,64 @@ class ApiService {
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
 
-        const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-            },
+        const token = this.getToken();
+        const headers = {
+            ...(options.headers || {}),
         };
 
-        const token = this.getToken();
         if (token) {
-            defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+            headers["Authorization"] = `Bearer ${token}`;
         }
+
+        const body = options.body;
+        const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+        const isPlainObjectBody =
+            body &&
+            !isFormData &&
+            typeof body === "object" &&
+            !(body instanceof Blob) &&
+            !(body instanceof ArrayBuffer);
 
         const finalOptions = {
-            ...defaultOptions,
             ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...options.headers,
-            },
+            headers,
+            body,
         };
 
-        console.log('⏳ Requête en cours, attente...', options.method || 'GET', endpoint);
-        const response = await fetch(url, finalOptions);
-        console.log('✅ Réponse reçue:', response.status);
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`);
+        if (isPlainObjectBody) {
+            finalOptions.body = JSON.stringify(body);
+            finalOptions.headers["Content-Type"] = "application/json";
+        } else if (!body && !finalOptions.headers["Content-Type"]) {
+            finalOptions.headers["Content-Type"] = "application/json";
         }
 
-        const contentType = response.headers.get('content-type');
-        if (contentType?.includes('application/json')) {
+        console.log("⏳ Requête en cours, attente...", finalOptions.method || "GET", endpoint);
+
+        const response = await fetch(url, finalOptions);
+
+        console.log("✅ Réponse reçue:", response.status);
+
+        const contentType = response.headers.get("content-type") || "";
+
+        if (!response.ok) {
+            const raw = await response.text();
+
+            let msg = `HTTP ${response.status}`;
+            try {
+                const parsed = JSON.parse(raw);
+                msg = parsed.error || parsed.message || msg;
+            } catch {
+                msg = raw?.slice(0, 200) || msg;
+            }
+
+            throw new Error(msg);
+        }
+
+        if (contentType.includes("application/json")) {
             return await response.json();
         }
 
-        return response;
+        return await response.text();
     }
 
     async _executeRequest(endpoint, options = {}, retryCount = 0) {
@@ -312,7 +335,8 @@ class ApiService {
     }
 
     async getMe() {
-        return await this.request('/me');
+        const data = await this.request("/me");
+        return data.user ?? data;
     }
 
     async getUserProfile(userId) {
