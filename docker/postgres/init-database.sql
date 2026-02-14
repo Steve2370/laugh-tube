@@ -474,6 +474,49 @@ COMMENT ON TABLE subscriptions IS 'Table des abonnements entre utilisateurs (nou
 COMMENT ON COLUMN subscriptions.creator_id IS 'ID du créateur (celui à qui on s''abonne)';
 COMMENT ON COLUMN subscriptions.subscriber_id IS 'ID de l''abonné (celui qui s''abonne)';
 
+ALTER TABLE videos
+    ADD COLUMN IF NOT EXISTS encoded_filename VARCHAR(255);
+ALTER TABLE videos
+    ADD COLUMN IF NOT EXISTS encoded BOOLEAN DEFAULT FALSE;
+COMMENT ON COLUMN videos.filename IS 'Nom du fichier ORIGINAL uploadé';
+COMMENT ON COLUMN videos.encoded_filename IS 'Nom du fichier ENCODÉ (après traitement FFmpeg)';
+ALTER TABLE encoding_queue
+    ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0 NOT NULL;
+
+ALTER TABLE encoding_queue
+    ADD COLUMN IF NOT EXISTS started_at TIMESTAMP;
+
+ALTER TABLE encoding_queue
+    ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP;
+
+ALTER TABLE encoding_queue
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;
+
+CREATE INDEX IF NOT EXISTS idx_encoding_queue_priority
+    ON encoding_queue(priority DESC, created_at ASC)
+    WHERE status = 'pending';
+
+CREATE INDEX IF NOT EXISTS idx_encoding_queue_status
+    ON encoding_queue(status);
+
+SELECT
+    column_name,
+    data_type,
+    is_nullable,
+    column_default
+FROM information_schema.columns
+WHERE table_name = 'videos'
+ORDER BY ordinal_position;
+
+SELECT
+    column_name,
+    data_type,
+    is_nullable,
+    column_default
+FROM information_schema.columns
+WHERE table_name = 'encoding_queue'
+ORDER BY ordinal_position;
+
 COMMENT ON TABLE notifications IS 'Table des notifications utilisateur';
 COMMENT ON COLUMN notifications.type IS 'Type de notification: like, comment, subscribe, mention, reply, video_upload';
 COMMENT ON COLUMN notifications.user_id IS 'Utilisateur qui reçoit la notification';
