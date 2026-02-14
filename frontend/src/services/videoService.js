@@ -425,7 +425,7 @@ class VideoService {
 
     getThumbnailUrl(video) {
         if (!video) {
-            return 'https://via.placeholder.com/640x360/4F46E5/FFFFFF?text=Vidéo';
+            return '/default-thumbnail.jpg';
         }
 
         if (typeof video === 'object' && video.thumbnail) {
@@ -436,7 +436,7 @@ class VideoService {
             return `https://www.laughtube.ca/uploads/thumbnails/${video}_thumb.jpg`;
         }
 
-        return 'https://via.placeholder.com/640x360/4F46E5/FFFFFF?text=Vidéo';
+        return '/default-thumbnail.jpg';
     }
 
     _validateVideoFile(file) {
