@@ -271,6 +271,15 @@ class ApiService {
         return response.data || response;
     }
 
+    async getVideoById(id) {
+        try {
+            return await this.request(`/videos/${id}`);
+        } catch (error) {
+            console.error('ApiService.getVideoById:', error);
+            throw error;
+        }
+    }
+
     getThumbnailUrl(video) {
         if (video?.thumbnail) {
             return `${this.baseURL}/uploads/thumbnails/${video.thumbnail}`;
