@@ -262,13 +262,7 @@ try {
     }
 
     if (preg_match('#^/users/(\d+)/subscribers-count$#', $uri, $m) && $method === 'GET') {
-        http_response_code(200);
-        echo json_encode([
-            'success' => true,
-            'count' => 0,
-            'user_id' => (int)$m[1]
-        ]);
-        return;
+        $userController->getSubscribersCount((int)$m[1]); return;
     }
 
     if (preg_match('#^/users/(\d+)/subscribe-status$#', $uri, $m) && $method === 'GET') {
