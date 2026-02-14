@@ -448,7 +448,7 @@ class ApiService {
 
     async getSubscribersCount(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
-        return response.data || response;
+        return response.count || 0;
     }
 
     async getWatchHistory(userId) {
