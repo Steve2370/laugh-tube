@@ -272,7 +272,7 @@ class ApiService {
     }
 
     getThumbnailUrl(video) {
-        if (video.thumbnail) {
+        if (video?.thumbnail) {
             return `${this.baseURL}/uploads/thumbnails/${video.thumbnail}`;
         }
         return '/default-thumbnail.jpg';
