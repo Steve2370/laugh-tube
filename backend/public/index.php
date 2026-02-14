@@ -264,11 +264,7 @@ try {
     if (preg_match('#^/users/(\d+)/subscribers-count$#', $uri, $m) && $method === 'GET') {
         header('Content-Type: application/json');
         http_response_code(200);
-        echo json_encode([
-            'success' => true,
-            'count' => 0,
-            'user_id' => (int)$m[1]
-        ]);
+        echo json_encode(['success' => true, 'count' => 0, 'user_id' => (int)$m[1]]);
         return;
     }
 
