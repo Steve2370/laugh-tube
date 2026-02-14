@@ -144,11 +144,13 @@ class ReactionController
         }
     }
 
-    public function status(int $param)
+    public function status(int $videoId): void
     {
+        $this->getStatus($videoId);
     }
 
-    public function counts(int $param)
+    public function counts(int $videoId): void
     {
+        $this->getCounts($videoId);
     }
 }
