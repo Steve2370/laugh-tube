@@ -136,13 +136,13 @@ class VideoEncoder {
                         SELECT id, video_id
                         FROM encoding_queue
                         WHERE status = 'pending'
-                        ORDER BY priority DESC, created_at ASC
+                        ORDER BY created_at DESC, created_at ASC
                         LIMIT 1
                             FOR UPDATE SKIP LOCKED
                     )
                     UPDATE encoding_queue eq
                     SET status = 'processing',
-                        started_at = NOW()
+                        created_at = NOW()
                     FROM next_job nj
                              JOIN videos v ON v.id = nj.video_id
                     WHERE eq.id = nj.id
@@ -150,7 +150,7 @@ class VideoEncoder {
                         eq.id AS queue_id,
                         eq.video_id,
                         v.filename,
-                        v.titre AS title
+                        v.title AS title
                 `);
 
                 if (result.rows.length === 0) {
@@ -184,8 +184,7 @@ class VideoEncoder {
             await pool.query(
                 `UPDATE encoding_queue
                  SET status = 'failed',
-                     error_message = 'Fichier source introuvable',
-                     completed_at = NOW()
+                     created_at = NOW()
                  WHERE id = $1`,
                 [queue_id]
             );
@@ -285,8 +284,7 @@ class VideoEncoder {
             await pool.query(`
                 UPDATE encoding_queue
                 SET status = 'failed',
-                    error_message = $1,
-                    completed_at = NOW()
+                    updated_at = NOW()
                 WHERE id = $2
             `, [err.message.substring(0, 500), queue_id]);
 
