@@ -127,15 +127,17 @@ class ReactionController
         try {
             $result = $this->reactionService->getReactionCounts($videoId);
 
+            header('Content-Type: application/json');
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'likes_count' => $result['likes_count'],
-                'dislikes_count' => $result['dislikes_count']
+                'likes_count' => $result['likes_count'] ?? 0,
+                'dislikes_count' => $result['dislikes_count'] ?? 0
             ]);
 
         } catch (\Exception $e) {
             error_log("ReactionController::getCounts - Error: " . $e->getMessage());
+            header('Content-Type: application/json');
             http_response_code(500);
             echo json_encode([
                 'success' => false,
