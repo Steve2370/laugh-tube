@@ -271,6 +271,13 @@ class ApiService {
         return response.data || response;
     }
 
+    getThumbnailUrl(video) {
+        if (video.thumbnail) {
+            return `${this.baseURL}/uploads/thumbnails/${video.thumbnail}`;
+        }
+        return '/default-thumbnail.jpg';
+    }
+
     async getUserVideos(userId) {
         const response = await this.request(`/users/${userId}/videos`);
         return response.data || response;
