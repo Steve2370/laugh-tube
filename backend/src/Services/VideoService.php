@@ -80,10 +80,9 @@ class VideoService
             if ($this->notificationCreator) {
                 try {
                     error_log("VideoService::creationVideo - Sending notification for videoId: $videoId");
-                    $this->notificationCreator->notifyVideoUpload($userId, $videoId, $title);
+                    $this->notificationCreator->notifyVideoUpload($userId, $videoId, $title, $filename);
                 } catch (\Exception $e) {
                     error_log("VideoService::creationVideo - Notification error: " . $e->getMessage());
-                    // Continue même si la notification échoue
                 }
             }
 

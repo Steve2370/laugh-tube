@@ -184,7 +184,7 @@ class VideoEncoder {
             await pool.query(
                 `UPDATE encoding_queue
                  SET status = 'failed',
-                     created_at = NOW()
+                     updated_at = NOW()
                  WHERE id = $1`,
                 [queue_id]
             );
@@ -285,8 +285,8 @@ class VideoEncoder {
                 UPDATE encoding_queue
                 SET status = 'failed',
                     updated_at = NOW()
-                WHERE id = $2
-            `, [err.message.substring(0, 500), queue_id]);
+                WHERE id = $1
+            `, [queue_id]);
 
             try {
                 if (await fileExists(outputPath)) await fs.unlink(outputPath);
