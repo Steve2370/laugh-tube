@@ -30,12 +30,15 @@ class VideoService
     public function creationVideo(int $userId, string $title, string $description, $filenameOrFile): array
     {
         try {
+            error_log("VideoService::creationVideo - START - userId: $userId, title: $title");
+
             $title = SecurityHelper::sanitizeInput(trim($title));
             $description = SecurityHelper::sanitizeInput(trim($description));
 
             $errors = $this->validationService->validateVideoMetadata($title, $description);
 
             if (!empty($errors)) {
+                error_log("VideoService::creationVideo - Validation errors: " . json_encode($errors));
                 return [
                     'success' => false,
                     'errors' => $errors,
@@ -46,22 +49,41 @@ class VideoService
             $filename = $filenameOrFile;
 
             if (is_array($filenameOrFile) && $this->uploadService) {
+                error_log("VideoService::creationVideo - Uploading file...");
                 $uploadResult = $this->uploadService->uploadVideo($filenameOrFile, $userId);
 
                 if (!$uploadResult['success']) {
+                    error_log("VideoService::creationVideo - Upload failed: " . json_encode($uploadResult));
                     return $uploadResult;
                 }
 
                 $filename = $uploadResult['filename'];
+                error_log("VideoService::creationVideo - File uploaded: $filename");
             }
 
+            // Appeler la création avec tous les paramètres
+            error_log("VideoService::creationVideo - Creating video record with userId: $userId");
             $videoId = $this->videoModel->create($userId, $title, $description, $filename);
 
+            if ($videoId === null) {
+                error_log("VideoService::creationVideo - CRITICAL: videoModel->create returned NULL");
+                return [
+                    'success' => false,
+                    'message' => 'Échec de la création de la vidéo en base de données',
+                    'code' => 500
+                ];
+            }
+
+            error_log("VideoService::creationVideo - Video created with ID: $videoId");
+
+            // Notification uniquement si $videoId est valide
             if ($this->notificationCreator) {
                 try {
+                    error_log("VideoService::creationVideo - Sending notification for videoId: $videoId");
                     $this->notificationCreator->notifyVideoUpload($userId, $videoId, $title);
                 } catch (\Exception $e) {
                     error_log("VideoService::creationVideo - Notification error: " . $e->getMessage());
+                    // Continue même si la notification échoue
                 }
             }
 
@@ -75,6 +97,8 @@ class VideoService
                 ]
             );
 
+            error_log("VideoService::creationVideo - SUCCESS - videoId: $videoId");
+
             return [
                 'success' => true,
                 'data' => [
@@ -85,11 +109,12 @@ class VideoService
             ];
 
         } catch (\Exception $e) {
-            error_log("VideoService::creationVideo - Error: " . $e->getMessage());
+            error_log("VideoService::creationVideo - EXCEPTION: " . $e->getMessage());
+            error_log("VideoService::creationVideo - Stack trace: " . $e->getTraceAsString());
 
             return [
                 'success' => false,
-                'message' => 'Erreur lors de la création de la vidéo',
+                'message' => 'Erreur lors de la création de la vidéo: ' . $e->getMessage(),
                 'code' => 500
             ];
         }

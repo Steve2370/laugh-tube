@@ -132,24 +132,25 @@ class VideoEncoder {
 
             try {
                 const result = await client.query(`
-                    UPDATE encoding_queue
-                    SET status = 'processing',
-                        started_at = NOW()
-                    WHERE id = (
-                        SELECT id
+                    WITH next_job AS (
+                        SELECT id, video_id
                         FROM encoding_queue
                         WHERE status = 'pending'
                         ORDER BY priority DESC, created_at ASC
                         LIMIT 1
                             FOR UPDATE SKIP LOCKED
                     )
+                    UPDATE encoding_queue eq
+                    SET status = 'processing',
+                        started_at = NOW()
+                    FROM next_job nj
+                             JOIN videos v ON v.id = nj.video_id
+                    WHERE eq.id = nj.id
                     RETURNING
-                        encoding_queue.id AS queue_id,
-                        encoding_queue.video_id,
-                        videos.filename,
-                        videos.titre AS title
-                    FROM videos
-                    WHERE videos.id = encoding_queue.video_id
+                        eq.id AS queue_id,
+                        eq.video_id,
+                        v.filename,
+                        v.titre AS title
                 `);
 
                 if (result.rows.length === 0) {
