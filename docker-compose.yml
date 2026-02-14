@@ -57,34 +57,31 @@ services:
     restart: "no"
 
   encoder:
-    image: node:20-alpine
+    build:
+      context: ./encoder
+      dockerfile: Dockerfile
     container_name: laughtube_encoder
-    working_dir: /app
     restart: unless-stopped
-    volumes:
-      - ./encoder:/app
-      - backend_uploads:/app/uploads
-      - /app/node_modules
-    command: sh -c "npm install && npm start"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - laughtube_network
+    command: sh -c "apk add --no-cache ffmpeg && npm install && npm start"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=${DB_NAME:-laughtube}
       - DB_USER=${DB_USER:-laughtube_user}
       - DB_PASSWORD=${DB_PASSWORD:-LaughTube206@#$}
-      - UPLOAD_DIR=/app/uploads/videos
-      - ENCODED_DIR=/app/uploads/encoded
-      - THUMBNAILS_DIR=/app/uploads/thumbnails
+      - UPLOADS_DIR=/app/uploads/videos
+      - OUTPUT_DIR=/app/uploads/encoded
+      - THUMBS_DIR=/app/uploads/thumbnails
       - NODE_ENV=production
-      - ENCODER_WORKERS=2
-      - ENCODER_PRESET=veryfast
-      - ENCODER_CRF=23
-      - POLL_INTERVAL=5000
+    volumes:
+      - ./encoder:/app
+      - backend_uploads:/app/uploads
+      - /app/node_modules
+    networks:
+      - laughtube_network
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   nginx:
     image: nginx:alpine
