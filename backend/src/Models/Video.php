@@ -36,7 +36,6 @@ class Video
             $videoId = (int)$result['id'];
             error_log("Video::create - Created video ID: $videoId");
 
-            // Ajouter à la queue d'encodage
             if (!$this->addToEncodingQueue($videoId)) {
                 error_log("Video::create - Failed to add to encoding queue");
                 $this->db->rollback();
