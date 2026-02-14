@@ -18,19 +18,30 @@ class Video
         try {
             $this->db->beginTransaction();
 
+            // Log des paramètres pour debug
+            error_log("Video::create - userId: $userId, title: $title, filename: $filename");
+
             $sql = "INSERT INTO videos (user_id, title, description, filename, created_at) 
                     VALUES ($1, $2, $3, $4, NOW()) 
                     RETURNING id";
 
             $result = $this->db->fetchOne($sql, [$userId, $title, $description, $filename]);
 
-            if (!$result) {
+            if (!$result || !isset($result['id'])) {
+                error_log("Video::create - No ID returned from INSERT");
                 $this->db->rollback();
                 return null;
             }
 
             $videoId = (int)$result['id'];
-            $this->addToEncodingQueue($videoId);
+            error_log("Video::create - Created video ID: $videoId");
+
+            // Ajouter à la queue d'encodage
+            if (!$this->addToEncodingQueue($videoId)) {
+                error_log("Video::create - Failed to add to encoding queue");
+                $this->db->rollback();
+                return null;
+            }
 
             $this->db->commit();
             return $videoId;
@@ -38,6 +49,7 @@ class Video
         } catch (\Exception $e) {
             $this->db->rollback();
             error_log("Video::create error: " . $e->getMessage());
+            error_log("Video::create stack trace: " . $e->getTraceAsString());
             return null;
         }
     }
