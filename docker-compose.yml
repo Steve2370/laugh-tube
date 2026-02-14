@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
@@ -62,7 +60,6 @@ services:
       dockerfile: Dockerfile
     container_name: laughtube_encoder
     restart: unless-stopped
-    command: sh -c "apk add --no-cache ffmpeg && npm install && npm start"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -93,7 +90,7 @@ services:
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend:/var/www/html:ro
-      - backend_uploads:/var/www/html/public/uploads:ro
+      - backend_uploads:/var/www/html/public/uploads
       - frontend_dist:/var/www/frontend:ro
     depends_on:
       - backend
