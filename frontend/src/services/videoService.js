@@ -54,6 +54,10 @@ class VideoService {
         }
     }
 
+    async getVideoById(id) {
+        return this.getVideo(id);
+    }
+
     async getTrendingVideos(options = {}) {
         try {
             const { limit = 10, period = 7 } = options;
@@ -419,11 +423,20 @@ class VideoService {
         return apiService.getVideoStreamUrl(id);
     }
 
-    getThumbnailUrl(id) {
-        if (!id) {
-            throw new Error('ID de vidéo requis');
+    getThumbnailUrl(video) {
+        if (!video) {
+            return 'https://via.placeholder.com/640x360/4F46E5/FFFFFF?text=Vidéo';
         }
-        return apiService.getThumbnailUrl(id);
+
+        if (typeof video === 'object' && video.thumbnail) {
+            return `https://www.laughtube.ca/uploads/thumbnails/${video.thumbnail}`;
+        }
+
+        if (typeof video === 'number' || typeof video === 'string') {
+            return `https://www.laughtube.ca/uploads/thumbnails/${video}_thumb.jpg`;
+        }
+
+        return 'https://via.placeholder.com/640x360/4F46E5/FFFFFF?text=Vidéo';
     }
 
     _validateVideoFile(file) {
