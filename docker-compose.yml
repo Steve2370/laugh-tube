@@ -39,7 +39,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/var/www/html
-      - backend_uploads:/var/www/html/uploads
+      - backend_uploads:/var/www/html/public/uploads
     networks:
       - laughtube_network
     expose:
@@ -56,6 +56,24 @@ services:
     command: sh -c "npm install && npm run build"
     restart: "no"
 
+  encoder:
+    image: node:20-alpine
+    container_name: laughtube_encoder
+    working_dir: /app
+    restart: unless-stopped
+    volumes:
+      - ./encoder:/app
+      - backend_uploads:/app/uploads
+      - /app/node_modules
+    command: sh -c "npm install && npm start"
+    depends_on:
+      - backend
+    networks:
+      - laughtube_network
+    environment:
+      - UPLOAD_DIR=/app/uploads/videos
+      - NODE_ENV=production
+
   nginx:
     image: nginx:alpine
     container_name: laughtube_nginx
@@ -66,7 +84,7 @@ services:
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend:/var/www/html:ro
-      - backend_uploads:/var/www/html/uploads:ro
+      - backend_uploads:/var/www/html/public/uploads:ro
       - frontend_dist:/var/www/frontend:ro
     depends_on:
       - backend
