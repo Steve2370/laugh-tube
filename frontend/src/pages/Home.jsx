@@ -348,7 +348,8 @@ const VideoCard = ({ video, onClick }) => {
                     alt={video.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/640x360/4F46E5/FFFFFF?text=Vidéo';
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/images/placeholder-video.png';
                     }}
                 />
 
