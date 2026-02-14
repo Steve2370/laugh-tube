@@ -46,6 +46,23 @@ class PostgreSQLDatabase implements DatabaseInterface
         }
     }
 
+    private function convertPostgreSQLPlaceholders(string $sql, array $params): array
+    {
+        if (preg_match('/\$\d+/', $sql)) {
+            preg_match_all('/\$(\d+)/', $sql, $matches);
+
+            if (!empty($matches[1])) {
+                $convertedSql = preg_replace('/\$\d+/', '?', $sql);
+
+                $reorderedParams = array_values($params);
+
+                return [$convertedSql, $reorderedParams];
+            }
+        }
+
+        return [$sql, $params];
+    }
+
     public function query(string $sql, array $params = []): mixed
     {
         if (!$this->connection) {
@@ -53,11 +70,20 @@ class PostgreSQLDatabase implements DatabaseInterface
         }
 
         try {
-            $stmt = $this->connection->prepare($sql);
-            $stmt->execute($params);
+            [$convertedSql, $convertedParams] = $this->convertPostgreSQLPlaceholders($sql, $params);
+
+            error_log("PostgreSQLDatabase::query - Original SQL: " . substr($sql, 0, 100));
+            error_log("PostgreSQLDatabase::query - Converted SQL: " . substr($convertedSql, 0, 100));
+            error_log("PostgreSQLDatabase::query - Params: " . json_encode($convertedParams));
+
+            $stmt = $this->connection->prepare($convertedSql);
+            $stmt->execute($convertedParams);
             return $stmt;
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
+            error_log("PostgreSQLDatabase::query - Error: " . $e->getMessage());
+            error_log("PostgreSQLDatabase::query - SQL: " . $sql);
+            error_log("PostgreSQLDatabase::query - Params: " . json_encode($params));
             throw new \Exception("Query failed: " . $e->getMessage());
         }
     }

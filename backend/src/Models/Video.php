@@ -18,7 +18,6 @@ class Video
         try {
             $this->db->beginTransaction();
 
-            // Log des paramètres pour debug
             error_log("Video::create - userId: $userId, title: $title, filename: $filename");
 
             $sql = "INSERT INTO videos (user_id, title, description, filename, created_at) 
