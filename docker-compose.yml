@@ -6,9 +6,9 @@ services:
     container_name: laughtube_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-laughtube}
-      POSTGRES_USER: ${DB_USER:-laughtube_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: laughtube
+      POSTGRES_USER: laughtube_user
+      POSTGRES_PASSWORD: "LaughTube206@#$$"
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -16,7 +16,7 @@ services:
     networks:
       - laughtube_network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-laughtube_user} -d ${DB_NAME:-laughtube}" ]
+      test: [ "CMD-SHELL", "pg_isready -U laughtube_user -d laughtube" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -30,10 +30,10 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-laughtube}
-      DB_USER: ${DB_USER:-laughtube_user}
-      DB_PASSWORD: ${DB_PASSWORD:-changeme}
-      APP_ENV: ${APP_ENV:-production}
+      DB_NAME: laughtube
+      DB_USER: laughtube_user
+      DB_PASSWORD: "LaughTube206@#$$"
+      APP_ENV: production
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,12 +67,18 @@ services:
       - /app/node_modules
     command: sh -c "npm install && npm start"
     depends_on:
-      - backend
+      postgres:
+        condition: service_healthy
     networks:
       - laughtube_network
     environment:
       - UPLOAD_DIR=/app/uploads/videos
       - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=laughtube
+      - DB_USER=laughtube_user
+      - DB_PASSWORD=LaughTube206@#$$
 
   nginx:
     image: nginx:alpine
