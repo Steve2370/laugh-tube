@@ -136,13 +136,13 @@ class VideoEncoder {
                         SELECT id, video_id
                         FROM encoding_queue
                         WHERE status = 'pending'
-                        ORDER BY created_at DESC, created_at ASC
+                        ORDER BY priority DESC, created_at ASC
                         LIMIT 1
                             FOR UPDATE SKIP LOCKED
                     )
                     UPDATE encoding_queue eq
                     SET status = 'processing',
-                        created_at = NOW()
+                        started_at = NOW()
                     FROM next_job nj
                              JOIN videos v ON v.id = nj.video_id
                     WHERE eq.id = nj.id
@@ -240,31 +240,32 @@ class VideoEncoder {
 
             logSuccess(`Worker ${this.workerId} - Thumbnail créé`);
 
-            await pool.query(`
-                BEGIN;
-                
-                UPDATE videos 
-                SET encoded = TRUE,
-                    encoded_filename = $1,
-                    thumbnail = $2,
-                    file_size = $3,
-                    encoding_duration = $4
-                WHERE id = $5;
-                
-                UPDATE encoding_queue
-                SET status = 'completed',
-                    completed_at = NOW()
-                WHERE id = $6;
-                
-                COMMIT;
-            `, [
-                outputFilename,
-                thumbFilename,
-                outputSize,
-                encodingTime,
-                video_id,
-                queue_id
-            ]);
+            const client = await pool.connect();
+            try {
+                await client.query('BEGIN');
+
+                await client.query(`
+                    UPDATE videos
+                    SET encoded = TRUE,
+                        encoded_filename = $1,
+                        thumbnail = $2
+                    WHERE id = $3
+                `, [outputFilename, thumbFilename, video_id]);
+
+                await client.query(`
+                    UPDATE encoding_queue
+                    SET status = 'completed',
+                        completed_at = NOW()
+                    WHERE id = $1
+                `, [queue_id]);
+
+                await client.query('COMMIT');
+            } catch (e) {
+                await client.query('ROLLBACK');
+                throw e;
+            } finally {
+                client.release();
+            }
 
             logSuccess(`Worker ${this.workerId} - Vidéo ${video_id} encodée avec succès!`);
 
