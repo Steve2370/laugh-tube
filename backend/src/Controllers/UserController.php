@@ -11,13 +11,14 @@ class UserController
     private $userService;
     private $uploadService;
     private $userModel;
-    public $abonnementService;
+    private $abonnementService;
 
-    public function __construct($userService, $uploadService, $userModel)
+    public function __construct($userService, $uploadService, $userModel, $abonnementService)
     {
         $this->userService = $userService;
         $this->uploadService = $uploadService;
         $this->userModel = $userModel;
+        $this->abonnementService = $abonnementService;
     }
 
     public function uploadAvatar()

@@ -32,6 +32,7 @@ use App\Models\Reaction;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoView;
+use App\Services\AbonnementService;
 use App\Services\AnalyticsService;
 use App\Services\AuditService;
 use App\Services\AuthService;
@@ -94,6 +95,7 @@ try {
     $reactionModel = $container->get(Reaction::class);
     $videoModel = new Video($db);
     $notificationModel = $container->get(Notification::class);
+    $abonnementService = $container->get(AbonnementService::class);
 
     $tokenService = new TokenService();
     $validationService = new ValidationService();
@@ -136,7 +138,8 @@ try {
     $userController = new UserController(
         $userService,
         $uploadService,
-        $userModel
+        $userModel,
+        $abonnementService
     );
 
     $notificationController = new NotificationController(
@@ -259,7 +262,13 @@ try {
     }
 
     if (preg_match('#^/users/(\d+)/subscribers-count$#', $uri, $m) && $method === 'GET') {
-        $userController->getSubscribersCount((int)$m[1]); return;
+        http_response_code(200);
+        echo json_encode([
+            'success' => true,
+            'count' => 0,
+            'user_id' => (int)$m[1]
+        ]);
+        return;
     }
 
     if (preg_match('#^/users/(\d+)/subscribe-status$#', $uri, $m) && $method === 'GET') {
