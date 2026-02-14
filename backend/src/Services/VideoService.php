@@ -61,7 +61,6 @@ class VideoService
                 error_log("VideoService::creationVideo - File uploaded: $filename");
             }
 
-            // Appeler la création avec tous les paramètres
             error_log("VideoService::creationVideo - Creating video record with userId: $userId");
             $videoId = $this->videoModel->create($userId, $title, $description, $filename);
 
@@ -76,7 +75,6 @@ class VideoService
 
             error_log("VideoService::creationVideo - Video created with ID: $videoId");
 
-            // Notification uniquement si $videoId est valide
             if ($this->notificationCreator) {
                 try {
                     error_log("VideoService::creationVideo - Sending notification for videoId: $videoId");
@@ -128,7 +126,7 @@ class VideoService
                 $video['likes'] = $this->reactionModel->countLikes($video['id']);
                 $video['dislikes'] = $this->reactionModel->countDislikes($video['id']);
                 $video['commentaires'] = $this->commentaireModel->countByVideo($video['id']);
-                $video['comments'] = $video['commentaires']; // Alias
+                $video['comments'] = $video['commentaires'];
                 $video['views'] = (int)$video['views'];
                 $video['unique_views'] = (int)$video['unique_views'];
             }
@@ -173,7 +171,7 @@ class VideoService
             $video['likes'] = $this->reactionModel->countLikes($videoId);
             $video['dislikes'] = $this->reactionModel->countDislikes($videoId);
             $video['commentaires'] = $this->commentaireModel->findByVideo($videoId);
-            $video['comments'] = $video['commentaires']; // Alias
+            $video['comments'] = $video['commentaires'];
 
             return [
                 'success' => true,

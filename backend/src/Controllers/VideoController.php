@@ -346,7 +346,30 @@ class VideoController
         }
     }
 
-    public function expose(int $param)
+    public function expose(int $videoId): void
     {
+        try {
+            $result = $this->videoService->getVideoDetails($videoId);
+
+            if (!$result['success']) {
+                http_response_code($result['code'] ?? 404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $result['message'] ?? 'Vidéo non trouvée'
+                ]);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode($result);
+
+        } catch (\Exception $e) {
+            error_log("VideoController::expose - Error: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur serveur'
+            ]);
+        }
     }
 }
