@@ -150,4 +150,9 @@ class PostgreSQLDatabase implements DatabaseInterface
     {
         return $this->connection;
     }
+
+    public function prepare(string $string)
+    {
+        // TODO: Implement prepare() method.
+    }
 }
