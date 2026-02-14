@@ -64,7 +64,7 @@ class AbonnementService
 
     public function getSubscribersCount(int $targetUserId): int
     {
-        return $this->abonnementModel->conterAbonnes($targetUserId);
+        return $this->abonnementModel->countSubscribers($targetUserId);
     }
 
     public function getSubscribers(int $userId): array

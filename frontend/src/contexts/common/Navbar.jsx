@@ -14,7 +14,7 @@ import { useToast } from "../ToastContext.jsx";
 import NotificationDropdown from "./NotificationDropdown";
 
 export default function Navbar() {
-    const { user, logout } = useAuth();
+    const { user, logout, isAuthenticated } = useAuth();
     const toast = useToast();
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -97,7 +97,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex justify-end items-center space-x-3">
-                        {user ? (
+                        {isAuthenticated && user ? (
                             <>
                                 <NotificationDropdown />
 

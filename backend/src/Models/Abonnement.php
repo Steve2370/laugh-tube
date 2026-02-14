@@ -18,6 +18,26 @@ class Abonnement
         return $this->db->execute($sql, [$abonneId, $targetUserId]);
     }
 
+    public function countSubscribers(int $userId): int
+    {
+        try {
+            $stmt = $this->db->prepare("
+            SELECT COUNT(*) as count
+            FROM abonnements
+            WHERE subscriber_id = :user_id
+        ");
+
+            $stmt->execute(['user_id' => $userId]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            return (int)($result['count'] ?? 0);
+
+        } catch (\Exception $e) {
+            error_log("AbonnementRepository::countSubscribers - Error: " . $e->getMessage());
+            return 0;
+        }
+    }
+
     public function desabonneToi(int $abonneId, int $targetUserId): bool
     {
         $sql = "DELETE FROM abonnements 
