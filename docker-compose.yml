@@ -72,7 +72,7 @@ services:
       - NODE_ENV=production
     volumes:
       - ./encoder:/app
-      - ./backend/public/uploads:/var/www/html/public/uploads
+      - ./backend/public/uploads:/app/uploads
       - /app/node_modules
     networks:
       - laughtube_network
