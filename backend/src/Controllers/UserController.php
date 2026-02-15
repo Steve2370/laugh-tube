@@ -38,14 +38,14 @@ class UserController
 
             $file = $_FILES['avatar'] ?? $_FILES['photo_profil'] ?? $_FILES['profile-image'];
 
-            $uploadResult = $this->uploadService->uploadImage($file, $user['user_id'], 'avatar');
+            $uploadResult = $this->uploadService->uploadImage($file, $user['sub'], 'avatar');
 
             if (!$uploadResult['success']) {
                 JsonResponse::serverError(['error' => $uploadResult['message'] ?? 'Erreur upload']);
                 return;
             }
 
-            $updateResult = $this->userModel->updateAvatar($user['user_id'], $uploadResult['filename']);
+            $updateResult = $this->userModel->updateAvatar($user['sub'], $uploadResult['filename']);
 
             if (!$updateResult) {
                 JsonResponse::serverError(['error' => 'Erreur mise à jour profil']);
@@ -97,14 +97,14 @@ class UserController
 
             $file = $_FILES['cover'] ?? $_FILES['photo_couverture'];
 
-            $uploadResult = $this->uploadService->uploadImage($file, $user['user_id'], 'cover');
+            $uploadResult = $this->uploadService->uploadImage($file, $user['sub'], 'cover');
 
             if (!$uploadResult['success']) {
                 JsonResponse::serverError(['error' => $uploadResult['message'] ?? 'Erreur upload']);
                 return;
             }
 
-            $updateResult = $this->userModel->updateCover($user['user_id'], $uploadResult['filename']);
+            $updateResult = $this->userModel->updateCover($user['sub'], $uploadResult['filename']);
 
             if (!$updateResult) {
                 JsonResponse::serverError(['error' => 'Erreur mise à jour couverture']);
