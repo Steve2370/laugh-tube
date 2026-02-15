@@ -50,6 +50,34 @@ class User
         return $this->db->fetchOne($sql, [$username]);
     }
 
+    public function updateAvatar(int $userId, string $filename): bool
+    {
+        try {
+            $result = $this->db->query(
+                "UPDATE users SET profile_image = $1 WHERE id = $2",
+                [$filename, $userId]
+            );
+            return $result !== false;
+        } catch (\Exception $e) {
+            error_log("User::updateAvatar - Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateCover(int $userId, string $filename): bool
+    {
+        try {
+            $result = $this->db->query(
+                "UPDATE users SET profile_cover = $1 WHERE id = $2",
+                [$filename, $userId]
+            );
+            return $result !== false;
+        } catch (\Exception $e) {
+            error_log("User::updateCover - Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function existsByEmailOrUsername(string $email, string $username): bool
     {
         $sql = "SELECT id FROM users 

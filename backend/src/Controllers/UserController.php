@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthAide;
 use App\Utils\JsonResponse;
-use App\Services\abonnementService;
+use App\Models\User;
 
 class UserController
 {
@@ -54,7 +54,7 @@ class UserController
                 return;
             }
 
-            $updateResult = $this->userModel->updateAvatar($userId, $uploadResult['filename']);
+            $updateResult = $this->userModel->updateProfileImage($userId, $uploadResult['filename']);
 
             if (!$updateResult) {
                 JsonResponse::serverError(['error' => 'Erreur mise à jour profil']);
@@ -120,7 +120,7 @@ class UserController
                 return;
             }
 
-            $updateResult = $this->userModel->updateCover($userId, $uploadResult['filename']);
+            $updateResult = $this->userModel->updateProfileCover($userId, $uploadResult['filename']);
 
             if (!$updateResult) {
                 JsonResponse::serverError(['error' => 'Erreur mise à jour couverture']);
