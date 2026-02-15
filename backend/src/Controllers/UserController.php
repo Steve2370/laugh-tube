@@ -24,7 +24,12 @@ class UserController
     public function uploadAvatar()
     {
         try {
-            $user = AuthAide::requireAuth();
+            $user = $_SESSION['current_user'] ?? null;
+
+            if (!$user) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
 
             if (!isset($_FILES['avatar']) && !isset($_FILES['photo_profil']) && !isset($_FILES['profile-image'])) {
                 JsonResponse::badRequest(['error' => 'Aucun fichier fourni']);
@@ -33,40 +38,29 @@ class UserController
 
             $file = $_FILES['avatar'] ?? $_FILES['photo_profil'] ?? $_FILES['profile-image'];
 
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-            if (!in_array($file['type'], $allowedTypes)) {
-                JsonResponse::badRequest(['error' => 'Type de fichier non autorisé. Utilisez JPEG, PNG ou WebP']);
-                return;
-            }
-
-            if ($file['size'] > 5 * 1024 * 1024) {
-                JsonResponse::badRequest(['error' => 'Fichier trop volumineux. Maximum 5MB']);
-                return;
-            }
-
-            $uploadResult = $this->uploadService->uploadAvatar($file, $user['sub']);
+            $uploadResult = $this->uploadService->uploadImage($file, $user['user_id'], 'avatar');
 
             if (!$uploadResult['success']) {
-                JsonResponse::serverError(['error' => $uploadResult['error']]);
+                JsonResponse::serverError(['error' => $uploadResult['message'] ?? 'Erreur upload']);
                 return;
             }
 
-            $updateResult = $this->userModel->updateAvatar($user['sub'], $uploadResult['filename']);
+            $updateResult = $this->userModel->updateAvatar($user['user_id'], $uploadResult['filename']);
 
             if (!$updateResult) {
-                JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour du profil']);
+                JsonResponse::serverError(['error' => 'Erreur mise à jour profil']);
                 return;
             }
 
             JsonResponse::success([
-                'message' => 'Avatar mis à jour avec succès',
-                'avatar_url' => $uploadResult['url'],
+                'message' => 'Avatar mis à jour',
+                'avatar_url' => '/' . $uploadResult['path'],
                 'filename' => $uploadResult['filename']
             ]);
 
         } catch (\Exception $e) {
             error_log('Upload avatar error: ' . $e->getMessage());
-            JsonResponse::serverError(['error' => 'Erreur lors de l\'upload de l\'avatar']);
+            JsonResponse::serverError(['error' => 'Erreur upload avatar']);
         }
     }
 
@@ -89,7 +83,12 @@ class UserController
     public function uploadCover()
     {
         try {
-            $user = AuthAide::requireAuth();
+            $user = $_SESSION['current_user'] ?? null;
+
+            if (!$user) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
 
             if (!isset($_FILES['cover']) && !isset($_FILES['photo_couverture'])) {
                 JsonResponse::badRequest(['error' => 'Aucun fichier fourni']);
@@ -98,40 +97,29 @@ class UserController
 
             $file = $_FILES['cover'] ?? $_FILES['photo_couverture'];
 
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-            if (!in_array($file['type'], $allowedTypes)) {
-                JsonResponse::badRequest(['error' => 'Type de fichier non autorisé. Utilisez JPEG, PNG ou WebP']);
-                return;
-            }
-
-            if ($file['size'] > 10 * 1024 * 1024) {
-                JsonResponse::badRequest(['error' => 'Fichier trop volumineux. Maximum 10MB']);
-                return;
-            }
-
-            $uploadResult = $this->uploadService->uploadCover($file, $user['sub']);
+            $uploadResult = $this->uploadService->uploadImage($file, $user['user_id'], 'cover');
 
             if (!$uploadResult['success']) {
-                JsonResponse::serverError(['error' => $uploadResult['error']]);
+                JsonResponse::serverError(['error' => $uploadResult['message'] ?? 'Erreur upload']);
                 return;
             }
 
-            $updateResult = $this->userModel->updateCover($user['sub'], $uploadResult['filename']);
+            $updateResult = $this->userModel->updateCover($user['user_id'], $uploadResult['filename']);
 
             if (!$updateResult) {
-                JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour de la couverture']);
+                JsonResponse::serverError(['error' => 'Erreur mise à jour couverture']);
                 return;
             }
 
             JsonResponse::success([
-                'message' => 'Photo de couverture mise à jour avec succès',
-                'cover_url' => $uploadResult['url'],
+                'message' => 'Couverture mise à jour',
+                'cover_url' => '/' . $uploadResult['path'],
                 'filename' => $uploadResult['filename']
             ]);
 
         } catch (\Exception $e) {
             error_log('Upload cover error: ' . $e->getMessage());
-            JsonResponse::serverError(['error' => 'Erreur lors de l\'upload de la couverture']);
+            JsonResponse::serverError(['error' => 'Erreur upload couverture']);
         }
     }
 
