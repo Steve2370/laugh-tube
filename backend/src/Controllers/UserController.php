@@ -12,21 +12,23 @@ class UserController
     private $uploadService;
     private $userModel;
     private $abonnementService;
+    private $authMiddleware;
 
-    public function __construct($userService, $uploadService, $userModel, $abonnementService)
+    public function __construct($userService, $uploadService, $userModel, $abonnementService, $authMiddleware)
     {
         $this->userService = $userService;
         $this->uploadService = $uploadService;
         $this->userModel = $userModel;
         $this->abonnementService = $abonnementService;
+        $this->authMiddleware = $authMiddleware;
     }
 
     public function uploadAvatar()
     {
         try {
-            $user = $_SESSION['current_user'] ?? null;
+            $currentUser = $this->authMiddleware->handle();
 
-            if (!$user) {
+            if (!$currentUser) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
@@ -38,14 +40,21 @@ class UserController
 
             $file = $_FILES['avatar'] ?? $_FILES['photo_profil'] ?? $_FILES['profile-image'];
 
-            $uploadResult = $this->uploadService->uploadImage($file, $user['sub'], 'avatar');
+            $userId = $currentUser['user_id'] ?? $currentUser['sub'] ?? null;
+
+            if (!$userId) {
+                JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
+                return;
+            }
+
+            $uploadResult = $this->uploadService->uploadImage($file, $userId, 'avatar');
 
             if (!$uploadResult['success']) {
                 JsonResponse::serverError(['error' => $uploadResult['message'] ?? 'Erreur upload']);
                 return;
             }
 
-            $updateResult = $this->userModel->updateAvatar($user['sub'], $uploadResult['filename']);
+            $updateResult = $this->userModel->updateAvatar($userId, $uploadResult['filename']);
 
             if (!$updateResult) {
                 JsonResponse::serverError(['error' => 'Erreur mise à jour profil']);
@@ -83,9 +92,9 @@ class UserController
     public function uploadCover()
     {
         try {
-            $user = $_SESSION['current_user'] ?? null;
+            $currentUser = $this->authMiddleware->handle();
 
-            if (!$user) {
+            if (!$currentUser) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
@@ -97,14 +106,21 @@ class UserController
 
             $file = $_FILES['cover'] ?? $_FILES['photo_couverture'];
 
-            $uploadResult = $this->uploadService->uploadImage($file, $user['sub'], 'cover');
+            $userId = $currentUser['user_id'] ?? $currentUser['sub'] ?? null;
+
+            if (!$userId) {
+                JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
+                return;
+            }
+
+            $uploadResult = $this->uploadService->uploadImage($file, $userId, 'cover');
 
             if (!$uploadResult['success']) {
                 JsonResponse::serverError(['error' => $uploadResult['message'] ?? 'Erreur upload']);
                 return;
             }
 
-            $updateResult = $this->userModel->updateCover($user['sub'], $uploadResult['filename']);
+            $updateResult = $this->userModel->updateCover($userId, $uploadResult['filename']);
 
             if (!$updateResult) {
                 JsonResponse::serverError(['error' => 'Erreur mise à jour couverture']);
