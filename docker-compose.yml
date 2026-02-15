@@ -37,7 +37,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/var/www/html
-      - backend_uploads:/var/www/html/public/uploads
+      - ./backend/public/uploads:/var/www/html/public/uploads
     networks:
       - laughtube_network
     expose:
@@ -72,7 +72,7 @@ services:
       - NODE_ENV=production
     volumes:
       - ./encoder:/app
-      - backend_uploads:/app/uploads
+      - ./backend/public/uploads:/var/www/html/public/uploads
       - /app/node_modules
     networks:
       - laughtube_network
@@ -90,7 +90,7 @@ services:
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend:/var/www/html:ro
-      - backend_uploads:/var/www/html/public/uploads
+      - ./backend/public/uploads:/var/www/html/public/uploads
       - frontend_dist:/var/www/frontend:ro
     depends_on:
       - backend
