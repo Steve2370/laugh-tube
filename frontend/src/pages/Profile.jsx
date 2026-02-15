@@ -600,7 +600,7 @@ const AnalyticsTab = ({ stats, videos }) => {
 const Profile = () => {
     const { user, isAuthenticated } = useAuth();
     const toast = useToast();
-    const { videos: userVideos, loading: videosLoading, getUserVideos } = useVideos()
+    const { videos: userVideos, loading: videosLoading, getUserVideos } = useVideos();
     const isOwnProfile = true;
     const targetUserId = user?.id;
     const [activeTab, setActiveTab] = useState('videos');
