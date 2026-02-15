@@ -613,7 +613,6 @@ const Profile = () => {
     const { videos: userVideos, loading: videosLoading, getUserVideos } = useVideos();
 
     const [activeTab, setActiveTab] = useState('videos');
-    const [coverPreview, setCoverPreview] = useState(null);
     const [videos, setVideos] = useState([]);
     const [stats, setStats] = useState({
         totalVideos: 0,
