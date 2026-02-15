@@ -63,6 +63,11 @@ class UploadService
             $targetPath = $targetDir . $filename;
 
             if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+                error_log("UPLOAD FAILED - tmp: " . $file['tmp_name']);
+                error_log("UPLOAD FAILED - target: " . $targetPath);
+                error_log("UPLOAD FAILED - target dir exists: " . (is_dir($targetDir) ? 'YES' : 'NO'));
+                error_log("UPLOAD FAILED - target dir writable: " . (is_writable($targetDir) ? 'YES' : 'NO'));
+
                 return [
                     'success' => false,
                     'message' => 'Impossible de sauvegarder le fichier',

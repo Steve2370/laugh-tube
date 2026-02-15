@@ -62,7 +62,7 @@ class VideoController
                 return;
             }
 
-            $result = $this->videoService->creationVideo($userId, $title, $description, $file);
+            $result = $this->videoService->createVideo($userId, $title, $description, $file);
 
             if (!$result['success']) {
                 $code = $result['code'] ?? 500;
