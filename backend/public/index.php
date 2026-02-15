@@ -226,25 +226,11 @@ try {
     }
 
     if (($uri === '/users/me/avatar' || $uri === '/profile/upload-image') && $method === 'POST') {
-        $currentUser = $authMiddleware->handle();
-        if (!$currentUser) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'error' => 'Non authentifié']);
-            return;
-        }
-        $_SESSION['current_user'] = $currentUser;
         $userController->uploadAvatar();
         return;
     }
 
     if (($uri === '/users/me/cover' || $uri === '/profile/upload-cover') && $method === 'POST') {
-        $currentUser = $authMiddleware->handle();
-        if (!$currentUser) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'error' => 'Non authentifié']);
-            return;
-        }
-        $_SESSION['current_user'] = $currentUser;
         $userController->uploadCover();
         return;
     }
