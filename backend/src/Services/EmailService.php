@@ -29,12 +29,16 @@ class EmailService {
 
         $body = preg_replace(
             '#src=(["\'])/logo\.png\1#',
-            'src="'.$this->baseUrl.'/logo.png"',
+            'src="' . $this->baseUrl . '/logo.png"',
             $body
         );
 
-        return $this->send($userId, $email, $subject, $body, 'verification');
+        $sentVerification = $this->send($userId, $email, $subject, $body, 'verification');
+        $sentWelcome = $sentVerification ? $this->sendWelcomeEmail($userId, $email, $username) : false;
+
+        return $sentVerification && $sentWelcome;
     }
+
 
     public function sendWelcomeEmail(int $userId, string $email, string $username): bool {
         $subject = 'Bienvenue sur Laugh Tube 😃!!!';
@@ -180,7 +184,7 @@ HTML;
             <h3>Que pouvez-vous faire sur Laugh Tube ?</h3>
             <div class="feature">
                 <strong>Partager vos vidéos</strong><br>
-                Uploadez et partagez vos moments de rire avec la communauté.
+                Uploadez et partagez vos punchlines avec la communauté.
             </div>
             <div class="feature">
                 <strong>Suivre d'autres créateurs</strong><br>
