@@ -214,36 +214,38 @@ class UserController
     public function updateBio()
     {
         try {
-            $user = AuthAide::requireAuth();
+            $currentUser = $this->authMiddleware->handleOptional();
+
+            if (!$currentUser) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
+
+            $userId = (int)($currentUser['user_id'] ?? $currentUser['sub'] ?? 0);
+
+            if (!$userId) {
+                JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
+                return;
+            }
+
             $data = json_decode(file_get_contents('php://input'), true);
+            $bio = $data['bio'] ?? '';
 
-            if (!isset($data['bio'])) {
-                JsonResponse::badRequest(['error' => 'Bio manquante']);
-                return;
-            }
+            $updateResult = $this->userModel->updateBio($userId, $bio);
 
-            $bio = trim($data['bio']);
-
-            if (strlen($bio) > 500) {
-                JsonResponse::badRequest(['error' => 'La bio ne peut pas dépasser 500 caractères']);
-                return;
-            }
-
-            $result = $this->userModel->updateBio($user['sub'], $bio);
-
-            if (!$result) {
-                JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour de la bio']);
+            if (!$updateResult) {
+                JsonResponse::serverError(['error' => 'Erreur mise à jour bio']);
                 return;
             }
 
             JsonResponse::success([
-                'message' => 'Bio mise à jour avec succès',
+                'message' => 'Bio mise à jour',
                 'bio' => $bio
             ]);
 
         } catch (\Exception $e) {
             error_log('Update bio error: ' . $e->getMessage());
-            JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour de la bio']);
+            JsonResponse::serverError(['error' => 'Erreur update bio']);
         }
     }
 
