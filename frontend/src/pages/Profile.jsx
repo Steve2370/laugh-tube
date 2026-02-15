@@ -82,14 +82,13 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
             formData.append("avatar", file);
 
             const result = await apiService.uploadAvatar(formData);
-            const updatedUser = await apiService.getMe();
 
             if (result?.avatar_url) {
                 toast.success(result.message ?? "Photo de profil mise à jour");
 
                 const fullUrl = `${window.location.origin}${result.avatar_url}`;
                 setAvatarPreview(fullUrl);
-                updateUser(updatedUser);
+                updateUser({ avatar_url: result.avatar_url });
                 URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload avatar failed");
@@ -130,14 +129,13 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
             formData.append("cover", file);
 
             const result = await apiService.uploadCover(formData);
-            const updatedUser = await apiService.getMe();
 
             if (result?.cover_url) {
                 toast.success(result.message ?? "Couverture mise à jour");
 
                 const fullUrl = `${window.location.origin}${result.cover_url}`;
                 setCoverPreview(fullUrl);
-                updateUser(updatedUser);
+                updateUser({ cover_url: result.cover_url });
                 URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload cover failed");
