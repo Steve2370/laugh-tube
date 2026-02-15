@@ -26,7 +26,7 @@ class UserController
     public function uploadAvatar()
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            $currentUser = $this->authMiddleware->handleOptional();
 
             if (!$currentUser) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
@@ -40,7 +40,7 @@ class UserController
 
             $file = $_FILES['avatar'] ?? $_FILES['photo_profil'] ?? $_FILES['profile-image'];
 
-            $userId = $currentUser['user_id'] ?? $currentUser['sub'] ?? null;
+            $userId = (int)$currentUser['user_id'];
 
             if (!$userId) {
                 JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
@@ -92,7 +92,7 @@ class UserController
     public function uploadCover()
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            $currentUser = $this->authMiddleware->handleOptional();
 
             if (!$currentUser) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
@@ -106,7 +106,7 @@ class UserController
 
             $file = $_FILES['cover'] ?? $_FILES['photo_couverture'];
 
-            $userId = $currentUser['user_id'] ?? $currentUser['sub'] ?? null;
+            $userId = (int)$currentUser['user_id'];
 
             if (!$userId) {
                 JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
