@@ -35,8 +35,6 @@ const LoadingState = () => (
 const ProfileHeader = ({
     user,
     stats,
-    coverPreview,
-    onCoverChange,
     isOwnProfile,
     targetUserId
 }) => {
