@@ -128,13 +128,15 @@ class AuthMiddleware
 
 
 
-    public function handleOptional(): bool
+    public function handleOptional(): ?array
     {
         try {
-            $this->handle();
-            return true;
+            if ($this->handle()) {
+                return $this->user;
+            }
+            return null;
         } catch (\Exception $e) {
-            return true;
+            return null;
         }
     }
 
