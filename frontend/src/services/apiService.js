@@ -445,7 +445,7 @@ class ApiService {
 
         const response = await fetch(`${this.baseURL}/api/users/me/avatar`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             body: formData,
         });
 
@@ -457,12 +457,13 @@ class ApiService {
 
         const response = await fetch(`${this.baseURL}/api/users/me/cover`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             body: formData,
         });
 
         return this.handleResponse(response);
     }
+
 
     async updateBio(bio) {
         return this.request('/users/me/bio', {
