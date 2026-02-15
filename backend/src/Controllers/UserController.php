@@ -383,6 +383,46 @@ class UserController
         }
     }
 
+    public function serveProfile(string $filename)
+    {
+        try {
+            $imagePath = __DIR__ . '/../../uploads/profiles/' . $filename;
+
+            if (!file_exists($imagePath)) {
+                http_response_code(404);
+                header('Content-Type: image/svg+xml');
+                echo '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ccc" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#666" font-size="40">?</text></svg>';
+                return;
+            }
+
+            $allowedPath = realpath(__DIR__ . '/../../uploads/profiles/');
+            $requestedPath = realpath($imagePath);
+
+            if (strpos($requestedPath, $allowedPath) !== 0) {
+                http_response_code(403);
+                return;
+            }
+
+            $mimeType = mime_content_type($imagePath);
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+
+            if (!in_array($mimeType, $allowedTypes)) {
+                http_response_code(403);
+                return;
+            }
+
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . filesize($imagePath));
+            header('Cache-Control: public, max-age=31536000');
+            header('X-Content-Type-Options: nosniff');
+            readfile($imagePath);
+
+        } catch (\Exception $e) {
+            error_log('Serve profile error: ' . $e->getMessage());
+            http_response_code(500);
+        }
+    }
+
 //    public function getSubscribersCount(int $userId)
 //    {
 //        try {

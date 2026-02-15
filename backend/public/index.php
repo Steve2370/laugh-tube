@@ -226,11 +226,25 @@ try {
     }
 
     if (($uri === '/users/me/avatar' || $uri === '/profile/upload-image') && $method === 'POST') {
-        $userController->uploadAvatar(); return;
+        $currentUser = $authMiddleware->handle();
+        if (!$currentUser) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Non authentifié']);
+            return;
+        }
+        $userController->uploadAvatar();
+        return;
     }
 
     if (($uri === '/users/me/cover' || $uri === '/profile/upload-cover') && $method === 'POST') {
-        $userController->uploadCover(); return;
+        $currentUser = $authMiddleware->handle();
+        if (!$currentUser) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Non authentifié']);
+            return;
+        }
+        $userController->uploadCover();
+        return;
     }
 
     if (($uri === '/profile' || $uri === '/users/profile/update') && $method === 'PUT') {
@@ -259,6 +273,11 @@ try {
 
     if (preg_match('#^/uploads/avatars/([^/]+)$#', $uri, $m) && $method === 'GET') {
         $userController->serveAvatar($m[1]); return;
+    }
+
+    if (preg_match('#^/uploads/profiles/([^/]+)$#', $uri, $m) && $method === 'GET') {
+        $userController->serveProfile($m[1]);
+        return;
     }
 
     if (preg_match('#^/users/(\d+)/subscribers-count$#', $uri, $m) && $method === 'GET') {
