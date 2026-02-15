@@ -530,6 +530,34 @@ class VideoService {
             uploadQueueLength: this.uploadQueue.length
         };
     }
+
+    async getUserVideos(userId) {
+        try {
+            if (!userId) {
+                throw new Error('User ID requis');
+            }
+
+            const cacheKey = `user_videos_${userId}`;
+            const cached = this._getFromCache(cacheKey);
+
+            if (cached) {
+                return cached;
+            }
+
+            const response = await apiService.request(`/users/${userId}/videos`);
+
+            if (response.success && response.videos) {
+                this._setInCache(cacheKey, response.videos);
+                return response.videos;
+            }
+
+            return [];
+
+        } catch (error) {
+            console.error('VideoService.getUserVideos:', error);
+            throw error;
+        }
+    }
 }
 
 export default new VideoService();
