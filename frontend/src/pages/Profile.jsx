@@ -88,7 +88,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 
                 const fullUrl = `${window.location.origin}${result.avatar_url}`;
                 setAvatarPreview(fullUrl);
-                updateUser({ cover_url: result.cover_url });
+                updateUser({ avatar_url: result.avatar_url });
                 URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload avatar failed");
@@ -135,7 +135,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 
                 const fullUrl = `${window.location.origin}${result.cover_url}`;
                 setCoverPreview(fullUrl);
-                updateUser({ avatar_url: result.avatar_url });
+                updateUser({ cover_url: result.cover_url });
                 URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload cover failed");
