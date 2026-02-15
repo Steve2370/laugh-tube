@@ -184,11 +184,12 @@ const VideoPlayer = ({
     if (hasError) {
         if (!src) {
             return (
-                <div className="relative bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center">
-                    <p className="text-white">Source vidéo manquante</p>
+                <div className="aspect-video bg-black flex items-center justify-center text-white">
+                    Vidéo indisponible
                 </div>
             );
         }
+
         return (
             <div className="relative bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center">
                 <div className="text-center text-white p-8">
