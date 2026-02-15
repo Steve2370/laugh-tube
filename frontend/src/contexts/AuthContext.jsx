@@ -1,96 +1,143 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import apiService from "../services/apiService.js";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import apiService from '../services/apiService.js';
 
 const AuthContext = createContext(null);
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-};
-
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        initialzeAuth();
-    }, []);
+        let mounted = true;
 
-    const initialzeAuth = async () => {
-        try {
-            const authenticated = apiService.isAuthenticated();
+        const init = async () => {
+            try {
+                setLoading(true);
 
-            if (authenticated) {
-                const currentUser = await apiService.getMe();
-                setUser(currentUser);
-                setIsAuthenticated(true);
+                const authenticated = apiService.isAuthenticated();
+                if (!authenticated) {
+                    if (!mounted) return;
+                    setUser(null);
+                    setIsAuthenticated(false);
+                    return;
+                }
+
+                const currentUser = await apiService.getCurrentUser();
+
+                if (!mounted) return;
+
+                if (currentUser) {
+                    setUser(currentUser);
+                    setIsAuthenticated(true);
+                } else {
+                    setUser(null);
+                    setIsAuthenticated(false);
+                }
+            } catch (err) {
+                console.error("Auth init error:", err);
+                if (!mounted) return;
+                setUser(null);
+                setIsAuthenticated(false);
+            } finally {
+                if (mounted) setLoading(false);
             }
-        } catch (err) {
-            console.error('Erreur initialisation auth:', err);
-            setIsAuthenticated(false);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+
+        init();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     const login = async (email, password) => {
         try {
-            const response = await apiService.login(email, password);
+            await apiService.login(email, password);
 
-            // ✅ Récupérer l'utilisateur après login
-            const currentUser = await apiService.getMe();
-            setUser(currentUser);
+            const me = await apiService.getMe();
+
+            setUser(me);
             setIsAuthenticated(true);
 
-            return { success: true, user: currentUser };
+            return { success: true, user: me };
         } catch (error) {
-            return { success: false, message: error.message };
+            console.error("Login error:", error);
+            setUser(null);
+            setIsAuthenticated(false);
+            return { success: false, message: error?.message ?? "Erreur login" };
         }
     };
 
     const register = async (username, email, password) => {
         try {
-            const response = await apiService.register(username, email, password);
+            await apiService.register(username, email, password);
 
-            // ✅ Récupérer l'utilisateur après register
-            const currentUser = await apiService.getMe();
-            setUser(currentUser);
+            const me = await apiService.getMe();
+
+            setUser(me);
             setIsAuthenticated(true);
 
-            return { success: true, user: currentUser };
+            return { success: true, user: me };
         } catch (error) {
-            return { success: false, message: error.message };
+            console.error("Register error:", error);
+            setUser(null);
+            setIsAuthenticated(false);
+            return { success: false, message: error?.message ?? "Erreur inscription" };
         }
     };
 
     const logout = async () => {
         try {
             await apiService.logout();
-        } catch (error) {
-            console.error('Erreur logout:', error);
+        } catch (e) {
+            console.warn("Logout warning:", e);
         } finally {
             setUser(null);
             setIsAuthenticated(false);
         }
     };
 
-    const updateUser = (userData) => {
-        setUser(prev => ({ ...prev, ...userData }));
+    const updateUser = (patch) => {
+        setUser((prev) => {
+            if (!prev) return prev;
+            return { ...prev, ...patch };
+        });
     };
 
-    const value = {
-        user,
-        isAuthenticated,
-        loading,
-        login,
-        register,
-        logout,
-        updateUser
-    }
+    const refreshUser = async () => {
+        try {
+            const me = await apiService.getMe();
+            setUser(me);
+            setIsAuthenticated(true);
+            return me;
+        } catch (e) {
+            console.error("refreshUser error:", e);
+            setUser(null);
+            setIsAuthenticated(false);
+            return null;
+        }
+    };
+
+    const value = useMemo(
+        () => ({
+            user,
+            isAuthenticated,
+            loading,
+            login,
+            register,
+            logout,
+            updateUser,
+            refreshUser,
+        }),
+        [user, isAuthenticated, loading]
+    );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+    const ctx = useContext(AuthContext);
+    if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+    return ctx;
 }
