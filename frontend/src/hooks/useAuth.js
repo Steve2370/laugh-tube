@@ -32,6 +32,11 @@ export const useAuth = () => {
         }
     }, []);
 
+    const updateUser = useCallback((patch) => {
+        setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+    }, []);
+
+
     const login = useCallback(async (email, password) => {
         try {
             setLoading(true);
@@ -180,6 +185,7 @@ export const useAuth = () => {
         requestPasswordReset,
         resetPassword,
         resendVerification,
-        reload: checkAuth
+        reload: checkAuth,
+        updateUser,
     };
 };
