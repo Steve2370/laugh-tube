@@ -223,7 +223,11 @@ const VideoPlayer = ({
                 className="w-full aspect-video"
                 src={src}
                 poster={poster}
-                onPlay={() => setIsPlaying(true)}
+                onPlay={() => {
+                    if (viewedRef.current) return;
+                    viewedRef.current = true;
+                    onViewRecorded?.();
+                }}
                 onPause={() => setIsPlaying(false)}
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={() => {
