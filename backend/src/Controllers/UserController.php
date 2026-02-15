@@ -3,16 +3,19 @@
 namespace App\Controllers;
 
 use App\Middleware\AuthAide;
+use App\Middleware\AuthMiddleware;
+use App\Services\AbonnementService;
+use App\Services\UploadService;
 use App\Utils\JsonResponse;
 use App\Models\User;
 
 class UserController
 {
     private $userService;
-    private $uploadService;
+    private UploadService $uploadService;
     private User $userModel;
-    private $abonnementService;
-    private $authMiddleware;
+    private AbonnementService $abonnementService;
+    private AuthMiddleware $authMiddleware;
 
     public function __construct($userService, $uploadService, $userModel, $abonnementService, $authMiddleware)
     {
@@ -23,55 +26,74 @@ class UserController
         $this->authMiddleware = $authMiddleware;
     }
 
-    public function uploadAvatar()
+    public function uploadAvatar(): void
     {
         try {
             $currentUser = $this->authMiddleware->handleOptional();
 
-            if (!$currentUser) {
+            if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
 
-            if (!isset($_FILES['avatar']) && !isset($_FILES['photo_profil']) && !isset($_FILES['profile-image'])) {
+            $userId = (int)($currentUser['sub'] ?? $currentUser['user_id'] ?? 0);
+            if ($userId <= 0) {
+                JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
+                return;
+            }
+
+            $file = $_FILES['avatar'] ?? $_FILES['photo_profil'] ?? $_FILES['profile-image'] ?? null;
+            if ($file === null) {
                 JsonResponse::badRequest(['error' => 'Aucun fichier fourni']);
                 return;
             }
 
-            $file = $_FILES['avatar'] ?? $_FILES['photo_profil'] ?? $_FILES['profile-image'];
-
-            $userId = (int)($currentUser['user_id'] ?? $currentUser['sub'] ?? 0);
-
-            if (!$userId) {
-                JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
+            if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+                JsonResponse::badRequest([
+                    'error' => 'Fichier invalide ou upload échoué',
+                    'code' => $file['error'] ?? -1
+                ]);
                 return;
             }
 
             $uploadResult = $this->uploadService->uploadImage($file, $userId, 'avatar');
 
-            if (!$uploadResult['success']) {
+            if (!is_array($uploadResult)) {
+                JsonResponse::serverError(['error' => 'Erreur upload (service invalide)']);
+                return;
+            }
+
+            if (!($uploadResult['success'] ?? false)) {
                 JsonResponse::serverError(['error' => $uploadResult['message'] ?? 'Erreur upload']);
                 return;
             }
 
-            $updateResult = $this->userModel->updateProfileImage($userId, $uploadResult['filename']);
+            $filename = $uploadResult['filename'] ?? null;
+            $path = $uploadResult['path'] ?? null;
 
-            if (!$updateResult) {
+            if (!$filename || !$path) {
+                JsonResponse::serverError(['error' => 'Upload incomplet (filename/path manquant)']);
+                return;
+            }
+
+            $ok = $this->userModel->updateProfileImage($userId, $filename);
+            if (!$ok) {
                 JsonResponse::serverError(['error' => 'Erreur mise à jour profil']);
                 return;
             }
 
             JsonResponse::success([
                 'message' => 'Avatar mis à jour',
-                'avatar_url' => '/' . $uploadResult['path'],
-                'filename' => $uploadResult['filename']
+                'avatar_url' => '/' . ltrim($path, '/'),
+                'filename' => $filename
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log('Upload avatar error: ' . $e->getMessage());
             JsonResponse::serverError(['error' => 'Erreur upload avatar']);
         }
     }
+
 
     public function getSubscribersCount(int $userId): void
     {
@@ -89,63 +111,93 @@ class UserController
         }
     }
 
-    public function uploadCover()
+    public function uploadCover(): void
     {
         try {
             $currentUser = $this->authMiddleware->handleOptional();
 
-            if (!$currentUser) {
+            if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
 
-            if (!isset($_FILES['cover']) && !isset($_FILES['photo_couverture'])) {
+            $userId = (int)($currentUser['sub'] ?? $currentUser['user_id'] ?? 0);
+            if ($userId <= 0) {
+                JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
+                return;
+            }
+
+            $file = $_FILES['cover'] ?? $_FILES['photo_couverture'] ?? null;
+            if ($file === null) {
                 JsonResponse::badRequest(['error' => 'Aucun fichier fourni']);
                 return;
             }
 
-            $file = $_FILES['cover'] ?? $_FILES['photo_couverture'];
-
-            $userId = (int)($currentUser['user_id'] ?? $currentUser['sub'] ?? 0);
-
-            if (!$userId) {
-                JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
+            if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+                JsonResponse::badRequest([
+                    'error' => 'Fichier invalide ou upload échoué',
+                    'code'  => $file['error'] ?? -1
+                ]);
                 return;
             }
 
             $uploadResult = $this->uploadService->uploadImage($file, $userId, 'cover');
 
-            if (!$uploadResult['success']) {
+            if (!is_array($uploadResult)) {
+                JsonResponse::serverError(['error' => 'Erreur upload (service invalide)']);
+                return;
+            }
+
+            if (!($uploadResult['success'] ?? false)) {
                 JsonResponse::serverError(['error' => $uploadResult['message'] ?? 'Erreur upload']);
                 return;
             }
 
-            $updateResult = $this->userModel->updateProfileCover($userId, $uploadResult['filename']);
+            $filename = $uploadResult['filename'] ?? null;
+            $path     = $uploadResult['path'] ?? null;
 
-            if (!$updateResult) {
+            if (!$filename || !$path) {
+                JsonResponse::serverError(['error' => 'Upload incomplet (filename/path manquant)']);
+                return;
+            }
+
+            $ok = $this->userModel->updateProfileCover($userId, $filename);
+            if (!$ok) {
                 JsonResponse::serverError(['error' => 'Erreur mise à jour couverture']);
                 return;
             }
 
             JsonResponse::success([
-                'message' => 'Couverture mise à jour',
-                'cover_url' => '/' . $uploadResult['path'],
-                'filename' => $uploadResult['filename']
+                'message'   => 'Couverture mise à jour',
+                'cover_url' => '/' . ltrim($path, '/'),
+                'filename'  => $filename
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log('Upload cover error: ' . $e->getMessage());
             JsonResponse::serverError(['error' => 'Erreur upload couverture']);
         }
     }
 
-    public function updateProfile()
+
+    public function updateProfile(): void
     {
         try {
-            $user = AuthAide::requireAuth();
-            $data = json_decode(file_get_contents('php://input'), true);
+            $currentUser = $this->authMiddleware->handleOptional();
 
-            if (!$data) {
+            if (!is_array($currentUser)) {
+                JsonResponse::unauthorized(['error' => 'Session expirée']);
+                return;
+            }
+
+            $userId = (int)($currentUser['sub'] ?? $currentUser['user_id'] ?? 0);
+            if ($userId <= 0) {
+                JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
+                return;
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!is_array($data)) {
                 JsonResponse::badRequest(['error' => 'Données invalides']);
                 return;
             }
@@ -154,7 +206,7 @@ class UserController
             $updateData = [];
 
             foreach ($allowedFields as $field) {
-                if (isset($data[$field])) {
+                if (array_key_exists($field, $data)) {
                     $updateData[$field] = $data[$field];
                 }
             }
@@ -165,87 +217,113 @@ class UserController
             }
 
             if (isset($updateData['username'])) {
-                if (strlen($updateData['username']) < 3 || strlen($updateData['username']) > 30) {
-                    JsonResponse::badRequest(['error' => 'Le nom d\'utilisateur doit contenir entre 3 et 30 caractères']);
+                $u = trim((string)$updateData['username']);
+                if (mb_strlen($u) < 3 || mb_strlen($u) > 30) {
+                    JsonResponse::badRequest(['error' => "Le nom d'utilisateur doit contenir entre 3 et 30 caractères"]);
                     return;
                 }
+                $updateData['username'] = $u;
             }
 
             if (isset($updateData['email'])) {
-                if (!filter_var($updateData['email'], FILTER_VALIDATE_EMAIL)) {
+                $email = trim((string)$updateData['email']);
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     JsonResponse::badRequest(['error' => 'Email invalide']);
                     return;
                 }
+                $updateData['email'] = $email;
             }
 
             if (isset($updateData['bio'])) {
-                if (strlen($updateData['bio']) > 500) {
+                $bio = trim((string)$updateData['bio']);
+                if (mb_strlen($bio) > 500) {
                     JsonResponse::badRequest(['error' => 'La bio ne peut pas dépasser 500 caractères']);
                     return;
                 }
+                $updateData['bio'] = $bio;
             }
 
-            $result = $this->userModel->update($user['sub'], $updateData);
-
-            if (!$result) {
+            $ok = $this->userModel->update($userId, $updateData);
+            if (!$ok) {
                 JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour du profil']);
                 return;
             }
 
-            $updatedUser = $this->userModel->findById($user['sub']);
+            $updatedUser = $this->userModel->findById($userId);
+            if (!$updatedUser) {
+                JsonResponse::serverError(['error' => 'Utilisateur introuvable après mise à jour']);
+                return;
+            }
 
             JsonResponse::success([
                 'message' => 'Profil mis à jour avec succès',
                 'user' => [
-                    'id' => $updatedUser['id'],
-                    'username' => $updatedUser['username'],
-                    'email' => $updatedUser['email'],
-                    'bio' => $updatedUser['bio'] ?? null,
-                    'photo_profil' => $updatedUser['photo_profil'] ?? null
+                    'id'         => (int)$updatedUser['id'],
+                    'username'   => $updatedUser['username'] ?? null,
+                    'email'      => $updatedUser['email'] ?? null,
+                    'bio'        => $updatedUser['bio'] ?? null,
+                    'avatar_url' => $updatedUser['avatar_url'] ?? null,
+                    'cover_url'  => $updatedUser['cover_url'] ?? null,
+                    'photo_profil' => $updatedUser['photo_profil'] ?? null,
                 ]
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log('Update profile error: ' . $e->getMessage());
             JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour du profil']);
         }
     }
 
-    public function updateBio()
+
+    public function updateBio(): void
     {
         try {
             $currentUser = $this->authMiddleware->handleOptional();
-
-            if (!$currentUser) {
-                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+            if (!is_array($currentUser)) {
+                JsonResponse::unauthorized(['error' => 'Session expirée']);
                 return;
             }
 
-            $userId = (int)($currentUser['user_id'] ?? $currentUser['sub'] ?? 0);
-
-            if (!$userId) {
+            $userId = (int)($currentUser['sub'] ?? $currentUser['user_id'] ?? 0);
+            if ($userId <= 0) {
                 JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
                 return;
             }
 
             $data = json_decode(file_get_contents('php://input'), true);
-            $bio = $data['bio'] ?? '';
+            if (!is_array($data)) {
+                JsonResponse::badRequest(['error' => 'Données invalides']);
+                return;
+            }
 
-            $updateResult = $this->userModel->updateBio($userId, $bio);
+            $bio = $data['bio'] ?? null;
+            if ($bio === null) {
+                JsonResponse::badRequest(['error' => 'bio manquant']);
+                return;
+            }
 
-            if (!$updateResult) {
-                JsonResponse::serverError(['error' => 'Erreur mise à jour bio']);
+            $bio = trim((string)$bio);
+
+            if (mb_strlen($bio) > 500) {
+                JsonResponse::badRequest(['error' => 'La bio ne peut pas dépasser 500 caractères']);
+                return;
+            }
+
+            $ok = $this->userModel->update($userId, ['bio' => $bio]);
+
+            if (!$ok) {
+                JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour de la bio']);
                 return;
             }
 
             JsonResponse::success([
                 'message' => 'Bio mise à jour',
-                'bio' => $bio
+                'bio'     => $bio
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log('Update bio error: ' . $e->getMessage());
-            JsonResponse::serverError(['error' => 'Erreur update bio']);
+            JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour de la bio']);
         }
     }
 
