@@ -338,11 +338,9 @@ const Video = () => {
     const [auteurImage, setAuteurImage] = useState(null);
     const [auteurId, setAuteurId] = useState(null);
     const [viewsCount, setViewsCount] = useState(0);
-    const videoSrc = video?.stream_url
-        ? video.stream_url
-        : video?.filename
-            ? `/uploads/videos/${video.filename}`
-            : null;
+    const videoSrc = video?.filename
+        ? `/uploads/videos/${video.filename}`
+        : null;
 
     useEffect(() => {
         const storedVideo = localStorage.getItem('currentVideo');
