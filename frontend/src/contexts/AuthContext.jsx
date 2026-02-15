@@ -18,19 +18,20 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         initialzeAuth();
-        }, []);
+    }, []);
 
-    const initialzeAuth = () => {
+    const initialzeAuth = async () => {
         try {
             const authenticated = apiService.isAuthenticated();
-            const currentUser = apiService.getCurrentUser();
 
-            if (authenticated && currentUser) {
+            if (authenticated) {
+                const currentUser = await apiService.getMe();
                 setUser(currentUser);
                 setIsAuthenticated(true);
             }
         } catch (err) {
             console.error('Erreur initialisation auth:', err);
+            setIsAuthenticated(false);
         } finally {
             setLoading(false);
         }
@@ -39,9 +40,13 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             const response = await apiService.login(email, password);
-            setUser(response.user);
+
+            // ✅ Récupérer l'utilisateur après login
+            const currentUser = await apiService.getMe();
+            setUser(currentUser);
             setIsAuthenticated(true);
-            return { success: true, user: response.user };
+
+            return { success: true, user: currentUser };
         } catch (error) {
             return { success: false, message: error.message };
         }
@@ -50,9 +55,13 @@ export const AuthProvider = ({ children }) => {
     const register = async (username, email, password) => {
         try {
             const response = await apiService.register(username, email, password);
-            setUser(response.user);
+
+            // ✅ Récupérer l'utilisateur après register
+            const currentUser = await apiService.getMe();
+            setUser(currentUser);
             setIsAuthenticated(true);
-            return { success: true, user: response.user };
+
+            return { success: true, user: currentUser };
         } catch (error) {
             return { success: false, message: error.message };
         }

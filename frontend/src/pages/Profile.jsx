@@ -32,12 +32,7 @@ const LoadingState = () => (
     </div>
 );
 
-const ProfileHeader = ({
-    user,
-    stats,
-    isOwnProfile,
-    targetUserId
-}) => {
+const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [bioDraft, setBioDraft] = useState('');
     const [savingBio, setSavingBio] = useState(false);
@@ -45,22 +40,29 @@ const ProfileHeader = ({
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
 
+    const { user: authUser, updateUser } = useAuth();
+
     const toast = useToast();
     const { loading, subscribersCount, isSubscribed, toggle } = useAbonnement(targetUserId);
 
     useEffect(() => {
-        if (user) {
-            setBioDraft(user.bio || '');
-            loadProfileImage();
+        if (authUser) {
+            setBioDraft(authUser.bio || '');
+            loadProfileImage(authUser);
         }
-    }, [user]);
+    }, [authUser]);
 
-    const loadProfileImage = async () => {
+    const loadProfileImage = (u) => {
         try {
-            const imageUrl = apiService.getProfileImageUrl(user.id);
-            setAvatarPreview(imageUrl);
+            setAvatarPreview(
+                u?.avatar_url ? `${window.location.origin}${u.avatar_url}` : "/images/default-avatar.png"
+            );
+
+            setCoverPreview(
+                u?.cover_url ? `${window.location.origin}${u.cover_url}` : "/images/default-cover.png"
+            );
         } catch (err) {
-            console.error('Erreur chargement image:', err);
+            console.error("Erreur chargement image:", err);
         }
     };
 
@@ -94,6 +96,7 @@ const ProfileHeader = ({
 
                 const fullUrl = `${window.location.origin}${result.avatar_url}`;
                 setAvatarPreview(fullUrl);
+                updateUser({ cover_url: result.cover_url });
                 URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload avatar failed");
@@ -140,6 +143,7 @@ const ProfileHeader = ({
 
                 const fullUrl = `${window.location.origin}${result.cover_url}`;
                 setCoverPreview(fullUrl);
+                updateUser({ avatar_url: result.avatar_url });
                 URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload cover failed");

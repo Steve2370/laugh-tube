@@ -49,6 +49,7 @@ export const useAuth = () => {
             await new Promise(resolve => setTimeout(resolve, 100));
 
             await checkAuth();
+            console.log('✅ Auth updated:', isAuthenticated);
             return { success: true, requires_2fa: false };
 
         } catch (err) {
