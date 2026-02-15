@@ -40,7 +40,7 @@ class UserController
 
             $file = $_FILES['avatar'] ?? $_FILES['photo_profil'] ?? $_FILES['profile-image'];
 
-            $userId = (int)$currentUser['user_id'];
+            $userId = (int)($currentUser['user_id'] ?? $currentUser['sub'] ?? 0);
 
             if (!$userId) {
                 JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
@@ -106,7 +106,7 @@ class UserController
 
             $file = $_FILES['cover'] ?? $_FILES['photo_couverture'];
 
-            $userId = (int)$currentUser['user_id'];
+            $userId = (int)($currentUser['user_id'] ?? $currentUser['sub'] ?? 0);
 
             if (!$userId) {
                 JsonResponse::unauthorized(['error' => 'ID utilisateur invalide']);
