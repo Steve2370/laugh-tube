@@ -52,10 +52,10 @@ class AuthMiddleware
 
             try {
                 $userCheck = $this->db->fetchOne(
-                    "SELECT id, username, email, role, email_verified, two_fa_enabled, deleted_at
-                 FROM users
-                 WHERE id = $1
-                 LIMIT 1",
+                    "SELECT id, username, email, role, email_verified, two_fa_enabled, deleted_at, profile_image, profile_cover
+                          FROM users
+                          WHERE id = $1
+                          LIMIT 1",
                     [$userId]
                 );
             } catch (\Throwable $e) {
