@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useMemo} from 'react';
 import { useVideos } from '../hooks/useVideos';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
@@ -80,21 +80,23 @@ const Home = () => {
         window.location.hash = `#/${page}`;
     };
 
-    const filteredVideos = displayVideos.filter(video => {
-        const matchesSearch = video.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            video.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredVideos = useMemo(() => {
+        return displayVideos.filter(video => {
+            const matchesSearch = video.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                video.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        if (!matchesSearch) return false;
+            if (!matchesSearch) return false;
 
-        switch (filter) {
-            case 'recent':
-                return true;
-            case 'popular':
-                return (video.views || 0) > 100;
-            default:
-                return true;
-        }
-    });
+            switch (filter) {
+                case 'recent':
+                    return true;
+                case 'popular':
+                    return (video.views || 0) > 100;
+                default:
+                    return true;
+            }
+        });
+    }, [displayVideos, searchTerm, filter]);
 
     if (loading) {
         return (
