@@ -168,8 +168,21 @@ class ApiService {
     }
 
     async getCurrentUser() {
-        return this.getMe();
+        const token = this.getToken?.() || localStorage.getItem("token");
+        if (!token) {
+            return null;
+        }
+
+        try {
+            return await this.getMe();
+        } catch (e) {
+            if (e.message?.includes("Non authentifié")) {
+                localStorage.removeItem("token");
+            }
+            return null;
+        }
     }
+
 
     clearAuth() {
         localStorage.removeItem('access_token');
