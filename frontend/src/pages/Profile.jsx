@@ -43,6 +43,7 @@ const ProfileHeader = ({
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [bioDraft, setBioDraft] = useState('');
     const [savingBio, setSavingBio] = useState(false);
+    const [coverPreview, setCoverPreview] = useState(null);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
 
@@ -546,9 +547,9 @@ const AnalyticsTab = ({ stats, videos }) => {
                     <div className="text-sm text-gray-600">Vues totales</div>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-2">
-                        <ThumbsUp className="text-green-600" size={24} />
+                        <ThumbsUp className="text-blue-600" size={24} />
                     </div>
                     <div className="text-3xl font-bold text-gray-900 mb-1">
                         {stats?.totalLikes?.toLocaleString() || 0}
@@ -556,9 +557,9 @@ const AnalyticsTab = ({ stats, videos }) => {
                     <div className="text-sm text-gray-600">J'aime</div>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-2">
-                        <MessageCircle className="text-purple-600" size={24} />
+                        <MessageCircle className="text-blue-600" size={24} />
                     </div>
                     <div className="text-3xl font-bold text-gray-900 mb-1">
                         {stats?.totalComments?.toLocaleString() || 0}
@@ -566,9 +567,9 @@ const AnalyticsTab = ({ stats, videos }) => {
                     <div className="text-sm text-gray-600">Commentaires</div>
                 </div>
 
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-2">
-                        <BarChart3 className="text-orange-600" size={24} />
+                        <BarChart3 className="text-blue-600" size={24} />
                     </div>
                     <div className="text-3xl font-bold text-gray-900 mb-1">
                         {stats?.engagementRate || 0}%
