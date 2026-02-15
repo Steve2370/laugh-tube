@@ -232,6 +232,7 @@ try {
             echo json_encode(['success' => false, 'error' => 'Non authentifié']);
             return;
         }
+        $_SESSION['current_user'] = $currentUser;
         $userController->uploadAvatar();
         return;
     }
@@ -243,6 +244,7 @@ try {
             echo json_encode(['success' => false, 'error' => 'Non authentifié']);
             return;
         }
+        $_SESSION['current_user'] = $currentUser;
         $userController->uploadCover();
         return;
     }
