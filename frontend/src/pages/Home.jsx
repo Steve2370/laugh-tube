@@ -345,11 +345,12 @@ const VideoCard = ({ video, onClick }) => {
             <div className="relative overflow-hidden aspect-video bg-gray-200">
                 <img
                     src={getThumbnailUrl(video.id)}
-                    alt={video.title}
+                    alt={video.title ?? "Vidéo"}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = '/images/placeholder-video.png';
+                        if (e.currentTarget.dataset.fallbackApplied) return;
+                        e.currentTarget.dataset.fallbackApplied = "1";
+                        e.currentTarget.src = "/images/placeholder-video.png";
                     }}
                 />
 
