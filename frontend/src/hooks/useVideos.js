@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import videoService from '../services/videoService.js';
 
 export const useVideos = (filters = {}) => {
@@ -48,8 +48,7 @@ export const useVideos = (filters = {}) => {
 
     const getTrending = useCallback(async (options = {}) => {
         try {
-            const result = await videoService.getTrendingVideos(options);
-            return result;
+            return await videoService.getTrendingVideos(options);
         } catch (err) {
             return { success: false, videos: [] };
         }
@@ -57,10 +56,24 @@ export const useVideos = (filters = {}) => {
 
     const searchVideos = useCallback(async (query, options = {}) => {
         try {
-            const result = await videoService.searchVideos(query, options);
-            return result;
+            return await videoService.searchVideos(query, options);
         } catch (err) {
             return { success: false, videos: [], total: 0 };
+        }
+    }, []);
+
+    const getUserVideos = useCallback(async (userId) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await videoService.getUserVideos(userId);
+            setVideos(data);
+            return data;
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -73,6 +86,7 @@ export const useVideos = (filters = {}) => {
         deleteVideo,
         getTrending,
         searchVideos,
+        getUserVideos,
         reload: loadVideos
     };
 };
