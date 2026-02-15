@@ -39,7 +39,6 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const [coverPreview, setCoverPreview] = useState(null);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
-
     const { user: authUser, updateUser } = useAuth();
 
     const toast = useToast();
@@ -709,7 +708,6 @@ const Profile = () => {
                 ) : (
                     <>
                         <ProfileHeader
-                            user={user}
                             stats={stats}
                             isOwnProfile={isOwnProfile}
                             targetUserId={targetUserId}
