@@ -345,6 +345,7 @@ const VideoCard = ({ video, onClick }) => {
             <div className="relative overflow-hidden aspect-video bg-gray-200">
                 <img
                     src={getThumbnailUrl(video.id)}
+                    loading="lazy"
                     alt={video.title ?? "Vidéo"}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     onError={(e) => {
@@ -409,6 +410,7 @@ const VideoCard = ({ video, onClick }) => {
                                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 bg-gradient-to-br from-blue-500 to-blue-600">
                                     <img
                                         src={getProfileImageUrl(authorData.id)}
+                                        loading="lazy"
                                         alt={authorData.username}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {

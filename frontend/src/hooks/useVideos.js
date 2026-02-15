@@ -10,7 +10,8 @@ export const useVideos = (filters = {}) => {
         try {
             setLoading(true);
             setError(null);
-            const data = await videoService.getVideos(filters);
+            const params = { limit: 20, ...filters };
+            const data = await videoService.getVideos(params);
             setVideos(data);
         } catch (err) {
             setError(err.message);

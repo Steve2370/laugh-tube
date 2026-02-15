@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Interfaces\DatabaseInterface;
-use Database;
+
 use PDO;
 
 class User
@@ -285,5 +285,64 @@ class User
 
     public function updateProfile(int $userId, mixed $username, mixed $email, mixed $bio)
     {
+    }
+
+    public function isSubscribed(int $subscriberId, int $targetUserId): bool
+    {
+        $stmt = $this->db->prepare("
+            SELECT 1 FROM abonnements
+            WHERE subscriber_id = :subscriber_id
+            AND user_id = :user_id
+            LIMIT 1
+        ");
+
+        $stmt->execute([
+            'subscriber_id' => $subscriberId,
+            'user_id' => $targetUserId
+        ]);
+
+        return (bool) $stmt->fetch();
+    }
+
+    public function subscribe(int $subscriberId, int $targetUserId): bool
+    {
+        $stmt = $this->db->prepare("
+            INSERT INTO abonnements (subscriber_id, subscribed_to_id, created_at)
+            VALUES (:subscriber_id, :user_id, NOW())
+            ON CONFLICT DO NOTHING
+        ");
+
+        return $stmt->execute([
+            'subscriber_id' => $subscriberId,
+            'subscribed_to_id' => $targetUserId
+        ]);
+    }
+
+    public function unsubscribe(int $subscriberId, int $targetUserId): bool
+    {
+        $stmt = $this->db->prepare("
+            DELETE FROM abonnements
+            WHERE subscriber_id = :subscriber_id
+            AND user_id = :user_id
+        ");
+
+        return $stmt->execute([
+            'subscriber_id' => $subscriberId,
+            'user_id' => $targetUserId
+        ]);
+    }
+
+    public function getSubscribersCount(int $userId): int
+    {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) as total
+            FROM abonnements
+            WHERE user_id = :user_id
+        ");
+
+        $stmt->execute(['user_id' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return (int) $result['total'];
     }
 }
