@@ -531,7 +531,7 @@ const Video = () => {
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
                             <VideoPlayer
-                                src={videoSrc}
+                                src={videoSrc} onViewRecorded={recordView}
                                 poster={video?.thumbnail ? `/uploads/thumbnails/${video.thumbnail}` : undefined}
                             />
                         </div>
