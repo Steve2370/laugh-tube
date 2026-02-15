@@ -41,7 +41,7 @@ const ProfileHeader = ({
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [bioDraft, setBioDraft] = useState('');
     const [savingBio, setSavingBio] = useState(false);
-    const [coverPreview, setCoverPreview] = useState<string | null>null;
+    const [coverPreview, setCoverPreview] = useState(null);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
 
