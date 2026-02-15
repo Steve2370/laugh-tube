@@ -600,11 +600,9 @@ const AnalyticsTab = ({ stats, videos }) => {
 const Profile = () => {
     const { user, isAuthenticated } = useAuth();
     const toast = useToast();
-    const { videos: userVideos, loading: videosLoading, getUserVideos } = useVideos();
-
+    const { videos: userVideos, loading: videosLoading, getUserVideos } = useVideos()
     const isOwnProfile = true;
     const targetUserId = user?.id;
-
     const [activeTab, setActiveTab] = useState('videos');
     const [videos, setVideos] = useState([]);
     const [stats, setStats] = useState({
@@ -614,16 +612,6 @@ const Profile = () => {
         totalComments: 0,
         engagementRate: 0,
     });
-
-    useEffect(() => {
-        loadUserData();
-    }, [loadUserData]);
-
-    useEffect(() => {
-        if (videos.length > 0) {
-            calculateStats();
-        }
-    }, [videos]);
 
     const loadUserData = useCallback(async () => {
         if (!user?.id) return;
@@ -635,12 +623,6 @@ const Profile = () => {
             toast.error('Erreur lors du chargement des vidéos');
         }
     }, [user?.id, getUserVideos, toast]);
-
-    useEffect(() => {
-        if (userVideos) {
-            setVideos(userVideos);
-        }
-    }, [userVideos]);
 
     const calculateStats = () => {
         const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
@@ -657,6 +639,22 @@ const Profile = () => {
             engagementRate,
         });
     };
+
+    useEffect(() => {
+        loadUserData();
+    }, [loadUserData]);
+
+    useEffect(() => {
+        if (videos.length > 0) {
+            calculateStats();
+        }
+    }, [videos]);
+
+    useEffect(() => {
+        if (userVideos) {
+            setVideos(userVideos);
+        }
+    }, [userVideos]);
 
     const handleVideoSelect = (video) => {
         window.location.hash = `#/video/${video.id}`;
