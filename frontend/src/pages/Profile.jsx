@@ -41,7 +41,7 @@ const ProfileHeader = ({
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [bioDraft, setBioDraft] = useState('');
     const [savingBio, setSavingBio] = useState(false);
-    const [coverPreview, setCoverPreview] = useState(null);
+    const [coverPreview, setCoverPreview] = useState<string | null>null;
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
 
@@ -133,7 +133,7 @@ const ProfileHeader = ({
             if (result?.success) {
                 toast.success("Couverture mise à jour");
             } else {
-                throw new Error("Upload cover failed");
+                throw new Error(result?.error || "Upload cover failed");
             }
         } catch (err) {
             console.error("Erreur cover:", err);
@@ -143,6 +143,7 @@ const ProfileHeader = ({
             e.target.value = "";
         }
     };
+
 
     const handleBioSave = async () => {
         if (bioDraft === user?.bio) return;
@@ -178,26 +179,15 @@ const ProfileHeader = ({
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="relative h-56 group">
                 {coverPreview ? (
-                    <img
-                        src={coverPreview}
-                        alt="Couverture"
-                        className="w-full h-full object-cover"
-                    />
+                    <img src={coverPreview} alt="Couverture" className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"></div>
                 )}
 
                 {isOwnProfile && (
                     <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <label
-                            htmlFor="cover-upload"
-                            className="bg-white bg-opacity-90 px-4 py-2 rounded-lg cursor-pointer hover:bg-opacity-100 transition-all flex items-center gap-2"
-                        >
-                            {uploadingCover ? (
-                                <RefreshCw size={18} className="animate-spin" />
-                            ) : (
-                                <Camera size={18} />
-                            )}
+                        <label htmlFor="cover-upload" className="bg-white bg-opacity-90 px-4 py-2 rounded-lg cursor-pointer hover:bg-opacity-100 transition-all flex items-center gap-2">
+                            {uploadingCover ? <RefreshCw size={18} className="animate-spin" /> : <Camera size={18} />}
                             {uploadingCover ? 'Upload...' : 'Modifier la couverture'}
                         </label>
                         <input
