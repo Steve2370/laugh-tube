@@ -33,11 +33,11 @@ const LoadingState = () => (
 );
 
 const ProfileHeader = ({
-                           user,
-                           stats,
-                           isOwnProfile,
-                           targetUserId
-                       }) => {
+    user,
+    stats,
+    isOwnProfile,
+    targetUserId
+}) => {
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [bioDraft, setBioDraft] = useState('');
     const [savingBio, setSavingBio] = useState(false);
@@ -68,7 +68,7 @@ const ProfileHeader = ({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!file.type.startsWith('image/')) {
+        if (!file.type.startsWith("image/")) {
             toast.error("Veuillez choisir une image");
             return;
         }
@@ -89,27 +89,32 @@ const ProfileHeader = ({
 
             const result = await apiService.uploadAvatar(formData);
 
-            if (result?.success) {
-                toast.success("Photo de profil mise à jour");
-            } else {
-                throw new Error("Upload avatar failed");
-            }
+            if (result?.avatar_url) {
+                toast.success(result.message ?? "Photo de profil mise à jour");
 
+                const fullUrl = `${window.location.origin}${result.avatar_url}`;
+                setAvatarPreview(fullUrl);
+                URL.revokeObjectURL(previewUrl);
+            } else {
+                throw new Error(result?.error || "Upload avatar failed");
+            }
         } catch (err) {
-            console.error('Erreur avatar:', err);
+            console.error("Erreur avatar:", err);
             toast.error("Erreur lors de la mise à jour");
         } finally {
             setUploadingAvatar(false);
             e.target.value = "";
         }
+
     };
+
 
 
     const handleCoverChange = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!file.type.startsWith('image/')) {
+        if (!file.type.startsWith("image/")) {
             toast.error("Veuillez choisir une image");
             return;
         }
@@ -130,8 +135,12 @@ const ProfileHeader = ({
 
             const result = await apiService.uploadCover(formData);
 
-            if (result?.success) {
-                toast.success("Couverture mise à jour");
+            if (result?.cover_url) {
+                toast.success(result.message ?? "Couverture mise à jour");
+
+                const fullUrl = `${window.location.origin}${result.cover_url}`;
+                setCoverPreview(fullUrl);
+                URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload cover failed");
             }
