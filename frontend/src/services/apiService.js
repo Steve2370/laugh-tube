@@ -168,20 +168,29 @@ class ApiService {
     }
 
     async getCurrentUser() {
-        const token = this.getToken?.() || localStorage.getItem("token");
-        if (!token) {
-            return null;
-        }
+        const token = localStorage.getItem("access_token");
+        if (!token) return null;
 
         try {
             return await this.getMe();
         } catch (e) {
-            if (e.message?.includes("Non authentifié")) {
-                localStorage.removeItem("token");
-            }
+            this.clearAuth();
             return null;
         }
     }
+
+    async getUserReactionStatus(videoId) {
+        if (!this.isAuthenticated()) return null;
+
+        try {
+            return await this.request(`/videos/${videoId}/reaction-status`);
+        } catch (e) {
+            console.warn("Reaction status non disponible:", e.message);
+            return null;
+        }
+    }
+
+
 
 
     clearAuth() {

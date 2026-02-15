@@ -85,21 +85,29 @@ const ProfileHeader = ({
             const previewUrl = URL.createObjectURL(file);
             setAvatarPreview(previewUrl);
 
-            const result = await apiService.uploadProfileImage(file);
+            const formData = new FormData();
+            formData.append("avatar", file);
 
-            if (result.success || result.image_url) {
+            const result = await apiService.uploadAvatar(formData);
+
+            if (result?.success) {
                 toast.success("Photo de profil mise à jour");
+            } else {
+                throw new Error("Upload avatar failed");
             }
+
         } catch (err) {
             console.error('Erreur avatar:', err);
             toast.error("Erreur lors de la mise à jour");
-            await loadProfileImage();
         } finally {
             setUploadingAvatar(false);
+            e.target.value = "";
         }
     };
 
-    const handleCoverUpload = async (file) => {
+
+    const handleCoverChange = async (e) => {
+        const file = e.target.files?.[0];
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
@@ -107,31 +115,38 @@ const ProfileHeader = ({
             return;
         }
 
-        if (file.size > 10 * 1024 * 1024) {
-            toast.error("L'image ne doit pas dépasser 10MB");
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("L'image ne doit pas dépasser 5MB");
             return;
         }
 
         try {
             setUploadingCover(true);
 
+            const previewUrl = URL.createObjectURL(file);
+            setCoverPreview(previewUrl);
+
             const formData = new FormData();
-            formData.append('cover', file);
+            formData.append("cover", file);
 
             const result = await apiService.uploadCover(formData);
 
-            if (result.success || result.cover_url) {
-                toast.success("Photo de couverture mise à jour");
-                const previewUrl = URL.createObjectURL(file);
-                onCoverChange({ target: { result: previewUrl } });
+            if (result?.success) {
+                toast.success("Couverture mise à jour");
+            } else {
+                throw new Error("Upload cover failed");
             }
+
         } catch (err) {
-            console.error('Erreur cover:', err);
+            console.error("Erreur cover:", err);
             toast.error("Erreur lors de la mise à jour");
         } finally {
             setUploadingCover(false);
+            e.target.value = "";
         }
     };
+
+
 
     const handleBioSave = async () => {
         if (bioDraft === user?.bio) return;
@@ -194,10 +209,7 @@ const ProfileHeader = ({
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) handleCoverUpload(file);
-                            }}
+                            onChange={handleCoverChange}
                             disabled={uploadingCover}
                         />
                     </div>

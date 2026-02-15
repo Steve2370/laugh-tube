@@ -173,7 +173,6 @@ class AuthService
 
             $verificationToken = $userData['verification_token'];
             $this->userModel->saveEmailVerificationToken($userId, $verificationToken);
-
             $this->emailService->sendVerificationEmail($userId, $email, $username, $verificationToken);
 
             $accessToken = $this->tokenService->generateToken($user);

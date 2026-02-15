@@ -224,6 +224,7 @@ const VideoPlayer = ({
                 src={src}
                 poster={poster}
                 onPlay={() => {
+                    const viewedRef = useRef(false);
                     if (viewedRef.current) return;
                     viewedRef.current = true;
                     onViewRecorded?.();
