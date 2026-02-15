@@ -10,7 +10,7 @@ class UserController
 {
     private $userService;
     private $uploadService;
-    private $userModel;
+    private User $userModel;
     private $abonnementService;
     private $authMiddleware;
 
@@ -185,7 +185,7 @@ class UserController
                 }
             }
 
-            $result = $this->userModel->updateProfile($user['sub'], $updateData);
+            $result = $this->userModel->update($user['sub'], $updateData);
 
             if (!$result) {
                 JsonResponse::serverError(['error' => 'Erreur lors de la mise à jour du profil']);
