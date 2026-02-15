@@ -57,6 +57,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
         setCoverPreview(u?.cover_url ? `${window.location.origin}${u.cover_url}` : "/images/default-cover.png");
     };
 
+
     const handleAvatarChange = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -150,7 +151,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 
 
     const handleBioSave = async () => {
-        if (bioDraft === authUser?.bio) return;
+        if (bioDraft === user?.bio) return;
 
         try {
             setSavingBio(true);
@@ -218,7 +219,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                                 />
                             ) : (
                                 <span className="text-white text-5xl font-bold">
-                                    {authUser?.username?.charAt(0)?.toUpperCase() || 'U'}
+                                    {user?.username?.charAt(0)?.toUpperCase() || 'U'}
                                 </span>
                             )}
                         </div>
@@ -288,11 +289,11 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 
                 <div className="mt-16">
                     <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                        {authUser?.username || 'Utilisateur'}
+                        {user?.username || 'Utilisateur'}
                     </h1>
                     <p className="text-gray-500 flex items-center gap-2 mb-4">
                         <Calendar size={16} />
-                        Membre depuis {authUser?.created_at ? new Date(authUser.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'récemment'}
+                        Membre depuis {user?.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'récemment'}
                     </p>
 
                     <div className="flex gap-6 mb-6">
@@ -333,7 +334,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                                 <span className="text-xs text-gray-400">
                                     {bioDraft.length}/500
                                 </span>
-                                {bioDraft !== (authUser?.bio || '') && (
+                                {bioDraft !== (user?.bio || '') && (
                                     <button
                                         onClick={handleBioSave}
                                         disabled={savingBio}
@@ -345,9 +346,9 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                             </div>
                         </div>
                     ) : (
-                        authUser?.bio && (
+                        user?.bio && (
                             <p className="text-gray-700 leading-relaxed bg-gray-50 px-4 py-3 rounded-xl">
-                                {authUser.bio}
+                                {user.bio}
                             </p>
                         )
                     )}
