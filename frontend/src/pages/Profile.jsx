@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { useVideos } from '../hooks/useVideos';
@@ -616,10 +616,8 @@ const Profile = () => {
     });
 
     useEffect(() => {
-        if (user?.id) {
-            loadUserData();
-        }
-    }, [user]);
+        loadUserData();
+    }, [loadUserData]);
 
     useEffect(() => {
         if (videos.length > 0) {
@@ -627,14 +625,16 @@ const Profile = () => {
         }
     }, [videos]);
 
-    const loadUserData = async () => {
+    const loadUserData = useCallback(async () => {
+        if (!user?.id) return;
+
         try {
             await getUserVideos(user.id);
         } catch (err) {
             console.error('Erreur chargement données:', err);
             toast.error('Erreur lors du chargement des vidéos');
         }
-    };
+    }, [user?.id, getUserVideos, toast]);
 
     useEffect(() => {
         if (userVideos) {
