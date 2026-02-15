@@ -139,7 +139,8 @@ try {
         $userService,
         $uploadService,
         $userModel,
-        $abonnementService
+        $abonnementService,
+        $authMiddleware,
     );
 
     $notificationController = new NotificationController(
