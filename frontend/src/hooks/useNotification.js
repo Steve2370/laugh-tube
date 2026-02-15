@@ -31,10 +31,10 @@ export const useNotifications = () => {
             }
         });
 
-        notificationService.startPolling((notifications, unreadCount) => {
-            setNotifications(notifications);
-            setUnreadCount(unreadCount);
-        });
+        // notificationService.startPolling((notifications, unreadCount) => {
+        //     setNotifications(notifications);
+        //     setUnreadCount(unreadCount);
+        // });
 
         return () => {
             unsubscribe();
