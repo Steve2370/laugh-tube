@@ -663,10 +663,6 @@ const Profile = () => {
         });
     };
 
-    const handleCoverChange = (e) => {
-        setCoverPreview(e.target.result);
-    };
-
     const handleVideoSelect = (video) => {
         window.location.hash = `#/video/${video.id}`;
     };
