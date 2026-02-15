@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import { useVideos } from '../hooks/useVideos';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
@@ -12,8 +12,10 @@ const Home = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filter, setFilter] = useState('all');
+    const [trendingVideos, setTrendingVideos] = useState([]);
     const [displayVideos, setDisplayVideos] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+
 
     useEffect(() => {
         if (error) {
@@ -48,23 +50,24 @@ const Home = () => {
         }
     };
 
+    const reqIdRef = useRef(0);
+
     const handleFilterChange = async (newFilter) => {
         setFilter(newFilter);
 
-        if (newFilter === 'trending') {
-            setIsSearching(true);
-            try {
-                const result = await getTrending({ limit: 20, period: 7 });
-                if (result.success) {
-                    setDisplayVideos(result.videos);
-                }
-            } catch (err) {
-                toast.error('Erreur lors du chargement des tendances');
-            } finally {
-                setIsSearching(false);
-            }
-        } else {
-            setDisplayVideos(videos);
+        if (newFilter !== 'trending') return;
+        const reqId = ++reqIdRef.current;
+        setIsSearching(true);
+
+        setIsSearching(true);
+        try {
+            const result = await getTrending({ limit: 20, period: 7 });
+            if (reqId !== reqIdRef.current) return;
+            if (result?.success) setTrendingVideos(result.videos ?? []);
+        } catch {
+            toast.error('Erreur lors du chargement des tendances');
+        } finally {
+            setIsSearching(false);
         }
     };
 

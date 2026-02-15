@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
                     return;
                 }
 
-                const currentUser = await apiService.getCurrentUser();
+                const currentUser = await apiService.getMe();
 
                 if (!mounted) return;
 
