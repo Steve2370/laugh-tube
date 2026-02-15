@@ -33,11 +33,11 @@ const LoadingState = () => (
 );
 
 const ProfileHeader = ({
-    user,
-    stats,
-    isOwnProfile,
-    targetUserId
-}) => {
+                           user,
+                           stats,
+                           isOwnProfile,
+                           targetUserId
+                       }) => {
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [bioDraft, setBioDraft] = useState('');
     const [savingBio, setSavingBio] = useState(false);
@@ -596,6 +596,9 @@ const Profile = () => {
     const { user, isAuthenticated } = useAuth();
     const toast = useToast();
     const { videos: userVideos, loading: videosLoading, getUserVideos } = useVideos();
+
+    const isOwnProfile = true;
+    const targetUserId = user?.id;
 
     const [activeTab, setActiveTab] = useState('videos');
     const [videos, setVideos] = useState([]);
