@@ -338,6 +338,11 @@ const Video = () => {
     const [auteurImage, setAuteurImage] = useState(null);
     const [auteurId, setAuteurId] = useState(null);
     const [viewsCount, setViewsCount] = useState(0);
+    const videoSrc = video?.stream_url
+        ? video.stream_url
+        : video?.filename
+            ? `/uploads/videos/${video.filename}`
+            : null;
 
     useEffect(() => {
         const storedVideo = localStorage.getItem('currentVideo');
@@ -528,9 +533,8 @@ const Video = () => {
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
                             <VideoPlayer
-                                videoId={videoId}
-                                videoRef={videoRef}
-                                onViewRecorded={recordView}
+                                src={videoSrc}
+                                poster={video?.thumbnail ? `/uploads/thumbnails/${video.thumbnail}` : undefined}
                             />
                         </div>
 
