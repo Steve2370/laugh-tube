@@ -135,7 +135,6 @@ const ProfileHeader = ({
             } else {
                 throw new Error("Upload cover failed");
             }
-
         } catch (err) {
             console.error("Erreur cover:", err);
             toast.error("Erreur lors de la mise à jour");
@@ -144,8 +143,6 @@ const ProfileHeader = ({
             e.target.value = "";
         }
     };
-
-
 
     const handleBioSave = async () => {
         if (bioDraft === user?.bio) return;
@@ -718,11 +715,10 @@ const Profile = () => {
                         <ProfileHeader
                             user={user}
                             stats={stats}
-                            coverPreview={coverPreview}
-                            onCoverChange={handleCoverChange}
-                            isOwnProfile={true}
-                            targetUserId={user.id}
+                            isOwnProfile={isOwnProfile}
+                            targetUserId={targetUserId}
                         />
+
 
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                             <div className="border-b border-gray-200 bg-gray-50">
