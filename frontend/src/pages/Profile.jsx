@@ -40,6 +40,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
     const { user: authUser, updateUser } = useAuth();
+    const user = authUser;
 
     const toast = useToast();
     const { loading, subscribersCount, isSubscribed, toggle } = useAbonnement(targetUserId);
@@ -154,7 +155,8 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 
         try {
             setSavingBio(true);
-            await apiService.updateUserBio(bioDraft);
+            await apiService.updateBio(bioDraft);
+            updateUser({ bio: bioDraft });
             toast.success("Biographie mise à jour");
         } catch (err) {
             console.error('Erreur sauvegarde bio:', err);
