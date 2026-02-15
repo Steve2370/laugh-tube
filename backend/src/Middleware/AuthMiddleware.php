@@ -126,17 +126,21 @@ class AuthMiddleware
         return isset($this->user['user_id']) ? (int)$this->user['user_id'] : null;
     }
 
-
-
-    public function handleOptional(): bool
+    public function handleOptional(): ?array
     {
-        try {
-            $this->handle();
-            return true;
-        } catch (\Exception $e) {
-            return true;
-        }
+        $ok = $this->handle();
+        return $ok ? ($this->user ?? null) : null;
     }
+
+    public function handleRequired(): array
+    {
+        $ok = $this->handle();
+        if (!$ok || empty($this->user)) {
+            throw new \Exception("Non authentifié");
+        }
+        return $this->user;
+    }
+
 
     public function requireRole(string $role): bool
     {
