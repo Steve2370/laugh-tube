@@ -12,7 +12,7 @@ class User
 
     public function findByEmail(string $email): ?array
     {
-        $sql = "SELECT id, username, email, password_hash, role, profile_image, email_verified, deleted_at, two_fa_enabled
+        $sql = "SELECT id, username, email, password_hash, role, avatar_url, email_verified, deleted_at, two_fa_enabled
             FROM users
             WHERE email = :email
             LIMIT 1";
@@ -32,7 +32,7 @@ class User
 
     public function findById(int $id): ?array
     {
-        $sql = "SELECT id, username, email, password_hash, role, profile_image, profile_cover, bio, 
+        $sql = "SELECT id, username, email, password_hash, role, avatar_url, cover_url, bio, 
                        created_at, updated_at, email_verified, two_fa_enabled, deleted_at
                 FROM users 
                 WHERE id = $1 AND deleted_at IS NULL";
@@ -42,7 +42,7 @@ class User
 
     public function findByUsername(string $username): ?array
     {
-        $sql = "SELECT id, username, email, password_hash, role, profile_image, profile_cover, bio, 
+        $sql = "SELECT id, username, email, password_hash, role, avatar_url, cover_url, bio, 
                        created_at, email_verified, two_fa_enabled
                 FROM users 
                 WHERE username = $1 AND deleted_at IS NULL";
@@ -54,7 +54,7 @@ class User
     {
         try {
             $result = $this->db->query(
-                "UPDATE users SET profile_image = $1 WHERE id = $2",
+                "UPDATE users SET avatar_url = $1 WHERE id = $2",
                 [$filename, $userId]
             );
             return $result !== false;
@@ -68,7 +68,7 @@ class User
     {
         try {
             $result = $this->db->query(
-                "UPDATE users SET profile_cover = $1 WHERE id = $2",
+                "UPDATE users SET cover_url = $1 WHERE id = $2",
                 [$filename, $userId]
             );
             return $result !== false;
@@ -130,7 +130,7 @@ class User
 
     public function update(int $id, array $data): bool
     {
-        $allowedFields = ['username', 'email', 'bio', 'profile_image', 'profile_cover'];
+        $allowedFields = ['username', 'email', 'bio', 'avatar_url', 'cover_url'];
         $fields = [];
         $params = [];
         $index = 1;
@@ -165,7 +165,7 @@ class User
     public function updateProfileImage(int $id, string $imagePath): bool
     {
         $sql = "UPDATE users 
-                SET profile_image = $1, updated_at = NOW() 
+                SET avatar_url = $1, updated_at = NOW() 
                 WHERE id = $2";
 
         return $this->db->execute($sql, [$imagePath, $id]);
@@ -174,7 +174,7 @@ class User
     public function updateProfileCover(int $id, string $coverPath): bool
     {
         $sql = "UPDATE users 
-                SET profile_cover = $1, updated_at = NOW() 
+                SET cover_url = $1, updated_at = NOW() 
                 WHERE id = $2";
 
         return $this->db->execute($sql, [$coverPath, $id]);
@@ -204,7 +204,7 @@ class User
 
     public function findAll(int $limit = 50, int $offset = 0): array
     {
-        $sql = "SELECT id, username, email, role, profile_image, profile_cover, bio, created_at
+        $sql = "SELECT id, username, email, role, avatar_url, cover_url, bio, created_at
                 FROM users 
                 WHERE deleted_at IS NULL
                 ORDER BY created_at DESC
@@ -222,7 +222,7 @@ class User
 
     public function recherche(string $term, int $limit = 20): array
     {
-        $sql = "SELECT id, username, email, role, profile_image, profile_cover, created_at
+        $sql = "SELECT id, username, email, role, avatar_url, cover_url, created_at
                 FROM users 
                 WHERE (username ILIKE $1 OR email ILIKE $1) AND deleted_at IS NULL
                 ORDER BY username
@@ -259,16 +259,16 @@ class User
 
     public function getProfileImage(int $userId): ?string
     {
-        $sql = "SELECT profile_image FROM users WHERE id = $1 AND deleted_at IS NULL";
+        $sql = "SELECT avatar_url FROM users WHERE id = $1 AND deleted_at IS NULL";
         $result = $this->db->fetchOne($sql, [$userId]);
-        return $result['profile_image'] ?? null;
+        return $result['avatar_url'] ?? null;
     }
 
     public function getProfileCover(int $userId): ?string
     {
-        $sql = "SELECT profile_cover FROM users WHERE id = $1 AND deleted_at IS NULL";
+        $sql = "SELECT cover_url FROM users WHERE id = $1 AND deleted_at IS NULL";
         $result = $this->db->fetchOne($sql, [$userId]);
-        return $result['profile_cover'] ?? null;
+        return $result['cover_url'] ?? null;
     }
 
     public function markEmailAsVerified(mixed $id)
