@@ -48,13 +48,28 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     useEffect(() => {
         if (authUser) {
             setBioDraft(authUser.bio || '');
-            loadProfileImage(authUser);
+            loadProfileImages();
         }
     }, [authUser]);
 
-    const loadProfileImage = (u) => {
-        setAvatarPreview(u?.avatar_url ? `${window.location.origin}${u.avatar_url}` : "/images/default-avatar.png");
-        setCoverPreview(u?.cover_url ? `${window.location.origin}${u.cover_url}` : "/images/default-cover.png");
+    const loadProfileImages = () => {
+        if (authUser?.avatar_url) {
+            const avatarUrl = authUser.avatar_url.startsWith('http')
+                ? authUser.avatar_url
+                : `${window.location.origin}${authUser.avatar_url}`;
+            setAvatarPreview(avatarUrl);
+        } else {
+            setAvatarPreview('/images/default-avatar.png');
+        }
+
+        if (authUser?.cover_url) {
+            const coverUrl = authUser.cover_url.startsWith('http')
+                ? authUser.cover_url
+                : `${window.location.origin}${authUser.cover_url}`;
+            setCoverPreview(coverUrl);
+        } else {
+            setCoverPreview('/images/default-cover.png');
+        }
     };
 
 
@@ -86,9 +101,14 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
             if (result?.avatar_url) {
                 toast.success(result.message ?? "Photo de profil mise à jour");
 
-                const fullUrl = `${window.location.origin}${result.avatar_url}`;
+                const fullUrl = result.avatar_url.startsWith('http')
+                    ? result.avatar_url
+                    : `${window.location.origin}${result.avatar_url}`;
+
                 setAvatarPreview(fullUrl);
+
                 updateUser({ avatar_url: result.avatar_url });
+
                 URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload avatar failed");
@@ -96,11 +116,11 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
         } catch (err) {
             console.error("Erreur avatar:", err);
             toast.error("Erreur lors de la mise à jour");
+            loadProfileImages();
         } finally {
             setUploadingAvatar(false);
             e.target.value = "";
         }
-
     };
 
 
@@ -133,9 +153,14 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
             if (result?.cover_url) {
                 toast.success(result.message ?? "Couverture mise à jour");
 
-                const fullUrl = `${window.location.origin}${result.cover_url}`;
+                const fullUrl = result.cover_url.startsWith('http')
+                    ? result.cover_url
+                    : `${window.location.origin}${result.cover_url}`;
+
                 setCoverPreview(fullUrl);
+
                 updateUser({ cover_url: result.cover_url });
+
                 URL.revokeObjectURL(previewUrl);
             } else {
                 throw new Error(result?.error || "Upload cover failed");
@@ -143,6 +168,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
         } catch (err) {
             console.error("Erreur cover:", err);
             toast.error("Erreur lors de la mise à jour");
+            loadProfileImages();
         } finally {
             setUploadingCover(false);
             e.target.value = "";
@@ -210,32 +236,28 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 
             <div className="relative px-8 pb-8">
                 <div className="absolute -top-20 left-8">
-                    <div className="relative group">
-                        <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                            {avatarPreview ? (
-                                <img
-                                    src={avatarPreview}
-                                    alt="Avatar"
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span className="text-white text-5xl font-bold">
-                                    {user?.username?.charAt(0)?.toUpperCase() || 'U'}
-                                </span>
-                            )}
-                        </div>
+                    <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 relative group/avatar">
+                        {avatarPreview ? (
+                            <img
+                                src={avatarPreview}
+                                alt="Avatar"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white text-5xl font-bold">
+                                {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                            </div>
+                        )}
 
                         {isOwnProfile && (
-                            <>
-                                <label
-                                    htmlFor="avatar-upload"
-                                    className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                >
+                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center">
+                                <label htmlFor="avatar-upload" className="cursor-pointer text-white flex flex-col items-center gap-1">
                                     {uploadingAvatar ? (
-                                        <RefreshCw className="h-8 w-8 text-white animate-spin" />
+                                        <RefreshCw size={24} className="animate-spin" />
                                     ) : (
-                                        <Camera className="h-8 w-8 text-white" />
+                                        <Camera size={24} />
                                     )}
+                                    <span className="text-xs">{uploadingAvatar ? 'Upload...' : 'Modifier'}</span>
                                 </label>
                                 <input
                                     id="avatar-upload"
@@ -245,114 +267,118 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                                     onChange={handleAvatarChange}
                                     disabled={uploadingAvatar}
                                 />
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-4 gap-3">
-                    {isOwnProfile ? (
-                        <>
-                            <button
-                                onClick={() => window.location.hash = '#/upload'}
-                                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg flex items-center gap-2"
-                            >
-                                <Upload size={18} />
-                                Upload vidéo
-                            </button>
-                            <button
-                                onClick={() => window.location.hash = '#/settings'}
-                                className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition-all flex items-center gap-2"
-                            >
-                                <Settings size={18} />
-                                Paramètres
-                            </button>
-                        </>
-                    ) : (
+                <div className="flex justify-end pt-4">
+                    {!isOwnProfile && (
                         <button
                             onClick={toggle}
                             disabled={loading}
-                            className={`px-6 py-2.5 rounded-xl font-semibold transition-all shadow-lg flex items-center gap-2 ${
+                            className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${
                                 isSubscribed
-                                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700'
+                                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg'
                             }`}
                         >
                             {loading ? (
-                                <RefreshCw size={18} className="animate-spin" />
+                                <RefreshCw size={18} className="animate-spin inline mr-2" />
                             ) : (
-                                <Users size={18} />
+                                <Users size={18} className="inline mr-2" />
                             )}
-                            {isSubscribed ? 'Abonné' : 'S\'abonner'}
+                            {isSubscribed ? 'Abonné' : "S'abonner"}
                         </button>
                     )}
                 </div>
 
-                <div className="mt-16">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                        {authUser?.username || 'Utilisateur'}
-                    </h1>
-                    <p className="text-gray-500 flex items-center gap-2 mb-4">
-                        <Calendar size={16} />
-                        Membre depuis {authUser?.created_at ? new Date(authUser.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'récemment'}
-                    </p>
+                <div className="pt-24">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                        <div className="flex-1">
+                            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                                {user?.username || 'Utilisateur'}
+                            </h1>
 
-                    <div className="flex gap-6 mb-6">
-                        <div className="flex items-center gap-2">
-                            <Users size={18} className="text-gray-400" />
-                            <span className="font-bold text-gray-900">
-                                {formatSubscribers(subscribersCount)}
-                            </span>
-                            <span className="text-gray-500">abonnés</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Video size={18} className="text-gray-400" />
-                            <span className="font-bold text-gray-900">
-                                {stats?.totalVideos || 0}
-                            </span>
-                            <span className="text-gray-500">vidéos</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Eye size={18} className="text-gray-400" />
-                            <span className="font-bold text-gray-900">
-                                {formatNumber(stats?.totalViews)}
-                            </span>
-                            <span className="text-gray-500">vues</span>
-                        </div>
-                    </div>
+                            {isOwnProfile ? (
+                                <div className="mb-4">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Biographie
+                                    </label>
+                                    <textarea
+                                        value={bioDraft}
+                                        onChange={(e) => setBioDraft(e.target.value)}
+                                        placeholder="Parlez-nous de vous..."
+                                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
+                                        rows={3}
+                                        maxLength={200}
+                                    />
+                                    <div className="flex items-center justify-between mt-2">
+                                        <span className="text-xs text-gray-500">
+                                            {bioDraft.length}/200 caractères
+                                        </span>
+                                        {bioDraft !== (user?.bio || '') && (
+                                            <button
+                                                onClick={handleBioSave}
+                                                disabled={savingBio}
+                                                className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
+                                            >
+                                                {savingBio ? (
+                                                    <RefreshCw size={16} className="animate-spin inline mr-2" />
+                                                ) : null}
+                                                Sauvegarder
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                user?.bio && (
+                                    <p className="text-gray-700 mb-4 text-lg">
+                                        {user.bio}
+                                    </p>
+                                )
+                            )}
 
-                    {isOwnProfile ? (
-                        <div>
-                            <textarea
-                                value={bioDraft}
-                                onChange={(e) => setBioDraft(e.target.value)}
-                                placeholder="Parlez-nous de vous..."
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-700"
-                                rows={3}
-                                maxLength={500}
-                            />
-                            <div className="flex justify-between items-center mt-2">
-                                <span className="text-xs text-gray-400">
-                                    {bioDraft.length}/500
-                                </span>
-                                {bioDraft !== (authUser?.bio || '') && (
-                                    <button
-                                        onClick={handleBioSave}
-                                        disabled={savingBio}
-                                        className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                                    >
-                                        {savingBio ? 'Sauvegarde...' : 'Sauvegarder'}
-                                    </button>
-                                )}
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <div className="flex items-center gap-1">
+                                    <Calendar size={16} />
+                                    Membre depuis{' '}
+                                    {new Date(user?.created_at || Date.now()).toLocaleDateString('fr-FR', {
+                                        month: 'long',
+                                        year: 'numeric',
+                                    })}
+                                </div>
                             </div>
                         </div>
-                    ) : (
-                        authUser?.bio && (
-                            <p className="text-gray-700 leading-relaxed bg-gray-50 px-4 py-3 rounded-xl">
-                                {authUser.bio}
-                            </p>
-                        )
-                    )}
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                            <div className="text-center">
+                                <div className="text-3xl font-bold text-blue-600 flex items-center justify-center gap-1">
+                                    <Users size={24} className="text-blue-500" />
+                                    <span>{formatSubscribers(subscribersCount)}</span>
+                                </div>
+                                <div className="text-sm text-gray-600">Abonnés</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl font-bold text-blue-600">
+                                    {formatNumber(stats?.totalVideos || 0)}
+                                </div>
+                                <div className="text-sm text-gray-600">Vidéos</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl font-bold text-blue-600">
+                                    {formatNumber(stats?.totalViews || 0)}
+                                </div>
+                                <div className="text-sm text-gray-600">Vues</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl font-bold text-blue-600">
+                                    {formatNumber(stats?.totalLikes || 0)}
+                                </div>
+                                <div className="text-sm text-gray-600">J'aime</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -360,96 +386,60 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 };
 
 const VideosTab = ({ videos, onVideoClick, onDelete, isOwnProfile }) => {
-    const formatDate = (date) => {
-        if (!date) return 'Date inconnue';
-        return new Date(date).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
-    };
-
-    const formatDuration = (seconds) => {
-        if (!seconds) return '0:00';
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const formatViews = (count) => {
-        if (!count) return '0 vue';
-        if (count === 1) return '1 vue';
-        if (count < 1000) return `${count} vues`;
-        if (count < 1000000) return `${Math.floor(count / 100) / 10}k vues`;
-        return `${Math.floor(count / 100000) / 10}M vues`;
-    };
-
-    if (!videos || videos.length === 0) {
+    if (videos.length === 0) {
         return (
             <div className="text-center py-16">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
-                    <Video size={40} className="text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune vidéo</h3>
-                <p className="text-gray-600 mb-6">
+                <Video size={64} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    Aucune vidéo
+                </h3>
+                <p className="text-gray-500">
                     {isOwnProfile
-                        ? 'Commencez à partager vos contenus en uploadant votre première vidéo'
-                        : 'Cet utilisateur n\'a pas encore publié de vidéo'}
+                        ? "Vous n'avez pas encore publié de vidéos."
+                        : "Cet utilisateur n'a pas encore publié de vidéos."}
                 </p>
-                {isOwnProfile && (
-                    <button
-                        onClick={() => window.location.hash = '#/upload'}
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg inline-flex items-center gap-2"
-                    >
-                        <Upload size={20} />
-                        Uploader une vidéo
-                    </button>
-                )}
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {videos.map((video) => (
                 <div
                     key={video.id}
-                    className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer group"
+                    className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 group"
                 >
                     <div
                         onClick={() => onVideoClick(video)}
-                        className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden"
+                        className="relative aspect-video bg-gray-200 overflow-hidden cursor-pointer"
                     >
-                        {video.thumbnail_url ? (
-                            <img
-                                src={video.thumbnail_url}
-                                alt={video.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                        ) : (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <Video size={48} className="text-gray-400" />
+                        <img
+                            src={apiService.getThumbnailUrl(video.id)}
+                            alt={video.title || 'Vidéo'}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-video.png';
+                            }}
+                        />
+
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div className="bg-white bg-opacity-90 rounded-full p-3">
+                                    <Eye className="h-6 w-6 text-blue-600" />
+                                </div>
                             </div>
-                        )}
-                        {video.duration && (
-                            <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded">
-                                {formatDuration(video.duration)}
-                            </div>
-                        )}
+                        </div>
                     </div>
 
                     <div className="p-4">
-                        <h3
-                            onClick={() => onVideoClick(video)}
-                            className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors"
-                        >
+                        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2">
                             {video.title}
                         </h3>
 
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
                             <span className="flex items-center gap-1">
                                 <Eye size={14} />
-                                {formatViews(video.views)}
+                                {video.views || 0} vues
                             </span>
                             <span className="flex items-center gap-1">
                                 <ThumbsUp size={14} />
@@ -461,24 +451,17 @@ const VideosTab = ({ videos, onVideoClick, onDelete, isOwnProfile }) => {
                             </span>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                            <p className="text-xs text-gray-500">
-                                {formatDate(video.created_at)}
-                            </p>
-
-                            {isOwnProfile && (
+                        {isOwnProfile && (
+                            <div className="flex gap-2 pt-3 border-t border-gray-100">
                                 <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete(video);
-                                    }}
-                                    className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Supprimer"
+                                    onClick={() => onDelete(video)}
+                                    className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Trash2 size={16} />
+                                    Supprimer
                                 </button>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             ))}
@@ -487,78 +470,40 @@ const VideosTab = ({ videos, onVideoClick, onDelete, isOwnProfile }) => {
 };
 
 const AnalyticsTab = ({ stats, videos }) => {
-    const [selectedPeriod, setSelectedPeriod] = useState('7d');
-
-    const getEngagementTrend = () => {
-        if (!videos || videos.length === 0) return 'stable';
-
-        const sorted = [...videos].sort((a, b) =>
-            new Date(b.created_at) - new Date(a.created_at)
-        );
-
-        const recent = sorted.slice(0, 3);
-        const older = sorted.slice(3, 6);
-
-        if (recent.length === 0 || older.length === 0) return 'stable';
-
-        const recentAvg = recent.reduce((sum, v) => sum + (v.views || 0), 0) / recent.length;
-        const olderAvg = older.reduce((sum, v) => sum + (v.views || 0), 0) / older.length;
-
-        if (recentAvg > olderAvg * 1.1) return 'up';
-        if (recentAvg < olderAvg * 0.9) return 'down';
-        return 'stable';
-    };
-
-    const trend = getEngagementTrend();
-
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900">Vue d'ensemble</h3>
-                <select
-                    value={selectedPeriod}
-                    onChange={(e) => setSelectedPeriod(e.target.value)}
-                    className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="7d">7 derniers jours</option>
-                    <option value="30d">30 derniers jours</option>
-                    <option value="all">Tout le temps</option>
-                </select>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-2">
-                        <Eye className="text-blue-600" size={24} />
-                        <TrendingUp className={`text-${trend === 'up' ? 'green' : trend === 'down' ? 'red' : 'gray'}-600`} size={20} />
+                        <Video className="text-blue-600" size={24} />
                     </div>
                     <div className="text-3xl font-bold text-gray-900 mb-1">
-                        {stats?.totalViews?.toLocaleString() || 0}
+                        {stats?.totalVideos || 0}
                     </div>
-                    <div className="text-sm text-gray-600">Vues totales</div>
+                    <div className="text-sm text-gray-600">Total Vidéos</div>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-2">
+                        <Eye className="text-blue-600" size={24} />
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {stats?.totalViews || 0}
+                    </div>
+                    <div className="text-sm text-gray-600">Total Vues</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-2">
                         <ThumbsUp className="text-blue-600" size={24} />
                     </div>
                     <div className="text-3xl font-bold text-gray-900 mb-1">
-                        {stats?.totalLikes?.toLocaleString() || 0}
+                        {stats?.totalLikes || 0}
                     </div>
-                    <div className="text-sm text-gray-600">J'aime</div>
+                    <div className="text-sm text-gray-600">Total J'aime</div>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <MessageCircle className="text-blue-600" size={24} />
-                    </div>
-                    <div className="text-3xl font-bold text-gray-900 mb-1">
-                        {stats?.totalComments?.toLocaleString() || 0}
-                    </div>
-                    <div className="text-sm text-gray-600">Commentaires</div>
-                </div>
-
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-2">
                         <BarChart3 className="text-blue-600" size={24} />
                     </div>

@@ -6,9 +6,15 @@ class ApiService {
         this.baseURL = API_URL;
         this.isRefreshing = false;
         this.failedQueue = [];
-        console.log('🌐 API initialisé avec:', this.baseURL);
+        console.log('API Service initialisé:', this.baseURL);
     }
 
+    /**
+     *
+     * @param {string} endpoint
+     * @param {object} options
+     * @returns {Promise<any>}
+     */
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}/api${endpoint}`;
         const token = localStorage.getItem('access_token');
@@ -32,7 +38,7 @@ class ApiService {
 
             return this.handleResponse(response);
         } catch (error) {
-            console.error(`❌ API Error:`, error);
+            console.error(`Erreur requête ${endpoint}:`, error);
             throw error;
         }
     }
@@ -48,29 +54,38 @@ class ApiService {
 
         try {
             const refreshed = await this.refreshToken();
+
             if (refreshed) {
                 this.failedQueue.forEach(({ resolve, endpoint, options }) => {
                     resolve(this.request(endpoint, options));
                 });
                 this.failedQueue = [];
+
                 return this.request(endpoint, options);
             } else {
                 this.clearAuth();
-                throw new Error('Session expirée');
+                window.location.hash = '#/login';
+                throw new Error('Session expirée - veuillez vous reconnecter');
             }
         } finally {
             this.isRefreshing = false;
         }
     }
 
+    /**
+     *
+     * @private
+     */
     async handleResponse(response) {
         const contentType = response.headers.get('content-type');
 
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
+
             if (!response.ok) {
                 throw new Error(data.message || data.error || `Erreur ${response.status}`);
             }
+
             return data;
         }
 
@@ -81,6 +96,12 @@ class ApiService {
         return response;
     }
 
+    /**
+     *
+     * @param {string} email
+     * @param {string} password
+     * @returns {Promise<object>}
+     */
     async login(email, password) {
         const response = await this.request('/login', {
             method: 'POST',
@@ -88,9 +109,10 @@ class ApiService {
             skipAuth: true,
         });
 
-        console.log('🔍 Login response:', response);
+        console.log('Réponse login:', response);
 
-        const accessToken = response.token || response.data?.token || response.access_token || response.data?.access_token;
+        const accessToken = response.token || response.data?.token ||
+            response.access_token || response.data?.access_token;
         const refreshToken = response.refresh_token || response.data?.refresh_token;
 
         if (accessToken) {
@@ -98,14 +120,21 @@ class ApiService {
             if (refreshToken) {
                 localStorage.setItem('refresh_token', refreshToken);
             }
-            console.log('✅ Tokens sauvegardés');
+            console.log('Tokens sauvegardés');
         } else {
-            console.error('❌ Pas de token dans la réponse!', response);
+            console.error('Aucun token dans la réponse:', response);
         }
 
         return response;
     }
 
+    /**
+     *
+     * @param {string} username
+     * @param {string} email
+     * @param {string} password
+     * @returns {Promise<object>}
+     */
     async register(username, email, password) {
         const response = await this.request('/register', {
             method: 'POST',
@@ -113,9 +142,10 @@ class ApiService {
             skipAuth: true,
         });
 
-        console.log('🔍 Register response:', response);
+        console.log('Réponse register:', response);
 
-        const accessToken = response.token || response.data?.token || response.access_token || response.data?.access_token;
+        const accessToken = response.token || response.data?.token ||
+            response.access_token || response.data?.access_token;
         const refreshToken = response.refresh_token || response.data?.refresh_token;
 
         if (accessToken) {
@@ -123,18 +153,25 @@ class ApiService {
             if (refreshToken) {
                 localStorage.setItem('refresh_token', refreshToken);
             }
-            console.log('✅ Tokens sauvegardés après inscription');
+            console.log('Tokens sauvegardés après inscription');
         } else {
-            console.error('❌ Pas de token dans la réponse register!', response);
+            console.error('Aucun token dans la réponse register:', response);
         }
 
         return response;
     }
 
+    /**
+     *
+     * @returns {Promise<boolean>}
+     */
     async refreshToken() {
         try {
             const refreshToken = localStorage.getItem('refresh_token');
-            if (!refreshToken) return false;
+            if (!refreshToken) {
+                console.warn('Aucun refresh token disponible');
+                return false;
+            }
 
             const response = await this.request('/auth/refresh', {
                 method: 'POST',
@@ -142,17 +179,19 @@ class ApiService {
                 skipAuth: true,
             });
 
-            const accessToken = response.token || response.data?.token || response.access_token || response.data?.access_token;
+            const accessToken = response.token || response.data?.token ||
+                response.access_token || response.data?.access_token;
 
             if (accessToken) {
                 localStorage.setItem('access_token', accessToken);
-                console.log('✅ Token rafraîchi');
+                console.log('Token rafraîchi avec succès');
                 return true;
             }
 
+            console.warn('Refresh token invalide');
             return false;
         } catch (error) {
-            console.error('❌ Refresh failed:', error);
+            console.error('Échec du refresh:', error);
             return false;
         }
     }
@@ -161,44 +200,45 @@ class ApiService {
         try {
             await this.request('/auth/logout', { method: 'POST' });
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error('Erreur lors de la déconnexion:', error);
         } finally {
             this.clearAuth();
+            window.location.hash = '#/login';
         }
     }
 
+    /**
+     *
+     * @returns {Promise<object|null>}
+     */
     async getCurrentUser() {
-        const token = localStorage.getItem("access_token");
+        const token = localStorage.getItem('access_token');
         if (!token) return null;
 
         try {
             return await this.getMe();
-        } catch (e) {
+        } catch (error) {
+            console.error('Erreur getCurrentUser:', error);
             this.clearAuth();
             return null;
         }
     }
 
-    async getUserReactionStatus(videoId) {
-        if (!this.isAuthenticated()) return null;
-
-        try {
-            return await this.request(`/videos/${videoId}/reaction-status`);
-        } catch (e) {
-            console.warn("Reaction status non disponible:", e.message);
-            return null;
-        }
+    async getMe() {
+        const response = await this.request('/me');
+        return response.data || response.user || response;
     }
-
-
-
 
     clearAuth() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        console.log('🔓 Déconnecté');
+        console.log('🔓 Authentification effacée');
     }
 
+    /**
+     *
+     * @returns {boolean}
+     */
     isAuthenticated() {
         const token = localStorage.getItem('access_token');
         if (!token) return false;
@@ -215,13 +255,9 @@ class ApiService {
             if (parts.length !== 3) return null;
             return JSON.parse(atob(parts[1]));
         } catch (error) {
+            console.error('Erreur décodage token:', error);
             return null;
         }
-    }
-
-    async getMe() {
-        const response = await this.request('/me');
-        return response.data || response.user || response;
     }
 
     async changePassword(currentPassword, newPassword) {
@@ -241,7 +277,8 @@ class ApiService {
             skipAuth: true,
         });
 
-        const accessToken = response.token || response.data?.token || response.access_token || response.data?.access_token;
+        const accessToken = response.token || response.data?.token ||
+            response.access_token || response.data?.access_token;
         const refreshToken = response.refresh_token || response.data?.refresh_token;
 
         if (accessToken) {
@@ -265,7 +302,11 @@ class ApiService {
     async resetPassword(token, password, confirmPassword) {
         return this.request('/resetPassword.php', {
             method: 'POST',
-            body: JSON.stringify({ token, password, confirm_password: confirmPassword }),
+            body: JSON.stringify({
+                token,
+                password,
+                confirm_password: confirmPassword
+            }),
             skipAuth: true,
         });
     }
@@ -278,42 +319,68 @@ class ApiService {
         });
     }
 
+    /**
+     *
+     * @returns {Promise<Array>}
+     */
     async getVideos() {
         const response = await this.request('/videos');
         return response.data || response.videos || response;
     }
 
+    /**
+     *
+     * @param {number} period
+     * @param {number} limit
+     */
     async getTrendingVideos(period = 7, limit = 10) {
         const response = await this.request(`/videos/trending?period=${period}&limit=${limit}`);
-        return response.data || response;
+        return response.data || response.videos || response;
     }
 
+    /**
+     *
+     * @param {number} id
+     */
     async getVideo(id) {
         const response = await this.request(`/videos/${id}`);
-        return response.data || response;
+        return response.data || response.video || response;
     }
 
     async getVideoById(id) {
         try {
-            return await this.request(`/videos/${id}`);
+            return await this.getVideo(id);
         } catch (error) {
-            console.error('ApiService.getVideoById:', error);
+            console.error('Erreur getVideoById:', error);
             throw error;
         }
     }
 
-    getThumbnailUrl(video) {
-        if (video?.thumbnail) {
-            return `${this.baseURL}/uploads/thumbnails/${video.thumbnail}`;
+    /**
+     *
+     * @param {number|object} videoOrId
+     * @returns {string}
+     */
+    getThumbnailUrl(videoOrId) {
+        if (typeof videoOrId === 'object' && videoOrId?.thumbnail) {
+            return `${this.baseURL}/uploads/thumbnails/${videoOrId.thumbnail}`;
         }
-        return '/default-thumbnail.jpg';
+
+        if (typeof videoOrId === 'number' || typeof videoOrId === 'string') {
+            return `${this.baseURL}/api/videos/${videoOrId}/thumbnail`;
+        }
+
+        return '/images/placeholder-video.png';
     }
 
-    async getUserVideos(userId) {
-        const response = await this.request(`/users/${userId}/videos`);
-        return response.data || response;
+    getVideoStreamUrl(videoId) {
+        return `${this.baseURL}/api/videos/${videoId}/play`;
     }
 
+    /**
+     *
+     * @param {FormData} formData
+     */
     async uploadVideo(formData) {
         const token = localStorage.getItem('access_token');
         if (!token) throw new Error('Non authentifié');
@@ -331,49 +398,77 @@ class ApiService {
         return this.request(`/videos/${id}`, { method: 'DELETE' });
     }
 
+    /**
+     *
+     * @param {number} videoId
+     * @param {object} data
+     */
     async recordView(videoId, data = {}) {
-        return this.request(`/videos/${videoId}/record-view`, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
+        try {
+            return await this.request(`/videos/${videoId}/record-view`, {
+                method: 'POST',
+                body: JSON.stringify(data),
+            });
+        } catch (error) {
+            console.warn('Erreur enregistrement vue:', error);
+            return null;
+        }
     }
 
-    getProfileImageUrl(userId) {
-        return `${this.baseURL}/uploads/profiles/${userId}.jpg`;
-    }
-
-    getCoverImageUrl(userId) {
-        return `${this.baseURL}/uploads/covers/${userId}.jpg`;
+    /**
+     *
+     * @param {number} videoId
+     */
+    async incrementVideoView(videoId) {
+        try {
+            return await this.request(`/videos/${videoId}/view`, {
+                method: 'POST',
+            });
+        } catch (error) {
+            console.warn('Erreur increment view:', error);
+            return null;
+        }
     }
 
     async getVideoViews(videoId) {
         const response = await this.request(`/videos/${videoId}/views`);
-        return response.data || response;
+        return response.data || response.views || response;
     }
 
     async checkViewed(videoId) {
         const response = await this.request(`/videos/${videoId}/viewed`);
-        return response.data || response;
+        return response.data || response.viewed || response;
     }
 
+    /**
+     *
+     * @param {number} videoId
+     * @param {string} period
+     */
     async getVideoAnalytics(videoId, period = '7d') {
         const response = await this.request(`/videos/${videoId}/analytics?period=${period}`);
         return response.data || response;
     }
 
     async likeVideo(videoId) {
-        const response = await this.request(`/videos/${videoId}/like`, { method: 'POST' });
+        const response = await this.request(`/videos/${videoId}/like`, {
+            method: 'POST'
+        });
         return response.data || response;
     }
 
     async dislikeVideo(videoId) {
-        const response = await this.request(`/videos/${videoId}/dislike`, { method: 'POST' });
+        const response = await this.request(`/videos/${videoId}/dislike`, {
+            method: 'POST'
+        });
         return response.data || response;
     }
 
     async getMyReaction(videoId) {
+        if (!this.isAuthenticated()) return null;
+
         const response = await this.request(`/videos/${videoId}/my-reaction`);
-        return response.data || response;
+        return response.data || response.reaction || response;
     }
 
     async getVideoReactions(videoId) {
@@ -381,9 +476,20 @@ class ApiService {
         return response.data || response;
     }
 
+    async getUserReactionStatus(videoId) {
+        if (!this.isAuthenticated()) return null;
+
+        try {
+            return await this.getMyReaction(videoId);
+        } catch (error) {
+            console.warn('Status réaction non disponible:', error.message);
+            return null;
+        }
+    }
+
     async getComments(videoId) {
         const response = await this.request(`/videos/${videoId}/comments`);
-        return response.data || response;
+        return response.data || response.comments || response.commentaires || response;
     }
 
     async createComment(videoId, content) {
@@ -402,7 +508,7 @@ class ApiService {
 
     async getReplies(commentId) {
         const response = await this.request(`/comments/${commentId}/replies`);
-        return response.data || response;
+        return response.data || response.replies || response;
     }
 
     async likeComment(commentId) {
@@ -423,14 +529,23 @@ class ApiService {
         return response.data || response;
     }
 
+    /**
+     *
+     * @param {number} userId
+     */
     async getUserProfile(userId) {
         const response = await this.request(`/users/${userId}/profile`);
-        return response.data || response;
+        return response.data || response.profile || response;
     }
 
     async getUserStats(userId) {
         const response = await this.request(`/users/${userId}/stats`);
-        return response.data || response;
+        return response.data || response.stats || response;
+    }
+
+    async getUserVideos(userId) {
+        const response = await this.request(`/users/${userId}/videos`);
+        return response.data || response.videos || response;
     }
 
     async updateProfile(data) {
@@ -440,36 +555,88 @@ class ApiService {
         });
     }
 
+    /**
+     *
+     * @param {FormData} formData
+     */
     async uploadAvatar(formData) {
         const token = localStorage.getItem('access_token');
+        if (!token) throw new Error('Non authentifié');
 
         const response = await fetch(`${this.baseURL}/api/users/me/avatar`, {
             method: 'POST',
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData,
         });
 
         return this.handleResponse(response);
     }
 
+    /**
+     *
+     * @param {FormData} formData
+     */
     async uploadCover(formData) {
         const token = localStorage.getItem('access_token');
+        if (!token) throw new Error('Non authentifié');
 
         const response = await fetch(`${this.baseURL}/api/users/me/cover`, {
             method: 'POST',
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData,
         });
 
         return this.handleResponse(response);
     }
 
+    /**
+     *
+     * @param {number|object} userOrId
+     * @returns {string}
+     */
+    getProfileImageUrl(userOrId) {
+        if (typeof userOrId === 'object' && userOrId?.avatar_url) {
+            return userOrId.avatar_url.startsWith('http')
+                ? userOrId.avatar_url
+                : `${this.baseURL}${userOrId.avatar_url}`;
+        }
+
+        if (typeof userOrId === 'number' || typeof userOrId === 'string') {
+            return `${this.baseURL}/api/users/${userOrId}/profile-image`;
+        }
+
+        return '/images/default-avatar.png';
+    }
+
+    /**
+     *
+     * @param {number|object} userOrId
+     * @returns {string}
+     */
+    getCoverImageUrl(userOrId) {
+        if (typeof userOrId === 'object' && userOrId?.cover_url) {
+            return userOrId.cover_url.startsWith('http')
+                ? userOrId.cover_url
+                : `${this.baseURL}${userOrId.cover_url}`;
+        }
+
+        if (typeof userOrId === 'number' || typeof userOrId === 'string') {
+            return `${this.baseURL}/api/users/${userOrId}/cover-image`;
+        }
+
+        return '/images/default-cover.png';
+    }
 
     async updateBio(bio) {
         return this.request('/users/me/bio', {
             method: 'PUT',
             body: JSON.stringify({ bio }),
         });
+    }
+
+    async getWatchHistory(userId) {
+        const response = await this.request(`/users/${userId}/watch-history`);
+        return response.data || response.history || response;
     }
 
     async subscribe(userId) {
@@ -482,45 +649,110 @@ class ApiService {
 
     async getSubscribeStatus(userId) {
         const response = await this.request(`/users/${userId}/subscribe-status`);
-        return response.data || response;
+        return response.data || response.subscribed || response;
     }
 
     async getSubscribersCount(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
-        return response.count || 0;
-    }
-
-    async getWatchHistory(userId) {
-        const response = await this.request(`/users/${userId}/watch-history`);
-        return response.data || response;
+        return response.count || response.subscribers_count || 0;
     }
 
     async getNotifications(limit = 20, offset = 0) {
         const response = await this.request(`/notifications?limit=${limit}&offset=${offset}`);
-        return response.data || response;
+        return response.data || response.notifications || response;
     }
 
     async getUnreadCount() {
         const response = await this.request('/notifications/unread-count');
-        return response.data || response;
+        return response.data || response.count || response.unread_count || 0;
     }
 
     async markAsRead(notificationId) {
-        return this.request(`/notifications/${notificationId}/read`, { method: 'PUT' });
+        return this.request(`/notifications/${notificationId}/read`, {
+            method: 'PUT'
+        });
     }
 
     async markAllAsRead() {
-        return this.request('/notifications/mark-all-read', { method: 'PUT' });
+        return this.request('/notifications/mark-all-read', {
+            method: 'PUT'
+        });
     }
 
     async deleteNotification(notificationId) {
-        return this.request(`/notifications/${notificationId}`, { method: 'DELETE' });
+        return this.request(`/notifications/${notificationId}`, {
+            method: 'DELETE'
+        });
     }
 
+    /**
+     *
+     * @param {string} query - Terme de recherche
+     * @param {object} filters - Filtres additionnels
+     */
     async search(query, filters = {}) {
         const params = new URLSearchParams({ q: query, ...filters });
         const response = await this.request(`/search?${params}`);
-        return response.data || response;
+        return response.data || response.results || response;
+    }
+
+    generateSessionId() {
+        return 'anon_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    }
+
+    getOrCreateSessionId() {
+        let sessionId = localStorage.getItem('session_id');
+        if (!sessionId) {
+            sessionId = this.generateSessionId();
+            localStorage.setItem('session_id', sessionId);
+        }
+        return sessionId;
+    }
+
+    hasViewedVideo(videoId, userId = null) {
+        const sessionId = this.getOrCreateSessionId();
+        const viewedKey = userId
+            ? `video_viewed_${videoId}_${userId}`
+            : `video_viewed_${videoId}_${sessionId}`;
+        return localStorage.getItem(viewedKey) === 'true';
+    }
+
+    markVideoAsViewed(videoId, userId = null) {
+        const sessionId = this.getOrCreateSessionId();
+        const viewedKey = userId
+            ? `video_viewed_${videoId}_${userId}`
+            : `video_viewed_${videoId}_${sessionId}`;
+        localStorage.setItem(viewedKey, 'true');
+    }
+
+    formatViewCount(count) {
+        if (!count) return '0';
+        if (count >= 1000000) {
+            return `${(count / 1000000).toFixed(1)}M`;
+        } else if (count >= 1000) {
+            return `${(count / 1000).toFixed(1)}K`;
+        }
+        return count.toString();
+    }
+
+    formatWatchTime(milliseconds) {
+        if (!milliseconds) return '0s';
+        const seconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        if (hours > 0) return `${hours}h ${minutes % 60}m`;
+        if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+        return `${seconds}s`;
+    }
+
+    formatDate(date) {
+        if (!date) return 'Date inconnue';
+        return new Date(date).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     }
 }
 

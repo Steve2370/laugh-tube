@@ -21,7 +21,8 @@ export const useUserProfile = (userId) => {
                 userService.getUserVideos(userId)
             ]);
 
-            setProfile(profileData.profile || profileData.data || profileData);
+            const raw = profileData.profile || profileData.data || profileData;
+            setProfile(normalizeProfile(raw));
             setStats(statsData);
             setVideos(videosData);
         } catch (err) {
@@ -30,6 +31,18 @@ export const useUserProfile = (userId) => {
             setLoading(false);
         }
     }, [userId]);
+
+    const normalizeProfile = (p) => {
+        if (!p) return null;
+        return {
+            ...p,
+            avatar_url:
+                p.avatar_url ?? p.avatar ?? p.avatarUrl ?? p.profile_image ?? null,
+            cover_url:
+                p.cover_url ?? p.cover ?? p.coverUrl ?? p.banner ?? null,
+        };
+    };
+
 
     useEffect(() => {
         loadProfile();
