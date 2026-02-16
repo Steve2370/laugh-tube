@@ -10,7 +10,8 @@
       "ext-mbstring": "*",
       "ext-pgsql": "*",
       "ext-ctype": "*",
-      "ext-curl": "*"
+      "ext-curl": "*",
+      "ext-gd": "*"
     },
     "autoload": {
         "psr-4": {

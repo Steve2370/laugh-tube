@@ -366,4 +366,8 @@ class AuthController
     public function resendVerification()
     {
     }
+
+    public function verify2FA()
+    {
+    }
 }

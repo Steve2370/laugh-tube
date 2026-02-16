@@ -362,43 +362,43 @@ class UserController
         }
     }
 
-    public function getProfileImage(int $userId)
-    {
-        try {
-            $user = $this->userModel->findById($userId);
-
-            if (!$user) {
-                JsonResponse::notFound(['error' => 'Utilisateur non trouvé']);
-                return;
-            }
-
-            if (empty($user['photo_profil'])) {
-                http_response_code(404);
-                header('Content-Type: image/svg+xml');
-                echo '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ccc" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#666" font-size="40">?</text></svg>';
-                return;
-            }
-
-            $imagePath = __DIR__ . '/../../uploads/avatars/' . $user['photo_profil'];
-
-            if (!file_exists($imagePath)) {
-                http_response_code(404);
-                header('Content-Type: image/svg+xml');
-                echo '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ccc" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#666" font-size="40">?</text></svg>';
-                return;
-            }
-
-            $mimeType = mime_content_type($imagePath);
-            header('Content-Type: ' . $mimeType);
-            header('Content-Length: ' . filesize($imagePath));
-            header('Cache-Control: public, max-age=31536000');
-            readfile($imagePath);
-
-        } catch (\Exception $e) {
-            error_log('Get profile image error: ' . $e->getMessage());
-            http_response_code(500);
-        }
-    }
+//    public function getProfileImage(int $userId)
+//    {
+//        try {
+//            $user = $this->userModel->findById($userId);
+//
+//            if (!$user) {
+//                JsonResponse::notFound(['error' => 'Utilisateur non trouvé']);
+//                return;
+//            }
+//
+//            if (empty($user['photo_profil'])) {
+//                http_response_code(404);
+//                header('Content-Type: image/svg+xml');
+//                echo '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ccc" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#666" font-size="40">?</text></svg>';
+//                return;
+//            }
+//
+//            $imagePath = __DIR__ . '/../../uploads/avatars/' . $user['photo_profil'];
+//
+//            if (!file_exists($imagePath)) {
+//                http_response_code(404);
+//                header('Content-Type: image/svg+xml');
+//                echo '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ccc" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#666" font-size="40">?</text></svg>';
+//                return;
+//            }
+//
+//            $mimeType = mime_content_type($imagePath);
+//            header('Content-Type: ' . $mimeType);
+//            header('Content-Length: ' . filesize($imagePath));
+//            header('Cache-Control: public, max-age=31536000');
+//            readfile($imagePath);
+//
+//        } catch (\Exception $e) {
+//            error_log('Get profile image error: ' . $e->getMessage());
+//            http_response_code(500);
+//        }
+//    }
 
     public function getWatchHistory(int $userId)
     {
@@ -660,5 +660,268 @@ class UserController
             error_log('Change password error: ' . $e->getMessage());
             JsonResponse::serverError(['error' => 'Erreur lors du changement de mot de passe']);
         }
+    }
+
+    public function serveCover(string $filename): void
+    {
+        try {
+            $filename = basename($filename);
+            $coverPath = __DIR__ . '/../../uploads/covers/' . $filename;
+
+            if (!file_exists($coverPath) || !is_readable($coverPath)) {
+                $this->servePlaceholderImage('cover');
+                return;
+            }
+
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $coverPath);
+            finfo_close($finfo);
+
+            if (!str_starts_with($mimeType, 'image/')) {
+                $this->servePlaceholderImage('cover');
+                return;
+            }
+
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . filesize($coverPath));
+            header('Cache-Control: public, max-age=86400');
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 86400) . ' GMT');
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($coverPath)) . ' GMT');
+
+            $etag = md5_file($coverPath);
+            header('ETag: "' . $etag . '"');
+
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+                trim($_SERVER['HTTP_IF_NONE_MATCH'], '"') === $etag) {
+                http_response_code(304);
+                exit;
+            }
+
+            readfile($coverPath);
+            exit;
+
+        } catch (\Exception $e) {
+            error_log('UserController::serveCover - Error: ' . $e->getMessage());
+            $this->servePlaceholderImage('cover');
+        }
+    }
+
+    public function getCoverImage(int $userId): void
+    {
+        try {
+            $user = $this->userModel->findById($userId);
+
+            if (!$user) {
+                $this->servePlaceholderImage('cover');
+                return;
+            }
+
+            $basePath = __DIR__ . '/../../uploads/covers/';
+            $possiblePaths = [
+                $basePath . $userId . '.jpg',
+                $basePath . $userId . '.jpeg',
+                $basePath . $userId . '.png',
+                $basePath . $userId . '.webp',
+            ];
+
+            if (!empty($user['cover_url'])) {
+                $coverFilename = basename($user['cover_url']);
+                $customPath = $basePath . $coverFilename;
+
+                if (file_exists($customPath) && is_readable($customPath)) {
+                    array_unshift($possiblePaths, $customPath);
+                }
+            }
+
+            $coverPath = null;
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path) && is_readable($path)) {
+                    $coverPath = $path;
+                    break;
+                }
+            }
+
+            if (!$coverPath) {
+                $this->servePlaceholderImage('cover');
+                return;
+            }
+
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $coverPath);
+            finfo_close($finfo);
+
+            if (!str_starts_with($mimeType, 'image/')) {
+                $mimeType = 'image/jpeg';
+            }
+
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . filesize($coverPath));
+            header('Cache-Control: public, max-age=86400');
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 86400) . ' GMT');
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($coverPath)) . ' GMT');
+
+            $etag = md5_file($coverPath);
+            header('ETag: "' . $etag . '"');
+
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+                trim($_SERVER['HTTP_IF_NONE_MATCH'], '"') === $etag) {
+                http_response_code(304);
+                exit;
+            }
+
+            readfile($coverPath);
+            exit;
+
+        } catch (\Exception $e) {
+            error_log('UserController::getCoverImage - Error: ' . $e->getMessage());
+            error_log('UserController::getCoverImage - Stack: ' . $e->getTraceAsString());
+
+            $this->servePlaceholderImage('cover');
+        }
+    }
+
+    public function getProfileImage(int $userId): void
+    {
+        try {
+            $user = $this->userModel->findById($userId);
+
+            if (!$user) {
+                $this->servePlaceholderImage('profile');
+                return;
+            }
+
+            $basePath = __DIR__ . '/../../uploads/profiles/';
+            $possiblePaths = [
+                $basePath . $userId . '.jpg',
+                $basePath . $userId . '.jpeg',
+                $basePath . $userId . '.png',
+                $basePath . $userId . '.webp',
+            ];
+
+            if (!empty($user['avatar_url'])) {
+                $avatarFilename = basename($user['avatar_url']);
+                $customPath = $basePath . $avatarFilename;
+
+                if (file_exists($customPath) && is_readable($customPath)) {
+                    array_unshift($possiblePaths, $customPath);
+                }
+            }
+
+            $profilePath = null;
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path) && is_readable($path)) {
+                    $profilePath = $path;
+                    break;
+                }
+            }
+
+            if (!$profilePath) {
+                $this->servePlaceholderImage('profile');
+                return;
+            }
+
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $profilePath);
+            finfo_close($finfo);
+
+            if (!str_starts_with($mimeType, 'image/')) {
+                $mimeType = 'image/jpeg';
+            }
+
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . filesize($profilePath));
+            header('Cache-Control: public, max-age=86400');
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 86400) . ' GMT');
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($profilePath)) . ' GMT');
+
+            $etag = md5_file($profilePath);
+            header('ETag: "' . $etag . '"');
+
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+                trim($_SERVER['HTTP_IF_NONE_MATCH'], '"') === $etag) {
+                http_response_code(304);
+                exit;
+            }
+
+            readfile($profilePath);
+            exit;
+
+        } catch (\Exception $e) {
+            error_log('UserController::getProfileImage - Error: ' . $e->getMessage());
+            error_log('UserController::getProfileImage - Stack: ' . $e->getTraceAsString());
+
+            $this->servePlaceholderImage('profile');
+        }
+    }
+
+    private function servePlaceholderImage(string $type = 'profile'): void
+    {
+        $placeholders = [
+            'profile' => __DIR__ . '/../../public/images/default-avatar.png',
+            'cover' => __DIR__ . '/../../public/images/default-cover.png',
+        ];
+
+        $placeholderPath = $placeholders[$type] ?? $placeholders['profile'];
+
+        if (!file_exists($placeholderPath)) {
+            header('Content-Type: image/png');
+            header('Cache-Control: public, max-age=3600');
+
+            $size = $type === 'cover' ? 800 : 200;
+            $height = $type === 'cover' ? 300 : 200;
+
+            $image = imagecreatetruecolor($size, $height);
+
+            if ($type === 'cover') {
+                $blue1 = imagecolorallocate($image, 59, 130, 246);
+                $blue2 = imagecolorallocate($image, 37, 99, 235);
+
+                for ($i = 0; $i < $height; $i++) {
+                    $r = 59 - (int)(($i / $height) * 22);
+                    $g = 130 - (int)(($i / $height) * 31);
+                    $b = 246 - (int)(($i / $height) * 11);
+                    $color = imagecolorallocate($image, $r, $g, $b);
+                    imageline($image, 0, $i, $size, $i, $color);
+                }
+            } else {
+                $gray = imagecolorallocate($image, 229, 231, 235);
+                imagefill($image, 0, 0, $gray);
+
+                $iconColor = imagecolorallocate($image, 156, 163, 175);
+                imagefilledellipse($image, $size / 2, $size / 3, $size / 3, $size / 3, $iconColor);
+                imagefilledarc($image, $size / 2, $size * 0.85, $size * 0.7, $size * 0.7, 0, 180, $iconColor, IMG_ARC_PIE);
+            }
+
+            imagepng($image);
+            imagedestroy($image);
+            exit;
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $placeholderPath);
+        finfo_close($finfo);
+
+        header('Content-Type: ' . $mimeType);
+        header('Content-Length: ' . filesize($placeholderPath));
+        header('Cache-Control: public, max-age=3600');
+
+        readfile($placeholderPath);
+        exit;
+    }
+
+    private function hasUserImage(int $userId, string $type = 'avatar'): bool
+    {
+        $directory = $type === 'avatar' ? 'profiles' : 'covers';
+        $basePath = __DIR__ . '/../../uploads/' . $directory . '/';
+
+        $extensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+        foreach ($extensions as $ext) {
+            if (file_exists($basePath . $userId . '.' . $ext)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
