@@ -30,7 +30,8 @@ export const useVideos = (filters = {}) => {
         loadVideos();
     }, [loadVideos]);
 
-    const getUserVideos = async (userId) => {
+    const getUserVideos = useCallback(async (userId) => {
+        if (!userId) return;
         setLoading(true);
         try {
             const data = await apiService.getUserVideos(userId);
@@ -40,7 +41,7 @@ export const useVideos = (filters = {}) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     return { videos, loading, error, loadVideos, reload: loadVideos, getUserVideos };
 };

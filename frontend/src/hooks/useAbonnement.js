@@ -30,8 +30,7 @@ export function useAbonnement(targetUserId) {
                 setIsSubscribed(false);
             }
         } catch (err) {
-            console.error('Error fetching subscription data:', err);
-            setError(err.message || 'Erreur');
+            setError(err?.message || 'Erreur');
             setSubscribersCount(0);
             setIsSubscribed(false);
         } finally {
@@ -46,14 +45,13 @@ export function useAbonnement(targetUserId) {
             if (isSubscribed) {
                 await apiService.request(`/users/${targetUserId}/unsubscribe`, { method: 'DELETE' });
                 setIsSubscribed(false);
-                setSubscribersCount(prev => Math.max(0, prev - 1));
+                setSubscribersCount((prev) => Math.max(0, prev - 1));
             } else {
                 await apiService.request(`/users/${targetUserId}/subscribe`, { method: 'POST' });
                 setIsSubscribed(true);
-                setSubscribersCount(prev => prev + 1);
+                setSubscribersCount((prev) => prev + 1);
             }
         } catch (err) {
-            console.error('Error toggling subscription:', err);
             await refresh();
             throw err;
         }
@@ -61,7 +59,7 @@ export function useAbonnement(targetUserId) {
 
     useEffect(() => {
         refresh();
-    }, [targetUserId, isAuthenticated, user?.id]);
+    }, [targetUserId, isAuthenticated, user?.id, refresh]);
 
     return { loading, subscribersCount, isSubscribed, error, toggle, refresh };
 }

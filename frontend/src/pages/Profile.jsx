@@ -561,7 +561,6 @@ const Profile = () => {
     const isOwnProfile = true;
     const targetUserId = user?.id;
     const [activeTab, setActiveTab] = useState('videos');
-    const [videos, setVideos] = useState([]);
     const [stats, setStats] = useState({
         totalVideos: 0,
         totalViews: 0,
@@ -579,17 +578,17 @@ const Profile = () => {
             console.error('Erreur chargement données:', err);
             toast.error('Erreur lors du chargement des vidéos');
         }
-    }, [user?.id, getUserVideos, toast]);
+    }, [user?.id, getUserVideos]);
 
     const calculateStats = () => {
-        const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
-        const totalLikes = videos.reduce((sum, v) => sum + (v.likes || 0), 0);
-        const totalComments = videos.reduce((sum, v) => sum + (v.comments || 0), 0);
+        const totalViews = userVideos.reduce((sum, v) => sum + (v.views || 0), 0);
+        const totalLikes = userVideos.reduce((sum, v) => sum + (v.likes || 0), 0);
+        const totalComments = userVideos.reduce((sum, v) => sum + (v.comments || 0), 0);
         const engagementRate =
             totalViews > 0 ? Math.round(((totalLikes + totalComments) / totalViews) * 100) : 0;
 
         setStats({
-            totalVideos: videos.length,
+            totalVideos: userVideos.length,
             totalViews,
             totalLikes,
             totalComments,
@@ -602,14 +601,8 @@ const Profile = () => {
     }, [loadUserData]);
 
     useEffect(() => {
-        if (videos.length > 0) {
+        if (userVideos.length > 0) {
             calculateStats();
-        }
-    }, [videos]);
-
-    useEffect(() => {
-        if (userVideos) {
-            setVideos(userVideos);
         }
     }, [userVideos]);
 
@@ -684,7 +677,7 @@ const Profile = () => {
                                         }`}
                                     >
                                         <Video size={18} />
-                                        Vidéos ({videos.length})
+                                        Vidéos ({userVideos.length})
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('analytics')}
