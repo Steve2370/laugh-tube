@@ -412,7 +412,7 @@ try {
         return;
     }
 
-    if (preg_match('#^/videos/(\d+)/thumbnail$#', $uri, $m) && $method === 'GET') {
+    if (preg_match('#^/videos/(\d+)/thumbnail$#', $uri, $m) && ($method === 'GET' || $method === 'HEAD')) {
         $videoController->getThumbnail((int)$m[1]);
         return;
     }
