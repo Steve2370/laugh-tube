@@ -226,6 +226,7 @@ $uri = normalizeUri($rawUri);
 error_log("API Call: $method $rawUri => normalized: $uri");
 
 try {
+
     if ($uri === '/login' && $method === 'POST') {
         $authController->login();
         return;
@@ -271,13 +272,13 @@ try {
         return;
     }
 
-    if ($uri === '/auth/2fa/verify' && $method === 'POST') {
-        $authController->verify2FASetup();
+    if ($uri === '/auth/2fa/disable' && $method === 'POST') {
+        $authController->disable2FA();
         return;
     }
 
-    if ($uri === '/auth/2fa/disable' && $method === 'POST') {
-        $authController->disable2FA();
+    if ($uri === '/auth/2fa/verify' && $method === 'POST') {
+        $authController->verify2FA();
         return;
     }
 
@@ -296,8 +297,7 @@ try {
         return;
     }
 
-    // ===== USER ROUTES =====
-    if (($uri === '/users/me/avatar' || $uri === '/profile/upload-image') && $method === 'POST') {
+    if (($uri === '/users/me/avatar' || $uri === '/profile/upload-avatar') && $method === 'POST') {
         $userController->uploadAvatar();
         return;
     }
@@ -332,6 +332,11 @@ try {
         return;
     }
 
+    if (preg_match('#^/users/(\d+)/cover-image$#', $uri, $m) && $method === 'GET') {
+        $userController->getCoverImage((int)$m[1]);
+        return;
+    }
+
     if (preg_match('#^/users/(\d+)/watch-history$#', $uri, $m) && $method === 'GET') {
         $userController->getWatchHistory((int)$m[1]);
         return;
@@ -344,6 +349,11 @@ try {
 
     if (preg_match('#^/uploads/profiles/([^/]+)$#', $uri, $m) && $method === 'GET') {
         $userController->serveProfile($m[1]);
+        return;
+    }
+
+    if (preg_match('#^/uploads/covers/([^/]+)$#', $uri, $m) && $method === 'GET') {
+        $userController->serveCover($m[1]);
         return;
     }
 
@@ -401,6 +411,11 @@ try {
         return;
     }
 
+    if (preg_match('#^/videos/(\d+)/thumbnail$#', $uri, $m) && $method === 'GET') {
+        $videoController->getThumbnail((int)$m[1]);
+        return;
+    }
+
     if (preg_match('#^/videos/(\d+)/play$#', $uri, $m) && $method === 'GET') {
         $videoStreamService->stream((int)$m[1]);
         return;
@@ -423,6 +438,11 @@ try {
 
     if (preg_match('#^/videos/(\d+)/record-view$#', $uri, $m) && $method === 'POST') {
         $videoController->recordView((int)$m[1]);
+        return;
+    }
+
+    if (preg_match('#^/videos/(\d+)/view$#', $uri, $m) && $method === 'POST') {
+        $videoController->incrementView((int)$m[1]);
         return;
     }
 
@@ -522,14 +542,6 @@ try {
     if (preg_match('#^/notifications/(\d+)$#', $uri, $m) && $method === 'DELETE') {
         $user = AuthMiddleware::requireAuth();
         $notificationController->deleteNotification((int)$m[1], $user['sub']);
-        return;
-    }
-
-    if (preg_match('#^/videos/(\d+)/view$#', $uri, $m) && $method === 'POST') {
-        JsonResponse::gone([
-            'error' => 'Méthode obsolète',
-            'message' => 'Utilisez /videos/{id}/record-view à la place'
-        ]);
         return;
     }
 

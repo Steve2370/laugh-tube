@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Interfaces\DatabaseInterface;
 use App\Middleware\AuthMiddleware;
+use App\Models\Video;
 use App\Services\AnalyticsService;
 use App\Services\AuditService;
 use App\Services\VideoService;
@@ -14,6 +15,7 @@ class VideoController
 {
     public function __construct(
         private VideoService $videoService,
+        private Video $videoModel,
         private AnalyticsService $analyticsService,
         private AuthMiddleware $authMiddleware,
         private AuditService $auditService,
@@ -371,5 +373,161 @@ class VideoController
                 'error' => 'Erreur serveur'
             ]);
         }
+    }
+
+    public function incrementView(int $videoId): void
+    {
+        try {
+            $video = $this->videoModel->findById($videoId);
+
+            if (!$video) {
+                JsonResponse::notFound([
+                    'success' => false,
+                    'error' => 'Vidéo introuvable'
+                ]);
+                return;
+            }
+
+            if (!empty($video['deleted_at'])) {
+                JsonResponse::notFound([
+                    'success' => false,
+                    'error' => 'Vidéo supprimée'
+                ]);
+                return;
+            }
+
+            $this->videoModel->incrementViews($videoId);
+
+            $updatedVideo = $this->videoModel->findById($videoId);
+            $this->auditService->logSecurityEvent(
+                null,
+                'video_view_increment',
+                [
+                    'video_id' => $videoId,
+                    'new_views' => (int)$updatedVideo['views']
+                ]
+            );
+
+            JsonResponse::success([
+                'success' => true,
+                'message' => 'Vue enregistrée avec succès',
+                'data' => [
+                    'video_id' => $videoId,
+                    'views' => (int)$updatedVideo['views'],
+                    'unique_views' => (int)$updatedVideo['unique_views']
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            error_log('VideoController::incrementView - Error: ' . $e->getMessage());
+            error_log('VideoController::incrementView - Stack: ' . $e->getTraceAsString());
+
+            JsonResponse::serverError([
+                'success' => false,
+                'error' => 'Erreur lors de l\'enregistrement de la vue'
+            ]);
+        }
+    }
+
+    public function getThumbnail(int $videoId): void
+    {
+        try {
+            $video = $this->videoModel->findById($videoId);
+
+            if (!$video) {
+                $this->servePlaceholderImage('video');
+                return;
+            }
+
+            if (!empty($video['deleted_at'])) {
+                $this->servePlaceholderImage('video');
+                return;
+            }
+
+            $basePath = __DIR__ . '/../../uploads/thumbnails/';
+            $possiblePaths = [
+                $basePath . $videoId . '.jpg',
+                $basePath . $videoId . '.jpeg',
+                $basePath . $videoId . '.png',
+                $basePath . $videoId . '.webp',
+            ];
+
+            $thumbnailPath = null;
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path) && is_readable($path)) {
+                    $thumbnailPath = $path;
+                    break;
+                }
+            }
+
+            if (!$thumbnailPath) {
+                $this->servePlaceholderImage('video');
+                return;
+            }
+
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $thumbnailPath);
+            finfo_close($finfo);
+
+            if (!str_starts_with($mimeType, 'image/')) {
+                $mimeType = 'image/jpeg';
+            }
+
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . filesize($thumbnailPath));
+            header('Cache-Control: public, max-age=86400');
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 86400) . ' GMT');
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($thumbnailPath)) . ' GMT');
+
+            $etag = md5_file($thumbnailPath);
+            header('ETag: "' . $etag . '"');
+
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+                trim($_SERVER['HTTP_IF_NONE_MATCH'], '"') === $etag) {
+                http_response_code(304);
+                exit;
+            }
+
+            readfile($thumbnailPath);
+            exit;
+
+        } catch (\Exception $e) {
+            error_log('VideoController::getThumbnail - Error: ' . $e->getMessage());
+            error_log('VideoController::getThumbnail - Stack: ' . $e->getTraceAsString());
+            $this->servePlaceholderImage('video');
+        }
+    }
+
+    private function servePlaceholderImage(string $type = 'video'): void
+    {
+        $placeholders = [
+            'video' => __DIR__ . '/../../public/images/placeholder-video.png',
+            'profile' => __DIR__ . '/../../public/images/default-avatar.png',
+            'cover' => __DIR__ . '/../../public/images/default-cover.png',
+        ];
+
+        $placeholderPath = $placeholders[$type] ?? $placeholders['video'];
+
+        if (!file_exists($placeholderPath)) {
+            header('Content-Type: image/png');
+            header('Cache-Control: public, max-age=3600');
+
+            $width = $type === 'video' ? 640 : 200;
+            $height = $type === 'video' ? 360 : 200;
+
+            $image = imagecreatetruecolor($width, $height);
+            $gray = imagecolorallocate($image, 200, 200, 200);
+            imagefill($image, 0, 0, $gray);
+
+            imagepng($image);
+            imagedestroy($image);
+            exit;
+        }
+
+        header('Content-Type: image/png');
+        header('Content-Length: ' . filesize($placeholderPath));
+        header('Cache-Control: public, max-age=3600');
+        readfile($placeholderPath);
+        exit;
     }
 }
