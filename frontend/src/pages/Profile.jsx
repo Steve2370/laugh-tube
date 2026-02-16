@@ -531,7 +531,7 @@ const AnalyticsTab = ({ stats, videos }) => {
                     Vidéos récentes
                 </h4>
                 <div className="space-y-3">
-                    {videos.slice(0, 5).map((video) => (
+                    {(videos || []).slice(0, 5).map((video) => (
                         <div
                             key={video.id}
                             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
