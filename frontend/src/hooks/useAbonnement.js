@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export function useAbonnement(targetUserId) {
     const { isAuthenticated, user } = useAuth();
+
     const [loading, setLoading] = useState(true);
     const [subscribersCount, setSubscribersCount] = useState(0);
     const [isSubscribed, setIsSubscribed] = useState(false);
@@ -22,38 +23,32 @@ export function useAbonnement(targetUserId) {
             const countResponse = await apiService.request(`/users/${targetUserId}/subscribers-count`);
             setSubscribersCount(countResponse.subscribers_count || 0);
 
-            if (isAuthenticated && user) {
+            if (isAuthenticated && user?.id) {
                 const statusResponse = await apiService.request(`/users/${targetUserId}/subscribe-status`);
-                setIsSubscribed(statusResponse.is_subscribed || false);
+                setIsSubscribed(!!statusResponse.is_subscribed);
             } else {
                 setIsSubscribed(false);
             }
         } catch (err) {
             console.error('Error fetching subscription data:', err);
-            setError(err.message);
+            setError(err.message || 'Erreur');
             setSubscribersCount(0);
             setIsSubscribed(false);
         } finally {
             setLoading(false);
         }
-    }, [targetUserId, isAuthenticated, user]);
+    }, [targetUserId, isAuthenticated, user?.id]);
 
     const toggle = useCallback(async () => {
-        if (!isAuthenticated) {
-            throw new Error('AUTH_REQUIRED');
-        }
+        if (!isAuthenticated) throw new Error('AUTH_REQUIRED');
 
         try {
             if (isSubscribed) {
-                await apiService.request(`/users/${targetUserId}/unsubscribe`, {
-                    method: 'DELETE'
-                });
+                await apiService.request(`/users/${targetUserId}/unsubscribe`, { method: 'DELETE' });
                 setIsSubscribed(false);
                 setSubscribersCount(prev => Math.max(0, prev - 1));
             } else {
-                await apiService.request(`/users/${targetUserId}/subscribe`, {
-                    method: 'POST'
-                });
+                await apiService.request(`/users/${targetUserId}/subscribe`, { method: 'POST' });
                 setIsSubscribed(true);
                 setSubscribersCount(prev => prev + 1);
             }
@@ -66,16 +61,9 @@ export function useAbonnement(targetUserId) {
 
     useEffect(() => {
         refresh();
-    }, [targetUserId]);
+    }, [targetUserId, isAuthenticated, user?.id]);
 
-    return {
-        loading,
-        subscribersCount,
-        isSubscribed,
-        error,
-        toggle,
-        refresh
-    };
+    return { loading, subscribersCount, isSubscribed, error, toggle, refresh };
 }
 
 export default useAbonnement;
