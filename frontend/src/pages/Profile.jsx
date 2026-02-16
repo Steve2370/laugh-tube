@@ -570,10 +570,6 @@ const Profile = () => {
         engagementRate: 0,
     });
 
-    if (loading || !user) {
-        return <LoadingState />;
-    }
-
     const loadUserData = useCallback(async () => {
         if (!user?.id) return;
 
@@ -583,7 +579,7 @@ const Profile = () => {
             console.error('Erreur chargement données:', err);
             toast.error('Erreur lors du chargement des vidéos');
         }
-    }, [user?.id, getUserVideos]);
+    }, [user?.id, getUserVideos, toast]);
 
     const calculateStats = () => {
         const totalViews = userVideos.reduce((sum, v) => sum + (v.views || 0), 0);
@@ -616,6 +612,10 @@ const Profile = () => {
             setVideos(userVideos);
         }
     }, [userVideos]);
+
+    if (loading || !user) {
+        return <LoadingState />;
+    }
 
     const handleVideoSelect = (video) => {
         window.location.hash = `#/video/${video.id}`;
