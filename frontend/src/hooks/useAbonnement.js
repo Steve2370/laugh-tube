@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import apiService from '../services/apiService.js';
-import { useAuth } from './useAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 export function useAbonnement(targetUserId) {
     const { isAuthenticated, user } = useAuth();
@@ -22,7 +22,6 @@ export function useAbonnement(targetUserId) {
             const countResponse = await apiService.request(`/users/${targetUserId}/subscribers-count`);
             setSubscribersCount(countResponse.subscribers_count || 0);
 
-            // Vérifier si l'utilisateur actuel est abonné
             if (isAuthenticated && user) {
                 const statusResponse = await apiService.request(`/users/${targetUserId}/subscribe-status`);
                 setIsSubscribed(statusResponse.is_subscribed || false);
@@ -67,7 +66,7 @@ export function useAbonnement(targetUserId) {
 
     useEffect(() => {
         refresh();
-    }, [refresh]);
+    }, [targetUserId]);
 
     return {
         loading,
