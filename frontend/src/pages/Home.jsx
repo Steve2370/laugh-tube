@@ -202,7 +202,7 @@ const EmptyState = ({ searchTerm, isAuthenticated, navigateTo }) => {
         <div className="flex flex-col items-center justify-center py-20">
             <Play className="h-24 w-24 text-blue-400 mb-6" />
             <h2 className="text-3xl font-bold text-gray-900 mb-3">
-                Bienvenue sur LaughTale
+                Bienvenue sur Laugh Tube
             </h2>
             <p className="text-gray-600 mb-8 text-center max-w-md">
                 Aucune vidéo disponible pour le moment.
