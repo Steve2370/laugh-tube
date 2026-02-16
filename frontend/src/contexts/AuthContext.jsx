@@ -20,7 +20,19 @@ export function AuthProvider({ children }) {
                     if (!mounted) return;
                     setUser(null);
                     setIsAuthenticated(false);
+                    localStorage.removeItem('user');
                     return;
+                }
+
+                const cachedUser = localStorage.getItem('user');
+                if (cachedUser) {
+                    try {
+                        const parsed = JSON.parse(cachedUser);
+                        setUser(parsed);
+                        setIsAuthenticated(true);
+                    } catch (e) {
+                        console.error('Parse error:', e);
+                    }
                 }
 
                 const currentUser = await apiService.getMe();
@@ -30,9 +42,11 @@ export function AuthProvider({ children }) {
                 if (currentUser) {
                     setUser(currentUser);
                     setIsAuthenticated(true);
+                    localStorage.setItem('user', JSON.stringify(currentUser));
                 } else {
                     setUser(null);
                     setIsAuthenticated(false);
+                    localStorage.removeItem('user');
                 }
             } catch (err) {
                 console.error("Auth init error:", err);
@@ -95,13 +109,16 @@ export function AuthProvider({ children }) {
         } finally {
             setUser(null);
             setIsAuthenticated(false);
+            localStorage.removeItem('user');
         }
     };
 
     const updateUser = (patch) => {
         setUser((prev) => {
             if (!prev) return prev;
-            return { ...prev, ...patch };
+            const updated = { ...prev, ...patch };
+            localStorage.setItem('user', JSON.stringify(updated));
+            return updated;
         });
     };
 
