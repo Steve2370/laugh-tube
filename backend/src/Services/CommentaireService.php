@@ -82,7 +82,7 @@ class CommentaireService
                         c.content, 
                         c.created_at,
                         u.username, 
-                        u.profile_image,
+                        u.avatar_url,
                         COALESCE((SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id), 0)::int AS like_count
                     FROM commentaires c
                     JOIN users u ON c.user_id = u.id
@@ -110,7 +110,7 @@ class CommentaireService
                             r.content, 
                             r.created_at,
                             u.username, 
-                            u.profile_image,
+                            u.avatar_url,
                             COALESCE((SELECT COUNT(*) FROM reply_likes rl WHERE rl.reply_id = r.id), 0)::int AS like_count
                            FROM comment_replies r
                            JOIN users u ON r.user_id = u.id
@@ -219,7 +219,7 @@ class CommentaireService
                     'user_id' => $userId,
                     'video_id' => $videoId,
                     'username' => $user['username'] ?? 'Utilisateur',
-                    'profile_image' => $user['profile_image'] ?? null,
+                    'avatar_url' => $user['avatar_url'] ?? null,
                     'content' => $content,
                     'created_at' => $result['created_at'],
                     'like_count' => 0,
@@ -320,7 +320,7 @@ class CommentaireService
                     'comment_id' => $commentId,
                     'user_id' => $userId,
                     'username' => $user['username'] ?? 'Utilisateur',
-                    'profile_image' => $user['profile_image'] ?? null,
+                    'avatar_url' => $user['avatar_url'] ?? null,
                     'content' => $content,
                     'created_at' => $result['created_at'],
                     'like_count' => 0

@@ -39,8 +39,8 @@ class UserService
                     'id' => $user['id'],
                     'username' => $user['username'],
                     'email' => $user['email'],
-                    'profile_image' => $user['profile_image'] ?? '/uploads/avatars/default.png',
-                    'profile_cover' => $user['profile_cover'] ?? '/uploads/covers/default.png',
+                    'avatar_url' => $user['avatar_url'] ?? '/uploads/avatars/default.png',
+                    'cover_url' => $user['cover_url'] ?? '/uploads/covers/default.png',
                     'bio' => $user['bio'] ?? null,
                     'created_at' => $user['created_at'],
                     'email_verified' => $user['email_verified'] ?? false,
@@ -221,12 +221,12 @@ class UserService
                 return $result;
             }
 
-            $sql = "UPDATE users SET profile_image = $1, updated_at = NOW() WHERE id = $2";
+            $sql = "UPDATE users SET avatar_url = $1, updated_at = NOW() WHERE id = $2";
             $this->db->execute($sql, [$result['path'], $userId]);
 
             $user = $this->userModel->findById($userId);
-            if ($user && !empty($user['profile_image']) && $user['profile_image'] !== '/uploads/avatars/default.png') {
-                $oldFilename = basename($user['profile_image']);
+            if ($user && !empty($user['avatar_url']) && $user['avatar_url'] !== '/uploads/avatars/default.png') {
+                $oldFilename = basename($user['avatar_url']);
                 $this->uploadService->deleteFile($oldFilename, 'profile');
             }
 
@@ -271,12 +271,12 @@ class UserService
                 return $result;
             }
 
-            $sql = "UPDATE users SET profile_cover = $1, updated_at = NOW() WHERE id = $2";
+            $sql = "UPDATE users SET cover_url = $1, updated_at = NOW() WHERE id = $2";
             $this->db->execute($sql, [$result['path'], $userId]);
 
             $user = $this->userModel->findById($userId);
-            if ($user && !empty($user['profile_cover']) && $user['profile_cover'] !== '/uploads/covers/default.png') {
-                $oldFilename = basename($user['profile_cover']);
+            if ($user && !empty($user['cover_url']) && $user['cover_url'] !== '/uploads/covers/default.png') {
+                $oldFilename = basename($user['cover_url']);
                 $this->uploadService->deleteFile($oldFilename, 'cover');
             }
 
@@ -474,7 +474,7 @@ class UserService
             $limit = min(max(1, $limit), 100);
             $offset = max(0, $offset);
 
-            $sql = "SELECT u.id, u.username, u.profile_image, s.subscribed_at
+            $sql = "SELECT u.id, u.username, u.avatar_url, s.subscribed_at
                     FROM subscriptions s
                     JOIN users u ON s.subscriber_id = u.id
                     WHERE s.creator_id = $1
@@ -519,7 +519,7 @@ class UserService
             $limit = min(max(1, $limit), 100);
             $offset = max(0, $offset);
 
-            $sql = "SELECT u.id, u.username, u.profile_image, s.subscribed_at
+            $sql = "SELECT u.id, u.username, u.avatar_url, s.subscribed_at
                     FROM subscriptions s
                     JOIN users u ON s.creator_id = u.id
                     WHERE s.subscriber_id = $1
@@ -612,7 +612,7 @@ class UserService
 
             $searchPattern = '%' . $query . '%';
 
-            $sql = "SELECT id, username, profile_image, bio, created_at
+            $sql = "SELECT id, username, avatar_url, bio, created_at
                     FROM users
                     WHERE username ILIKE $1 OR email ILIKE $1
                     ORDER BY username

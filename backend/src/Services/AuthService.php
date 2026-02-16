@@ -113,7 +113,7 @@ class AuthService
                     'username' => $user['username'],
                     'email' => $user['email'],
                     'role' => $user['role'] ?? 'user',
-                    'profile_image' => $user['profile_image'] ?? null,
+                    'avatar_url' => $user['avatar_url'] ?? null,
                     'email_verified' => $user['email_verified'] ?? false,
                     'two_fa_enabled' => $user['two_fa_enabled'] ?? false
                 ]
@@ -167,7 +167,7 @@ class AuthService
                 'username' => $username,
                 'email' => $email,
                 'role' => 'membre',
-                'profile_image' => null,
+                'avatar_url' => null,
                 'email_verified' => false
             ];
 
@@ -208,7 +208,7 @@ class AuthService
                         'username' => $user['username'],
                         'email' => $user['email'],
                         'role' => $user['role'] ?? 'user',
-                        'profile_image' => $user['profile_image'] ?? null,
+                        'avatar_url' => $user['avatar_url'] ?? null,
                         'email_verified' => false
                     ]
                 ]
@@ -300,8 +300,8 @@ class AuthService
                 'username' => $user['username'],
                 'email' => $user['email'],
                 'role' => $user['role'] ?? 'user',
-                'profile_image' => $user['profile_image'] ?? null,
-                'profile_cover' => $user['profile_cover'] ?? null,
+                'avatar_url' => $user['avatar_url'] ?? null,
+                'cover_url' => $user['cover_url'] ?? null,
                 'bio' => $user['bio'] ?? null,
                 'email_verified' => $user['email_verified'] ?? false,
                 'two_fa_enabled' => $user['two_fa_enabled'] ?? false,

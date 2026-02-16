@@ -51,7 +51,7 @@ class UserRepository {
 
     public function findById(int $id): ?array
     {
-        $sql = "SELECT id, username, email, role, profile_image, email_verified
+        $sql = "SELECT id, username, email, role, avatar_url, email_verified
             FROM users
             WHERE id = :id
             LIMIT 1";
@@ -70,7 +70,7 @@ class UserRepository {
 
     public function findByEmail(string $email): ?array
     {
-        $sql = "SELECT id, username, email, password_hash, role, profile_image, email_verified, deleted_at, two_fa_enabled,
+        $sql = "SELECT id, username, email, password_hash, role, avatar_url, email_verified, deleted_at, two_fa_enabled,
                        failed_login_attempts, account_locked_until
             FROM users
             WHERE email = :email
