@@ -774,8 +774,6 @@ class UserController
 
         } catch (\Exception $e) {
             error_log('UserController::getCoverImage - Error: ' . $e->getMessage());
-            error_log('UserController::getCoverImage - Stack: ' . $e->getTraceAsString());
-
             $this->servePlaceholderImage('cover');
         }
     }
@@ -848,8 +846,6 @@ class UserController
 
         } catch (\Exception $e) {
             error_log('UserController::getProfileImage - Error: ' . $e->getMessage());
-            error_log('UserController::getProfileImage - Stack: ' . $e->getTraceAsString());
-
             $this->servePlaceholderImage('profile');
         }
     }
@@ -873,23 +869,14 @@ class UserController
             $image = imagecreatetruecolor($size, $height);
 
             if ($type === 'cover') {
-                $blue1 = imagecolorallocate($image, 59, 130, 246);
-                $blue2 = imagecolorallocate($image, 37, 99, 235);
-
-                for ($i = 0; $i < $height; $i++) {
-                    $r = 59 - (int)(($i / $height) * 22);
-                    $g = 130 - (int)(($i / $height) * 31);
-                    $b = 246 - (int)(($i / $height) * 11);
-                    $color = imagecolorallocate($image, $r, $g, $b);
-                    imageline($image, 0, $i, $size, $i, $color);
-                }
+                $blue = imagecolorallocate($image, 59, 130, 246);
+                imagefill($image, 0, 0, $blue);
             } else {
                 $gray = imagecolorallocate($image, 229, 231, 235);
                 imagefill($image, 0, 0, $gray);
 
                 $iconColor = imagecolorallocate($image, 156, 163, 175);
                 imagefilledellipse($image, $size / 2, $size / 3, $size / 3, $size / 3, $iconColor);
-                imagefilledarc($image, $size / 2, $size * 0.85, $size * 0.7, $size * 0.7, 0, 180, $iconColor, IMG_ARC_PIE);
             }
 
             imagepng($image);
