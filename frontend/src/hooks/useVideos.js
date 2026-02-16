@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import videoService from '../services/videoService.js';
+import apiService from "../services/apiService.js";
 
 export const useVideos = (filters = {}) => {
     const [videos, setVideos] = useState([]);
@@ -29,5 +30,17 @@ export const useVideos = (filters = {}) => {
         loadVideos();
     }, [loadVideos]);
 
-    return { videos, loading, error, loadVideos, reload: loadVideos };
+    const getUserVideos = async (userId) => {
+        setLoading(true);
+        try {
+            const data = await apiService.getUserVideos(userId);
+            setVideos(data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { videos, loading, error, loadVideos, reload: loadVideos, getUserVideos };
 };
