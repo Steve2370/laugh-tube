@@ -289,33 +289,35 @@ class User
 
     public function isSubscribed(int $subscriberId, int $targetUserId): bool
     {
-        $stmt = $this->db->prepare("
+        try {
+            $result = $this->db->fetchOne("
             SELECT 1 FROM abonnements
-            WHERE subscriber_id = :subscriber_id
-            AND user_id = :user_id
+            WHERE subscriber_id = $1
+            AND subscribed_to_id = $2
             LIMIT 1
-        ");
+        ", [$subscriberId, $targetUserId]);
 
-        $stmt->execute([
-            'subscriber_id' => $subscriberId,
-            'user_id' => $targetUserId
-        ]);
-
-        return (bool) $stmt->fetch();
+            return $result !== null;
+        } catch (\Exception $e) {
+            error_log("User::isSubscribed - Error: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function subscribe(int $subscriberId, int $targetUserId): bool
     {
-        $stmt = $this->db->prepare("
+        try {
+            $result = $this->db->query("
             INSERT INTO abonnements (subscriber_id, subscribed_to_id, created_at)
-            VALUES (:subscriber_id, :user_id, NOW())
+            VALUES ($1, $2, NOW())
             ON CONFLICT DO NOTHING
-        ");
+        ", [$subscriberId, $targetUserId]);
 
-        return $stmt->execute([
-            'subscriber_id' => $subscriberId,
-            'subscribed_to_id' => $targetUserId
-        ]);
+            return $result !== false;
+        } catch (\Exception $e) {
+            error_log("User::subscribe - Error: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function unsubscribe(int $subscriberId, int $targetUserId): bool
@@ -334,15 +336,17 @@ class User
 
     public function getSubscribersCount(int $userId): int
     {
-        $stmt = $this->db->prepare("
+        try {
+            $result = $this->db->fetchOne("
             SELECT COUNT(*) as total
             FROM abonnements
-            WHERE user_id = :user_id
-        ");
+            WHERE subscribed_to_id = $1
+        ", [$userId]);
 
-        $stmt->execute(['user_id' => $userId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return (int) $result['total'];
+            return (int)($result['total'] ?? 0);
+        } catch (\Exception $e) {
+            error_log("User::getSubscribersCount - Error: " . $e->getMessage());
+            return 0;
+        }
     }
 }
