@@ -46,7 +46,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const { loading, subscribersCount, isSubscribed, toggle } = useAbonnement(targetUserId);
 
     useEffect(() => {
-        if (authUser) {
+        if (authUser?.id) {
             setBioDraft(authUser.bio || '');
 
             if (authUser.avatar_url) {
@@ -67,7 +67,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                 setCoverPreview('/images/default-cover.png');
             }
         }
-    }, [authUser?.id]);
+    }, [authUser?.id, authUser?.avatar_url, authUser?.cover_url]);
 
 
     const handleAvatarChange = async (e) => {
@@ -571,7 +571,7 @@ const Profile = () => {
     });
 
     const loadUserData = useCallback(async () => {
-        if (!user?.id || typeof getUserVideos !== 'function') return;
+        if (!user?.id) return;
 
         try {
             await getUserVideos(user.id);
@@ -581,18 +581,7 @@ const Profile = () => {
         }
     }, [user?.id, getUserVideos, toast]);
 
-    useEffect(() => {
-        if (!videos || videos.length === 0) {
-            setStats({
-                totalVideos: 0,
-                totalViews: 0,
-                totalLikes: 0,
-                totalComments: 0,
-                engagementRate: 0,
-            });
-            return;
-        }
-
+    const calculateStats = () => {
         const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
         const totalLikes = videos.reduce((sum, v) => sum + (v.likes || 0), 0);
         const totalComments = videos.reduce((sum, v) => sum + (v.comments || 0), 0);
@@ -606,11 +595,17 @@ const Profile = () => {
             totalComments,
             engagementRate,
         });
-    }, [videos]);
+    };
 
     useEffect(() => {
         loadUserData();
     }, [loadUserData]);
+
+    useEffect(() => {
+        if (videos.length > 0) {
+            calculateStats();
+        }
+    }, [videos]);
 
     useEffect(() => {
         if (userVideos) {
