@@ -59,6 +59,37 @@ class UserService
         }
     }
 
+    public function getUserProfile(int $userId): array
+    {
+        try {
+            $user = $this->userModel->findById($userId);
+
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'Utilisateur non trouvé',
+                    'code' => 404
+                ];
+            }
+
+            unset($user['password_hash']);
+            unset($user['two_fa_secret']);
+            unset($user['verification_token']);
+
+            return [
+                'success' => true,
+                'profile' => $user
+            ];
+        } catch (\Exception $e) {
+            error_log("UserService::getUserProfile - Error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur serveur',
+                'code' => 500
+            ];
+        }
+    }
+
     public function getStats(int $userId): array
     {
         try {
@@ -111,7 +142,6 @@ class UserService
                 ];
             }
 
-            // Validation email
             $emailErrors = $this->validationService->validateEmail($email);
             if (!empty($emailErrors)) {
                 return [
@@ -121,7 +151,6 @@ class UserService
                 ];
             }
 
-            // Validation bio (optionnelle)
             if ($bio && strlen($bio) > 500) {
                 return [
                     'success' => false,
@@ -130,7 +159,6 @@ class UserService
                 ];
             }
 
-            // Vérifier unicité
             if ($this->userModel->emailExists($email, $userId)) {
                 return [
                     'success' => false,
@@ -147,10 +175,8 @@ class UserService
                 ];
             }
 
-            // Mettre à jour
             $this->userModel->updateProfile($userId, $username, $email, $bio);
 
-            // Log
             $this->auditService->logSecurityEvent(
                 $userId,
                 'profile_updated',
@@ -178,9 +204,6 @@ class UserService
         }
     }
 
-    /**
-     * Upload avatar/photo de profil
-     */
     public function uploadAvatar(int $userId, array $file): array
     {
         try {
@@ -231,9 +254,6 @@ class UserService
         }
     }
 
-    /**
-     * Upload cover de profil
-     */
     public function uploadCover(int $userId, array $file): array
     {
         try {
@@ -245,25 +265,21 @@ class UserService
                 ];
             }
 
-            // Upload
             $result = $this->uploadService->uploadImage($file, $userId, 'cover');
 
             if (!$result['success']) {
                 return $result;
             }
 
-            // Mettre à jour
             $sql = "UPDATE users SET profile_cover = $1, updated_at = NOW() WHERE id = $2";
             $this->db->execute($sql, [$result['path'], $userId]);
 
-            // Supprimer l'ancienne cover
             $user = $this->userModel->findById($userId);
             if ($user && !empty($user['profile_cover']) && $user['profile_cover'] !== '/uploads/covers/default.png') {
                 $oldFilename = basename($user['profile_cover']);
                 $this->uploadService->deleteFile($oldFilename, 'cover');
             }
 
-            // Log
             $this->auditService->logSecurityEvent(
                 $userId,
                 'cover_uploaded',
@@ -288,9 +304,6 @@ class UserService
         }
     }
 
-    /**
-     * Obtenir le nombre d'abonnés
-     */
     public function getSubscribersCount(int $userId): array
     {
         try {
@@ -315,9 +328,6 @@ class UserService
         }
     }
 
-    /**
-     * Obtenir le statut d'abonnement
-     */
     public function getSubscribeStatus(int $creatorId, int $userId): array
     {
         try {
@@ -345,13 +355,9 @@ class UserService
         }
     }
 
-    /**
-     * S'abonner à un créateur
-     */
     public function subscribe(int $creatorId, int $subscriberId): array
     {
         try {
-            // Vérifier qu'on ne s'abonne pas à soi-même
             if ($creatorId === $subscriberId) {
                 return [
                     'success' => false,
@@ -369,14 +375,12 @@ class UserService
                 ];
             }
 
-            // S'abonner
             $sql = "INSERT INTO subscriptions (creator_id, subscriber_id, subscribed_at)
                     VALUES ($1, $2, NOW())
                     ON CONFLICT (creator_id, subscriber_id) DO NOTHING";
 
             $this->db->execute($sql, [$creatorId, $subscriberId]);
 
-            // Notification
             if ($this->notificationCreator) {
                 try {
                     $subscriber = $this->userModel->findById($subscriberId);
@@ -408,9 +412,6 @@ class UserService
         }
     }
 
-    /**
-     * Se désabonner
-     */
     public function unsubscribe(int $creatorId, int $subscriberId): array
     {
         try {
@@ -435,13 +436,9 @@ class UserService
         }
     }
 
-    /**
-     * Obtenir l'historique de visionnage
-     */
     public function getWatchHistory(int $userId, int $limit = 20, int $offset = 0): array
     {
         try {
-            // Validation
             $limit = min(max(1, $limit), 100);
             $offset = max(0, $offset);
 

@@ -1,7 +1,11 @@
 <?php
 
 use App\Controllers\AuthController;
+use App\Controllers\CommentaireController;
+use App\Controllers\NotificationController;
 use App\Controllers\ReactionController;
+use App\Controllers\UserController;
+use App\Controllers\VideoController;
 use App\Interfaces\DatabaseInterface;
 use App\Interfaces\EmailProviderInterface;
 use App\Middleware\AuthMiddleware;
@@ -67,53 +71,16 @@ $container->set(DatabaseInterface::class, function() {
     return $db;
 });
 
-
-
-$container->set(DatabaseInterface::class, function() {
-    $config = require __DIR__ . '/database.php';
-    $db = new PostgreSQLDatabase($config);
-    $db->connect();
-    return $db;
-});
-
 $container->set(User::class, function($c) {
     return new User($c->get(DatabaseInterface::class));
 });
 
-$container->set(VideoView::class, function($c) {
-    return new VideoView($c->get(DatabaseInterface::class));
-});
-
-$container->set(ReactionController::class, function($c) {
-    return new ReactionController(
-        $c->get(ReactionService::class),
-        $c->get(AuthMiddleware::class),
-        $c->get(AuditService::class),
-    );
-});
-
-
-$container->set(UserService::class, function ($c) {
-    return new UserService(
-        $c->get(User::class),
-        $c->get(Video::class),
-        $c->get(VideoView::class),
-        $c->get(DatabaseInterface::class),
-        $c->get(ValidationService::class),
-        $c->get(AuditService::class),
-        $c->has(NotificationCreationService::class)
-            ? $c->get(NotificationCreationService::class)
-            : null,
-        $c->has(UploadService::class)
-            ? $c->get(UploadService::class)
-            : null
-    );
-});
-
-
-
 $container->set(Video::class, function($c) {
     return new Video($c->get(DatabaseInterface::class));
+});
+
+$container->set(VideoView::class, function($c) {
+    return new VideoView($c->get(DatabaseInterface::class));
 });
 
 $container->set(Commentaire::class, function($c) {
@@ -163,6 +130,18 @@ $container->set(AuditService::class, function($c) {
     );
 });
 
+$container->set(EmailProviderInterface::class, function($c) use ($config) {
+    return new ResendEmailProvider($config);
+});
+
+$container->set(EmailService::class, function($c) use ($config) {
+    return new EmailService(
+        $c->get(LogRepository::class),
+        $c->get(EmailProviderInterface::class),
+        $config['base_url']
+    );
+});
+
 $container->set(NotificationCreationService::class, function($c) {
     return new NotificationCreationService(
         $c->get(DatabaseInterface::class),
@@ -174,6 +153,42 @@ $container->set(NotificationService::class, function($c) {
     return new NotificationService(
         $c->get(Notification::class),
         $c->get(User::class)
+    );
+});
+
+$container->set(UserService::class, function ($c) {
+    return new UserService(
+        $c->get(User::class),
+        $c->get(Video::class),
+        $c->get(VideoView::class),
+        $c->get(DatabaseInterface::class),
+        $c->get(ValidationService::class),
+        $c->get(AuditService::class),
+        $c->get(NotificationCreationService::class),
+        $c->get(UploadService::class)
+    );
+});
+
+$container->set(VideoService::class, function($c) {
+    return new VideoService(
+        $c->get(Video::class),
+        $c->get(Commentaire::class),
+        $c->get(Reaction::class),
+        $c->get(DatabaseInterface::class),
+        $c->get(ValidationService::class),
+        $c->get(AuditService::class),
+        $c->get(NotificationCreationService::class),
+        $c->get(UploadService::class)
+    );
+});
+
+$container->set(CommentaireService::class, function($c) {
+    return new CommentaireService(
+        $c->get(Commentaire::class),
+        $c->get(Video::class),
+        $c->get(User::class),
+        $c->get(DatabaseInterface::class),
+        $c->get(NotificationCreationService::class)
     );
 });
 
@@ -211,48 +226,11 @@ $container->set(AuthService::class, function($c) use ($config) {
     );
 });
 
-
-$container->set(AuthController::class, function($c) {
-    return new AuthController(
-        $c->get(AuthService::class),
-        $c->get(ValidationService::class),
-        $c->get(AuditService::class),
-        $c->get(AuthMiddleware::class)
-    );
-});
-
-$container->set(CommentaireService::class, function($c) {
-    return new CommentaireService(
-        $c->get(Commentaire::class),
-        $c->get(Video::class),
+$container->set(TwoFactorService::class, function($c) {
+    return new TwoFactorService(
         $c->get(User::class),
         $c->get(DatabaseInterface::class),
-        $c->get(NotificationCreationService::class)
-    );
-});
-
-$container->set(EmailProviderInterface::class, function($c) use ($config) {
-    return new ResendEmailProvider($config);
-});
-
-$container->set(EmailService::class, function($c) use ($config) {
-    return new EmailService(
-        $c->get(LogRepository::class),
-        $c->get(EmailProviderInterface::class),
-        $config['base_url']
-    );
-});
-
-$container->set(VideoService::class, function($c) {
-    return new VideoService(
-        $c->get(Video::class),
-        $c->get(Commentaire::class),
-        $c->get(Reaction::class),
-        $c->get(DatabaseInterface::class),
-        $c->get(ValidationService::class),
         $c->get(AuditService::class),
-        $c->get(NotificationCreationService::class),
-        $c->get(UploadService::class)
     );
 });
 
@@ -265,11 +243,56 @@ $container->set(AuthMiddleware::class, function($c) {
     );
 });
 
-$container->set(TwoFactorService::class, function($c) {
-    return new TwoFactorService(
-        $c->get(User::class),
-        $c->get(DatabaseInterface::class),
+$container->set(AuthController::class, function($c) {
+    return new AuthController(
+        $c->get(AuthService::class),
+        $c->get(ValidationService::class),
         $c->get(AuditService::class),
+        $c->get(AuthMiddleware::class)
+    );
+});
+
+$container->set(UserController::class, function($c) {
+    return new UserController(
+        $c->get(UserService::class),
+        $c->get(UploadService::class),
+        $c->get(User::class),
+        $c->get(AbonnementService::class),
+        $c->get(AuthMiddleware::class)
+    );
+});
+
+$container->set(VideoController::class, function($c) {
+    return new VideoController(
+        $c->get(VideoService::class),
+        $c->get(AnalyticsService::class),
+        $c->get(AuthMiddleware::class),
+        $c->get(AuditService::class),
+        $c->get(DatabaseInterface::class)
+    );
+});
+
+$container->set(CommentaireController::class, function($c) {
+    return new CommentaireController(
+        $c->get(CommentaireService::class),
+        $c->get(AuthMiddleware::class),
+        $c->get(AuditService::class),
+        $c->get(DatabaseInterface::class)
+    );
+});
+
+$container->set(ReactionController::class, function($c) {
+    return new ReactionController(
+        $c->get(ReactionService::class),
+        $c->get(AuthMiddleware::class),
+        $c->get(AuditService::class)
+    );
+});
+
+$container->set(NotificationController::class, function($c) {
+    return new NotificationController(
+        $c->get(NotificationService::class),
+        $c->get(AuthMiddleware::class)
     );
 });
 

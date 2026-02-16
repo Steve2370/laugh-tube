@@ -237,7 +237,7 @@ class AuthController
                 return;
             }
 
-            $currentUser = $this->authMiddleware->getUser(); // <= IMPORTANT
+            $currentUser = $this->authMiddleware->getUser();
             if (!$currentUser) {
                 http_response_code(401);
                 echo json_encode(['success' => false, 'error' => 'Non authentifié']);
@@ -253,7 +253,9 @@ class AuthController
                     'email' => $currentUser['email'],
                     'role' => $currentUser['role'],
                     'email_verified' => $currentUser['email_verified'],
-                    'two_fa_enabled' => $currentUser['two_fa_enabled']
+                    'two_fa_enabled' => $currentUser['two_fa_enabled'],
+                    'profile_image' => $currentUser['profile_image'] ?? null,
+                    'profile_cover' => $currentUser['profile_cover'] ?? null
                 ]
             ]);
         } catch (\Throwable $e) {
