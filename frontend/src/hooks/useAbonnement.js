@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import apiService from '../services/apiService.js';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,6 +9,14 @@ export function useAbonnement(targetUserId) {
     const [subscribersCount, setSubscribersCount] = useState(0);
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [error, setError] = useState(null);
+
+    const userIdRef = useRef(user?.id);
+    const isAuthRef = useRef(isAuthenticated);
+
+    useEffect(() => {
+        userIdRef.current = user?.id;
+        isAuthRef.current = isAuthenticated;
+    }, [user?.id, isAuthenticated]);
 
     const refresh = useCallback(async () => {
         if (!targetUserId) {
@@ -23,20 +31,21 @@ export function useAbonnement(targetUserId) {
             const countResponse = await apiService.request(`/users/${targetUserId}/subscribers-count`);
             setSubscribersCount(countResponse.subscribers_count || 0);
 
-            if (isAuthenticated && user?.id) {
+            if (isAuthRef.current && userIdRef.current) {
                 const statusResponse = await apiService.request(`/users/${targetUserId}/subscribe-status`);
                 setIsSubscribed(!!statusResponse.is_subscribed);
             } else {
                 setIsSubscribed(false);
             }
         } catch (err) {
+            console.error('Error fetching subscription data:', err);
             setError(err?.message || 'Erreur');
             setSubscribersCount(0);
             setIsSubscribed(false);
         } finally {
             setLoading(false);
         }
-    }, [targetUserId, isAuthenticated, user?.id]);
+    }, [targetUserId]);
 
     const toggle = useCallback(async () => {
         if (!isAuthenticated) throw new Error('AUTH_REQUIRED');
@@ -59,7 +68,7 @@ export function useAbonnement(targetUserId) {
 
     useEffect(() => {
         refresh();
-    }, [refresh]);
+    }, [targetUserId, refresh]);
 
     return { loading, subscribersCount, isSubscribed, error, toggle, refresh };
 }
