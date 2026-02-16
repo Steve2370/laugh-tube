@@ -16,22 +16,9 @@ import {
 } from 'lucide-react';
 
 const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
-    const [coverPreview, setCoverPreview] = useState(null);
-    const [avatarPreview, setAvatarPreview] = useState(
-        localStorage.getItem(`profileImage_${channelUser?.id}`) || null
-    );
+    const avatarUrl = channelUser?.profile_image ? `${window.location.origin}${channelUser.profile_image}` : null;
 
-    useEffect(() => {
-        const loadCover = () => {
-            const savedCover = localStorage.getItem(`coverImage_${channelUser?.id}`);
-            if (savedCover) {
-                setCoverPreview(savedCover);
-            }
-        };
-        if (channelUser?.id) {
-            loadCover();
-        }
-    }, [channelUser?.id]);
+    const coverUrl = channelUser?.profile_cover ? `${window.location.origin}${channelUser.profile_cover}` : null;
 
     const formatSubscribers = (count) => {
         if (!count || count === 0) return '0';
@@ -51,9 +38,9 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
     return (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="relative h-56">
-                {coverPreview ? (
+                {coverUrl ? (
                     <img
-                        src={coverPreview}
+                        src={coverUrl}
                         alt="Couverture"
                         className="w-full h-full object-cover"
                     />
@@ -65,9 +52,9 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
             <div className="relative px-8 pb-8">
                 <div className="absolute -top-20 left-8">
                     <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                        {avatarPreview ? (
+                        {avatarUrl ? (
                             <img
-                                src={avatarPreview}
+                                src={avatarUrl}
                                 alt="Avatar"
                                 className="w-full h-full object-cover"
                             />
@@ -407,7 +394,7 @@ const Chaine = () => {
                             <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
                                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                                     <Video size={24} className="text-blue-600" />
-                                    Vidéos ({videos.length})
+                                    Vidéos ({stats?.totalVideos || 0})
                                 </h2>
                             </div>
 
