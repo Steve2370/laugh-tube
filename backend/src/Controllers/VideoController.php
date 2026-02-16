@@ -444,13 +444,25 @@ class VideoController
                 return;
             }
 
-            $basePath = __DIR__ . '/../../uploads/thumbnails/';
-            $possiblePaths = [
-                $basePath . $videoId . '.jpg',
-                $basePath . $videoId . '.jpeg',
-                $basePath . $videoId . '.png',
-                $basePath . $videoId . '.webp',
-            ];
+            $basePath = '/var/www/html/public/uploads/thumbnails/';
+
+            if (!empty($video['thumbnail'])) {
+                $thumbnailFilename = basename($video['thumbnail']);
+                $possiblePaths = [
+                    $basePath . $thumbnailFilename,
+                    $basePath . $videoId . '.jpg',
+                    $basePath . $videoId . '.jpeg',
+                    $basePath . $videoId . '.png',
+                    $basePath . $videoId . '.webp',
+                ];
+            } else {
+                $possiblePaths = [
+                    $basePath . $videoId . '.jpg',
+                    $basePath . $videoId . '.jpeg',
+                    $basePath . $videoId . '.png',
+                    $basePath . $videoId . '.webp',
+                ];
+            }
 
             $thumbnailPath = null;
             foreach ($possiblePaths as $path) {
@@ -461,6 +473,7 @@ class VideoController
             }
 
             if (!$thumbnailPath) {
+                error_log("VideoController::getThumbnail - No thumbnail found for video $videoId in $basePath");
                 $this->servePlaceholderImage('video');
                 return;
             }
@@ -501,9 +514,9 @@ class VideoController
     private function servePlaceholderImage(string $type = 'video'): void
     {
         $placeholders = [
-            'video' => __DIR__ . '/../../public/images/placeholder-video.png',
-            'profile' => __DIR__ . '/../../public/images/default-avatar.png',
-            'cover' => __DIR__ . '/../../public/images/default-cover.png',
+            'video' => '/var/www/html/public/images/placeholder-video.png',
+            'profile' => '/var/www/html/public/images/default-avatar.png',
+            'cover' => '/var/www/html/public/images/default-cover.png',
         ];
 
         $placeholderPath = $placeholders[$type] ?? $placeholders['video'];
