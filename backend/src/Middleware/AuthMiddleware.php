@@ -104,6 +104,8 @@ class AuthMiddleware
                 'role'           => $userCheck['role'] ?? ($payload['role'] ?? 'membre'),
                 'email_verified' => (bool)($userCheck['email_verified'] ?? false),
                 'two_fa_enabled' => (bool)($userCheck['two_fa_enabled'] ?? false),
+                'avatar_url'     => $userCheck['avatar_url'] ?? null,
+                'cover_url'      => $userCheck['cover_url'] ?? null,
                 'session_id'     => $payload['session_id'] ?? null,
                 'jti'            => $payload['jti'] ?? null,
             ];
