@@ -46,28 +46,21 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const { loading, subscribersCount, isSubscribed, toggle } = useAbonnement(targetUserId);
 
     useEffect(() => {
-        if (authUser?.id) {
-            setBioDraft(authUser.bio || '');
+        if (!authUser?.id) return;
+        setBioDraft(authUser.bio || '');
 
-            if (authUser.avatar_url) {
-                const avatarUrl = authUser.avatar_url.startsWith('http')
-                    ? authUser.avatar_url
-                    : `${window.location.origin}${authUser.avatar_url}`;
-                setAvatarPreview(avatarUrl);
-            } else {
-                setAvatarPreview('/images/default-avatar.png');
-            }
-
-            if (authUser.cover_url) {
-                const coverUrl = authUser.cover_url.startsWith('http')
-                    ? authUser.cover_url
-                    : `${window.location.origin}${authUser.cover_url}`;
-                setCoverPreview(coverUrl);
-            } else {
-                setCoverPreview('/images/default-cover.png');
-            }
+        if (authUser.avatar_url) {
+            setAvatarPreview(`/api/users/${authUser.id}/profile-image`);
+        } else {
+            setAvatarPreview('/images/default-avatar.png');
         }
-    }, [authUser?.id, authUser?.avatar_url, authUser?.cover_url]);
+
+        if (authUser.cover_url) {
+            setCoverPreview(`/api/users/${authUser.id}/cover-image`);
+        } else {
+            setCoverPreview('/images/default-cover.png');
+        }
+    }, [authUser?.id, authUser?.avatar_url, authUser?.cover_url, authUser?.bio]);
 
 
     const handleAvatarChange = async (e) => {
