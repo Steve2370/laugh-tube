@@ -45,34 +45,29 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const toast = useToast();
     const { loading, subscribersCount, isSubscribed, toggle } = useAbonnement(targetUserId);
 
-    const loadProfileImages = useCallback(() => {
-        if (!authUser) return;
-
-        if (authUser.avatar_url) {
-            const avatarUrl = authUser.avatar_url.startsWith('http')
-                ? authUser.avatar_url
-                : `${window.location.origin}${authUser.avatar_url}`;
-            setAvatarPreview(avatarUrl);
-        } else {
-            setAvatarPreview('/images/default-avatar.png');
-        }
-
-        if (authUser.cover_url) {
-            const coverUrl = authUser.cover_url.startsWith('http')
-                ? authUser.cover_url
-                : `${window.location.origin}${authUser.cover_url}`;
-            setCoverPreview(coverUrl);
-        } else {
-            setCoverPreview('/images/default-cover.png');
-        }
-    }, [authUser]);
-
     useEffect(() => {
         if (authUser) {
             setBioDraft(authUser.bio || '');
-            loadProfileImages();
+
+            if (authUser.avatar_url) {
+                const avatarUrl = authUser.avatar_url.startsWith('http')
+                    ? authUser.avatar_url
+                    : `${window.location.origin}${authUser.avatar_url}`;
+                setAvatarPreview(avatarUrl);
+            } else {
+                setAvatarPreview('/images/default-avatar.png');
+            }
+
+            if (authUser.cover_url) {
+                const coverUrl = authUser.cover_url.startsWith('http')
+                    ? authUser.cover_url
+                    : `${window.location.origin}${authUser.cover_url}`;
+                setCoverPreview(coverUrl);
+            } else {
+                setCoverPreview('/images/default-cover.png');
+            }
         }
-    }, [authUser, loadProfileImages]);
+    }, [authUser?.id]);
 
 
     const handleAvatarChange = async (e) => {
@@ -118,7 +113,14 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
         } catch (err) {
             console.error("Erreur avatar:", err);
             toast.error("Erreur lors de la mise à jour");
-            loadProfileImages();
+            if (authUser?.avatar_url) {
+                const avatarUrl = authUser.avatar_url.startsWith('http')
+                    ? authUser.avatar_url
+                    : `${window.location.origin}${authUser.avatar_url}`;
+                setAvatarPreview(avatarUrl);
+            } else {
+                setAvatarPreview('/images/default-avatar.png');
+            }
         } finally {
             setUploadingAvatar(false);
             e.target.value = "";
@@ -170,7 +172,14 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
         } catch (err) {
             console.error("Erreur cover:", err);
             toast.error("Erreur lors de la mise à jour");
-            loadProfileImages();
+            if (authUser?.cover_url) {
+                const coverUrl = authUser.cover_url.startsWith('http')
+                    ? authUser.cover_url
+                    : `${window.location.origin}${authUser.cover_url}`;
+                setCoverPreview(coverUrl);
+            } else {
+                setCoverPreview('/images/default-cover.png');
+            }
         } finally {
             setUploadingCover(false);
             e.target.value = "";
@@ -572,8 +581,17 @@ const Profile = () => {
         }
     }, [user?.id, getUserVideos, toast]);
 
-    const calculateStats = useCallback(() => {
-        if (!videos || videos.length === 0) return;
+    useEffect(() => {
+        if (!videos || videos.length === 0) {
+            setStats({
+                totalVideos: 0,
+                totalViews: 0,
+                totalLikes: 0,
+                totalComments: 0,
+                engagementRate: 0,
+            });
+            return;
+        }
 
         const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
         const totalLikes = videos.reduce((sum, v) => sum + (v.likes || 0), 0);
@@ -593,12 +611,6 @@ const Profile = () => {
     useEffect(() => {
         loadUserData();
     }, [loadUserData]);
-
-    useEffect(() => {
-        if (videos && videos.length > 0) {
-            calculateStats();
-        }
-    }, [videos, calculateStats]);
 
     useEffect(() => {
         if (userVideos) {
