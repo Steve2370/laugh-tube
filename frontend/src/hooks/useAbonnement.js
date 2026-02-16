@@ -59,7 +59,7 @@ export function useAbonnement(targetUserId) {
 
     useEffect(() => {
         refresh();
-    }, [targetUserId, isAuthenticated, user?.id, refresh]);
+    }, [refresh]);
 
     return { loading, subscribersCount, isSubscribed, error, toggle, refresh };
 }
