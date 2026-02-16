@@ -16,8 +16,6 @@ if (is_file($dotenvPath)) {
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once __DIR__ . '/../config/database.php';
-
 use App\Controllers\AuthController;
 use App\Controllers\CommentaireController;
 use App\Controllers\NotificationController;
@@ -25,20 +23,29 @@ use App\Controllers\ReactionController;
 use App\Controllers\UserController;
 use App\Controllers\VideoController;
 use App\Interfaces\DatabaseInterface;
+use App\Interfaces\EmailProviderInterface;
 use App\Middleware\AuthMiddleware;
+use App\Models\Abonnement;
 use App\Models\Commentaire;
 use App\Models\Notification;
 use App\Models\Reaction;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoView;
+use App\Providers\PostgreSQLDatabase;
+use App\Repositories\LogRepository;
+use App\Repositories\SessionRepository;
+use App\Repositories\UserRepository;
 use App\Services\AbonnementService;
 use App\Services\AnalyticsService;
 use App\Services\AuditService;
 use App\Services\AuthService;
 use App\Services\CommentaireService;
+use App\Services\EmailService;
+use App\Services\NotificationCreationService;
 use App\Services\NotificationService;
 use App\Services\ReactionService;
+use App\Services\ResendEmailProvider;
 use App\Services\TokenService;
 use App\Services\TwoFactorService;
 use App\Services\UploadService;
@@ -47,7 +54,6 @@ use App\Services\ValidationService;
 use App\Services\VideoService;
 use App\Services\VideoStreamService;
 use App\Utils\JsonResponse;
-
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -62,19 +68,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
 function normalizeUri(string $rawPath): string
 {
     $path = $rawPath === '' ? '/' : $rawPath;
-
     if (str_starts_with($path, '/api/')) {
         $path = substr($path, 4);
-        if ($path === '') {
-            $path = '/';
-        }
+        if ($path === '') $path = '/';
     }
-
     if ($path !== '/' && str_ends_with($path, '/')) {
         $path = rtrim($path, '/');
         if ($path === '') $path = '/';
     }
-
     return $path;
 }
 
@@ -85,40 +86,102 @@ function isDev(): bool
 }
 
 try {
+    $dbConfig = require __DIR__ . '/../config/database.php';
+    $db = new PostgreSQLDatabase($dbConfig);
+    $db->connect();
 
-    $container = require __DIR__ . '/../config/container.php';
-    $db = $container->get(DatabaseInterface::class);
-
-    $userModel = $container->get(User::class);
-    $videoModel = $container->get(Video::class);
-    $commentModel = $container->get(Commentaire::class);
-    $reactionModel = $container->get(Reaction::class);
+    $userModel = new User($db);
     $videoModel = new Video($db);
-    $notificationModel = $container->get(Notification::class);
-    $abonnementService = $container->get(AbonnementService::class);
+    $commentModel = new Commentaire($db);
+    $reactionModel = new Reaction($db);
+    $notificationModel = new Notification($db);
+    $abonnementModel = new Abonnement($db);
+    $videoViewModel = new VideoView($db);
+
+    $userRepository = new UserRepository($db);
+    $sessionRepository = new SessionRepository($db);
+    $logRepository = new LogRepository($db);
 
     $tokenService = new TokenService();
     $validationService = new ValidationService();
     $uploadService = new UploadService();
+    $auditService = new AuditService($logRepository, $db);
+
+    $emailConfig = require __DIR__ . '/../config/email.php';
+    $emailProvider = new ResendEmailProvider($emailConfig);
+    $emailService = new EmailService($logRepository, $emailProvider, $emailConfig['base_url']);
+
+    $notificationCreationService = new NotificationCreationService($db, $userModel);
+    $notificationService = new NotificationService($notificationModel, $userModel);
+
+    $userService = new UserService(
+        $userModel,
+        $videoModel,
+        $videoViewModel,
+        $db,
+        $validationService,
+        $auditService,
+        $notificationCreationService,
+        $uploadService
+    );
+
+    $videoService = new VideoService(
+        $videoModel,
+        $commentModel,
+        $reactionModel,
+        $db,
+        $validationService,
+        $auditService,
+        $notificationCreationService,
+        $uploadService
+    );
+
+    $commentaireService = new CommentaireService(
+        $commentModel,
+        $videoModel,
+        $userModel,
+        $db,
+        $notificationCreationService
+    );
+
+    $reactionService = new ReactionService(
+        $reactionModel,
+        $videoModel,
+        $notificationService
+    );
+
+    $abonnementService = new AbonnementService(
+        $abonnementModel,
+        $userModel,
+        $notificationCreationService
+    );
+
+    $analyticsService = new AnalyticsService($db);
+
+    $authService = new AuthService(
+        $userRepository,
+        $logRepository,
+        $tokenService,
+        $validationService,
+        $sessionRepository,
+        $emailService,
+        $auditService
+    );
+
+    $twoFactorService = new TwoFactorService($userModel, $db, $auditService);
     $videoStreamService = new VideoStreamService($db);
-    $twoFactorService = $container->get(TwoFactorService::class);
 
-    $authService = $container->get(AuthService::class);
-    $authMiddleware = $container->get(AuthMiddleware::class);
-    $auditService = $container->get(AuditService::class);
-    $db = $container->get(DatabaseInterface::class);
-    $videoService = $container->get(VideoService::class);
-    $commentaireService = $container->get(CommentaireService::class);
-    $userService = $container->get(UserService::class);
-    $analyticsService = $container->get(AnalyticsService::class);
-    $notificationService = $container->get(NotificationService::class);
+    $authMiddleware = new AuthMiddleware($tokenService, $sessionRepository, $db, $auditService);
 
-    $reactionController = $container->get(ReactionController::class);
+    $authController = new AuthController($authService, $validationService, $auditService, $authMiddleware);
 
-     $reactionService = new ReactionService($reactionModel, $videoModel);
-     $reactionController = new ReactionController($reactionService, $authMiddleware, $auditService, $db);
-
-    $authController = $container->get(AuthController::class);
+    $userController = new UserController(
+        $userService,
+        $uploadService,
+        $userModel,
+        $abonnementService,
+        $authMiddleware
+    );
 
     $videoController = new VideoController(
         $videoService,
@@ -135,12 +198,10 @@ try {
         $db
     );
 
-    $userController = new UserController(
-        $userService,
-        $uploadService,
-        $userModel,
-        $abonnementService,
+    $reactionController = new ReactionController(
+        $reactionService,
         $authMiddleware,
+        $auditService
     );
 
     $notificationController = new NotificationController(
@@ -160,72 +221,82 @@ try {
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $rawUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
-$uri    = normalizeUri($rawUri);
+$uri = normalizeUri($rawUri);
 
 error_log("API Call: $method $rawUri => normalized: $uri");
 
 try {
-
     if ($uri === '/login' && $method === 'POST') {
-        $authController->login(); return;
+        $authController->login();
+        return;
     }
 
     if ($uri === '/register' && $method === 'POST') {
         $authController->register();
-        error_log("DEBUG index.php uri=" . ($_SERVER['REQUEST_URI'] ?? 'null') .
-            " method=" . ($_SERVER['REQUEST_METHOD'] ?? 'null'));
-
         return;
     }
 
     if ($uri === '/auth/refresh' && $method === 'POST') {
-        $authController->refresh(); return;
+        $authController->refresh();
+        return;
     }
 
     if ($uri === '/me' && $method === 'GET') {
-        $authController->me(); return;
+        $authController->me();
+        return;
     }
 
     if ($uri === '/auth/change-password' && $method === 'POST') {
-        $authController->changePassword(); return;
+        $authController->changePassword();
+        return;
     }
 
     if ($uri === '/auth/logout' && $method === 'POST') {
-        $authController->logout(); return;
+        $authController->logout();
+        return;
     }
 
     if ($uri === '/verify2faLogin.php' && $method === 'POST') {
-        $authController->verify2FALogin(); return;
+        $authController->verify2FALogin();
+        return;
     }
 
     if ($uri === '/auth/2fa/status' && $method === 'GET') {
-        $authController->check2FAStatus(); return;
+        $authController->check2FAStatus();
+        return;
     }
 
     if ($uri === '/auth/2fa/enable' && $method === 'POST') {
-        $authController->enable2FA(); return;
+        $authController->enable2FA();
+        return;
     }
 
     if ($uri === '/auth/2fa/verify' && $method === 'POST') {
-        $authController->verify2FASetup(); return;
+        $authController->verify2FASetup();
+        return;
     }
 
     if ($uri === '/auth/2fa/disable' && $method === 'POST') {
-        $authController->disable2FA(); return;
+        $authController->disable2FA();
+        return;
     }
 
     if ($uri === '/resetPasswordRequest.php' && $method === 'POST') {
-        $authController->requestPasswordReset(); return;
+        $authController->requestPasswordReset();
+        return;
     }
 
     if ($uri === '/resetPassword.php' && $method === 'POST') {
-        $authController->resetPassword(); return;
+        $authController->resetPassword();
+        return;
     }
 
     if ($uri === '/resendVerification.php' && $method === 'POST') {
-        $authController->resendVerification(); return;
+        $authController->resendVerification();
+        return;
     }
 
+    // ===== USER ROUTES =====
     if (($uri === '/users/me/avatar' || $uri === '/profile/upload-image') && $method === 'POST') {
         $userController->uploadAvatar();
         return;
@@ -237,31 +308,38 @@ try {
     }
 
     if (($uri === '/profile' || $uri === '/users/profile/update') && $method === 'PUT') {
-        $userController->updateProfile(); return;
+        $userController->updateProfile();
+        return;
     }
 
-    if (($uri === '/users/me/bio' || $uri === '/users/me/bio') && $method === 'PUT') {
-        $userController->updateBio(); return;
+    if ($uri === '/users/me/bio' && $method === 'PUT') {
+        $userController->updateBio();
+        return;
     }
 
     if (preg_match('#^/users/(\d+)/stats$#', $uri, $m) && $method === 'GET') {
-        $userController->getStats((int)$m[1]); return;
+        $userController->getStats((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/users/(\d+)/profile$#', $uri, $m) && $method === 'GET') {
-        $userController->getProfile((int)$m[1]); return;
+        $userController->getProfile((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/users/(\d+)/profile-image$#', $uri, $m) && $method === 'GET') {
-        $userController->getProfileImage((int)$m[1]); return;
+        $userController->getProfileImage((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/users/(\d+)/watch-history$#', $uri, $m) && $method === 'GET') {
-        $userController->getWatchHistory((int)$m[1]); return;
+        $userController->getWatchHistory((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/uploads/avatars/([^/]+)$#', $uri, $m) && $method === 'GET') {
-        $userController->serveAvatar($m[1]); return;
+        $userController->serveAvatar($m[1]);
+        return;
     }
 
     if (preg_match('#^/uploads/profiles/([^/]+)$#', $uri, $m) && $method === 'GET') {
@@ -270,126 +348,147 @@ try {
     }
 
     if (preg_match('#^/users/(\d+)/subscribers-count$#', $uri, $m) && $method === 'GET') {
-        header('Content-Type: application/json');
-        http_response_code(200);
-        echo json_encode(['success' => true, 'count' => 0, 'user_id' => (int)$m[1]]);
+        $userController->getSubscribersCount((int)$m[1]);
         return;
     }
 
     if (preg_match('#^/users/(\d+)/subscribe-status$#', $uri, $m) && $method === 'GET') {
         $user = AuthMiddleware::optionalAuth();
         $currentUserId = $user ? ($user['sub'] ?? null) : null;
-        $userController->getSubscribeStatus((int)$m[1], $currentUserId); return;
+        $userController->getSubscribeStatus((int)$m[1], $currentUserId);
+        return;
     }
 
     if (preg_match('#^/users/(\d+)/subscribe$#', $uri, $m) && $method === 'POST') {
         $user = AuthMiddleware::requireAuth();
-        $userController->subscribe((int)$m[1], $user['sub']); return;
+        $userController->subscribe((int)$m[1], $user['sub']);
+        return;
     }
 
     if (preg_match('#^/users/(\d+)/unsubscribe$#', $uri, $m) && $method === 'DELETE') {
         $user = AuthMiddleware::requireAuth();
-        $userController->unsubscribe((int)$m[1], $user['sub']); return;
+        $userController->unsubscribe((int)$m[1], $user['sub']);
+        return;
     }
 
     if ($uri === '/videos/upload' && $method === 'POST') {
-        $videoController->upload(); return;
+        $videoController->upload();
+        return;
     }
 
-    elseif ($uri === '/videos' && $method === 'GET') {
-        $videoService = $container->get(VideoService::class);
-        $videoController = new VideoController($videoService, $analyticsService, $authMiddleware, $auditService, $db);
+    if ($uri === '/videos' && $method === 'GET') {
         $videoController->list();
         return;
     }
 
-
     if ($uri === '/videos/trending' && $method === 'GET') {
-        $videoController->trending(); return;
-    }
-
-    if (preg_match('#^/videos/(\d+)$#', $uri, $m) && $method === 'GET') {
-        $videoController->expose((int)$m[1]); return;
-    }
-
-    if (preg_match('#^/videos/(\d+)$#', $uri, $m) && $method === 'DELETE') {
-        $videoController->delete((int)$m[1]); return;
-    }
-
-    if (preg_match('#^/users/(\d+)/videos$#', $uri, $m) && $method === 'GET') {
-        $videoController->userVideos((int)$m[1]); return;
-    }
-
-    if (preg_match('#^/videos/(\d+)/play$#', $uri, $matches) && $method === 'GET') {
-        $videoStreamService = new VideoStreamService($db);
-        $videoStreamService->stream((int)$matches[1]);
+        $videoController->trending();
         return;
     }
 
-    if (preg_match('#^/videos/(\d+)/play$#', $uri, $matches) && $method === 'GET') {
-        $videoStreamService = new VideoStreamService($db);
-        $videoStreamService->serveThumbnail((int)$matches[1]);
+    if (preg_match('#^/videos/(\d+)$#', $uri, $m) && $method === 'GET') {
+        $videoController->expose((int)$m[1]);
+        return;
+    }
+
+    if (preg_match('#^/videos/(\d+)$#', $uri, $m) && $method === 'DELETE') {
+        $videoController->delete((int)$m[1]);
+        return;
+    }
+
+    if (preg_match('#^/users/(\d+)/videos$#', $uri, $m) && $method === 'GET') {
+        $videoController->userVideos((int)$m[1]);
+        return;
+    }
+
+    if (preg_match('#^/videos/(\d+)/play$#', $uri, $m) && $method === 'GET') {
+        $videoStreamService->stream((int)$m[1]);
         return;
     }
 
     if ($uri === '/videos/cleanup-sessions' && $method === 'POST') {
-        $videoController->cleanupSessions(); return;
+        $videoController->cleanupSessions();
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/views$#', $uri, $m) && $method === 'GET') {
-        $videoController->getViews((int)$m[1]); return;
+        $videoController->getViews((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/viewed$#', $uri, $m) && $method === 'GET') {
-        $videoController->checkViewed((int)$m[1]); return;
+        $videoController->checkViewed((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/record-view$#', $uri, $m) && $method === 'POST') {
-        $videoController->recordView((int)$m[1]); return;
+        $videoController->recordView((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/analytics$#', $uri, $m) && $method === 'GET') {
-        $videoController->getAnalytics((int)$m[1]); return;
+        $videoController->getAnalytics((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/like$#', $uri, $m) && $method === 'POST') {
-        $reactionController->like((int)$m[1]); return;
+        $reactionController->like((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/dislike$#', $uri, $m) && $method === 'POST') {
-        $reactionController->dislike((int)$m[1]); return;
+        $reactionController->dislike((int)$m[1]);
+        return;
     }
+
     if (preg_match('#^/videos/(\d+)/my-reaction$#', $uri, $m) && $method === 'GET') {
-        $reactionController->status((int)$m[1]); return;
+        $reactionController->status((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/reactions$#', $uri, $m) && $method === 'GET') {
-        $reactionController->counts((int)$m[1]); return;
+        $reactionController->counts((int)$m[1]);
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/comments$#', $uri, $m) && $method === 'GET') {
-        $commentController->list((int)$m[1]); return;
+        $commentController->list((int)$m[1]);
+        return;
     }
+
     if (preg_match('#^/videos/(\d+)/comments$#', $uri, $m) && $method === 'POST') {
-        $commentController->create((int)$m[1]); return;
+        $commentController->create((int)$m[1]);
+        return;
     }
+
     if (preg_match('#^/comments/(\d+)/replies$#', $uri, $m) && $method === 'POST') {
-        $commentController->reply((int)$m[1]); return;
+        $commentController->reply((int)$m[1]);
+        return;
     }
+
     if (preg_match('#^/comments/(\d+)/replies$#', $uri, $m) && $method === 'GET') {
-        $commentController->getReplies((int)$m[1]); return;
+        $commentController->getReplies((int)$m[1]);
+        return;
     }
+
     if (preg_match('#^/comments/(\d+)/like$#', $uri, $m) && $method === 'POST') {
-        $commentController->likeComment((int)$m[1]); return;
+        $commentController->likeComment((int)$m[1]);
+        return;
     }
+
     if (preg_match('#^/comments/(\d+)/like-status$#', $uri, $m) && $method === 'GET') {
-        $commentController->getLikeStatus((int)$m[1]); return;
+        $commentController->getLikeStatus((int)$m[1]);
+        return;
     }
+
     if (preg_match('#^/replies/(\d+)/like$#', $uri, $m) && $method === 'POST') {
-        $commentController->likeReply((int)$m[1]); return;
+        $commentController->likeReply((int)$m[1]);
+        return;
     }
+
     if (preg_match('#^/replies/(\d+)/like-status$#', $uri, $m) && $method === 'GET') {
-        $commentController->getReplyLikeStatus((int)$m[1]); return;
+        $commentController->getReplyLikeStatus((int)$m[1]);
+        return;
     }
 
     if ($uri === '/notifications' && $method === 'GET') {
@@ -402,25 +501,28 @@ try {
         return;
     }
 
-
     if ($uri === '/notifications/unread-count' && $method === 'GET') {
         $user = AuthMiddleware::requireAuth();
-        $notificationController->getUnreadCount($user['sub']); return;
+        $notificationController->getUnreadCount($user['sub']);
+        return;
     }
 
     if (preg_match('#^/notifications/(\d+)/read$#', $uri, $m) && $method === 'PUT') {
         $user = AuthMiddleware::requireAuth();
-        $notificationController->markAsRead((int)$m[1], $user['sub']); return;
+        $notificationController->markAsRead((int)$m[1], $user['sub']);
+        return;
     }
 
     if ($uri === '/notifications/mark-all-read' && $method === 'PUT') {
         $user = AuthMiddleware::requireAuth();
-        $notificationController->markAllAsRead($user['sub']); return;
+        $notificationController->markAllAsRead($user['sub']);
+        return;
     }
 
     if (preg_match('#^/notifications/(\d+)$#', $uri, $m) && $method === 'DELETE') {
         $user = AuthMiddleware::requireAuth();
-        $notificationController->deleteNotification((int)$m[1], $user['sub']); return;
+        $notificationController->deleteNotification((int)$m[1], $user['sub']);
+        return;
     }
 
     if (preg_match('#^/videos/(\d+)/view$#', $uri, $m) && $method === 'POST') {
