@@ -185,6 +185,7 @@ try {
 
     $videoController = new VideoController(
         $videoService,
+        $videoModel,
         $analyticsService,
         $authMiddleware,
         $auditService,
