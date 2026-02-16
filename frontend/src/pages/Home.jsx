@@ -338,7 +338,7 @@ const VideoCard = ({ video, onClick }) => {
         if (imageError.avatar || !authorData?.avatar_url) {
             return null;
         }
-        return `${window.location.origin}${authorData.avatar_url}`;
+        return authorData?.id ? `/api/users/${authorData.id}/profile-image` : null;
     };
 
     return (

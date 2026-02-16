@@ -54,8 +54,8 @@ export default function Navbar() {
         navigateTo('home');
     };
 
-    const profileImage = user?.avatar_url
-        ? `${window.location.origin}${user.avatar_url}`
+    const profileImage = user?.id
+        ? `/api/users/${user.id}/profile-image`
         : null;
 
     return (

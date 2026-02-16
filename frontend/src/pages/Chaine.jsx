@@ -17,17 +17,14 @@ import {
 
 const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
     const getAvatarUrl = () => {
-        if (!channelUser?.avatar_url) return null;
-        return channelUser.avatar_url.startsWith('http')
-            ? channelUser.avatar_url
-            : `${window.location.origin}${channelUser.avatar_url}`;
+        if (!channelUser?.id) return null;
+        return `/api/users/${channelUser.id}/profile-image`;
     };
 
     const getCoverUrl = () => {
         if (!channelUser?.cover_url) return null;
-        return channelUser.cover_url.startsWith('http')
-            ? channelUser.cover_url
-            : `${window.location.origin}${channelUser.cover_url}`;
+        if (!channelUser?.id) return null;
+        return `/api/users/${channelUser.id}/cover-image`;
     };
 
     const formatSubscribers = (count) => {
