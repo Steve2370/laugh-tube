@@ -114,46 +114,6 @@ const Home = () => {
     return (
         <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 to-blue-50">
             <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                            <input
-                                type="text"
-                                placeholder="Rechercher des vidéos..."
-                                value={searchTerm}
-                                onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
-                            />
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => handleFilterChange('all')}
-                                className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                                    filter === 'all'
-                                        ? 'bg-blue-500 text-white shadow-lg'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                                }`}
-                            >
-                                <Filter size={20} className="inline mr-2" />
-                                Tout
-                            </button>
-                            <button
-                                onClick={() => handleFilterChange('trending')}
-                                className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                                    filter === 'trending'
-                                        ? 'bg-blue-500 text-white shadow-lg'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                                }`}
-                            >
-                                <TrendingUp size={20} className="inline mr-2" />
-                                Tendances
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 {isSearching && (
                     <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-2"></div>

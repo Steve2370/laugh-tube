@@ -22,7 +22,6 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
     };
 
     const getCoverUrl = () => {
-        if (!channelUser?.cover_url) return null;
         if (!channelUser?.id) return null;
         return `/api/users/${channelUser.id}/cover-image`;
     };
