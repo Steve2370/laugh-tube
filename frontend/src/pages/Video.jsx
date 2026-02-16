@@ -74,9 +74,9 @@ const ReplyItem = ({ reply, isAuthenticated, userId, onUserClick, onReply }) => 
     };
 
     const localAvatar = localStorage.getItem(`profileImage_${reply.user_id}`);
-    const hasValidAvatar = reply.profile_image &&
-        reply.profile_image !== '/uploads/avatars/default.png';
-    const avatarUrl = localAvatar || (hasValidAvatar ? `/api${reply.profile_image}` : null);
+    const hasValidAvatar = reply.avatar_url &&
+        reply.avatar_url !== '/uploads/avatars/default.png';
+    const avatarUrl = localAvatar || (hasValidAvatar ? `/api${reply.avatar_url}` : null);
 
     return (
         <div className="flex items-start gap-2 py-2">
@@ -218,9 +218,9 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
     };
 
     const localAvatar = localStorage.getItem(`profileImage_${comment.user_id}`);
-    const hasValidAvatar = comment.profile_image &&
-        comment.profile_image !== '/uploads/avatars/default.png';
-    const avatarUrl = localAvatar || (hasValidAvatar ? `/api${comment.profile_image}` : null);
+    const hasValidAvatar = comment.avatar_url &&
+        comment.avatar_url !== '/uploads/avatars/default.png';
+    const avatarUrl = localAvatar || (hasValidAvatar ? `/api${comment.avatar_url}` : null);
     const replyCount = comment.reply_count || replies.length || 0;
 
     return (
@@ -635,8 +635,8 @@ const Video = () => {
                             {isAuthenticated ? (
                                 <div className="mb-6">
                                     <form onSubmit={handleCommentSubmit} className="flex items-start gap-3">
-                                        {user && (getProfileImage(user.id) || user.profile_image) ? (
-                                            <img src={getProfileImage(user.id) || `/api${user.profile_image}`} alt="Votre photo" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                                        {user && (getProfileImage(user.id) || user.avatar_url) ? (
+                                            <img src={getProfileImage(user.id) || `/api${user.avatar_url}`} alt="Votre photo" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
                                         ) : (
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
                                                 <User size={18} className="text-white" />

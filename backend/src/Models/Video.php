@@ -62,7 +62,7 @@ class Video
 
     public function findById(int $id): ?array
     {
-        $sql = "SELECT v.*, u.username as auteur, u.profile_image as auteur_image 
+        $sql = "SELECT v.*, u.username as auteur, u.avatar_url as auteur_image 
                 FROM videos v 
                 JOIN users u ON v.user_id = u.id 
                 WHERE v.id = $1";
@@ -74,7 +74,7 @@ class Video
     {
         $sql = "SELECT v.id, v.title, v.description, v.filename, v.thumbnail, 
                        v.duration, v.views, v.unique_views, v.created_at, v.visibility, v.user_id, 
-                       u.username AS auteur, u.profile_image
+                       u.username AS auteur, u.avatar_url
                 FROM videos v 
                 JOIN users u ON v.user_id = u.id 
                 WHERE v.visibility = 'publique' AND v.encoded = TRUE

@@ -28,7 +28,7 @@ class Commentaire
     public function findByVideo(int $videoId): array
     {
         $sql = "SELECT c.id, c.content, c.created_at, c.user_id,
-                       u.username, u.profile_image
+                       u.username, u.avatar_url
                 FROM commentaires c
                 JOIN users u ON c.user_id = u.id
                 WHERE c.video_id = $1
@@ -52,7 +52,7 @@ class Commentaire
 
     public function findById(int $id): ?array
     {
-        $sql = "SELECT c.*, u.username, u.profile_image
+        $sql = "SELECT c.*, u.username, u.avatar_url
                 FROM commentaires c
                 JOIN users u ON c.user_id = u.id
                 WHERE c.id = $1";

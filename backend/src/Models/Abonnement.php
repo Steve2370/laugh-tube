@@ -70,7 +70,7 @@ class Abonnement
         $sql = "SELECT 
                     u.id,
                     u.username,
-                    u.profile_image,
+                    u.avatar_url,
                     COALESCE(sc.subscriber_count, 0) AS subscriber_count
                 FROM abonnements a
                 JOIN users u ON u.id = a.subscriber_id
@@ -90,7 +90,7 @@ class Abonnement
         $sql = "SELECT 
                     u.id,
                     u.username,
-                    u.profile_image,
+                    u.avatar_url,
                     COALESCE(sc.subscriber_count, 0) AS subscriber_count
                 FROM abonnements s
                 JOIN users u ON u.id = s.subscribed_to_id

@@ -45,7 +45,7 @@ class Notification
         $sql = "SELECT 
                     n.*,
                     u.username as actor_name,
-                    u.profile_image as actor_image,
+                    u.avatar_url as actor_image,
                     v.title as video_title,
                     v.thumbnail as video_thumbnail,
                     c.content as comment_preview
