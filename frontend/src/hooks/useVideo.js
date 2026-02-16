@@ -22,7 +22,7 @@ export const useVideo = (videoId) => {
                 videoService.getReactions(videoId)
             ]);
 
-            setVideo(videoData.video || videoData);
+            setVideo(normalizeVideo(videoData.video || videoData));
             setComments(commentsData.comments || []);
             setReactions(reactionsData);
         } catch (err) {
@@ -84,6 +84,17 @@ export const useVideo = (videoId) => {
             return { success: false, error: err.message };
         }
     }, [videoId, loadVideo]);
+
+    const normalizeVideo = (v) => {
+        if (!v) return null;
+        return {
+            ...v,
+            views: v.views ?? v.view_count ?? v.views_count ?? 0,
+            thumbnail_url:
+                v.thumbnail_url ?? v.thumbnail ?? v.thumb ?? null,
+        };
+    };
+
 
     const deleteVideo = useCallback(async () => {
         try {

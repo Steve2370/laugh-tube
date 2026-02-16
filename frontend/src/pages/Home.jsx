@@ -186,94 +186,87 @@ const Home = () => {
 const EmptyState = ({ searchTerm, isAuthenticated, navigateTo }) => {
     if (searchTerm) {
         return (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
-                <Search className="mx-auto h-24 w-24 text-gray-300 mb-4" />
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Aucun résultat
-                </h3>
-                <p className="text-gray-600 mb-4">
-                    Aucune vidéo ne correspond à votre recherche "{searchTerm}"
-                </p>
-                <p className="text-sm text-gray-500">
-                    Essayez avec d'autres mots-clés
+            <div className="flex flex-col items-center justify-center py-20">
+                <Search className="h-24 w-24 text-gray-300 mb-6" />
+                <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                    Aucun résultat pour "{searchTerm}"
+                </h2>
+                <p className="text-gray-600 mb-6 text-center max-w-md">
+                    Essayez avec d'autres mots-clés ou explorez les vidéos populaires.
                 </p>
             </div>
         );
     }
 
-    if (isAuthenticated) {
-        return (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
-                <Play className="mx-auto h-24 w-24 text-gray-300 mb-4" />
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Aucune punchline disponible
-                </h3>
-                <p className="text-gray-600 mb-8">
-                    Soyez le premier à partager une punchline avec la communauté !
-                </p>
+    return (
+        <div className="flex flex-col items-center justify-center py-20">
+            <Play className="h-24 w-24 text-blue-400 mb-6" />
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                Bienvenue sur LaughTale
+            </h2>
+            <p className="text-gray-600 mb-8 text-center max-w-md">
+                Aucune vidéo disponible pour le moment.
+                {isAuthenticated && " Soyez le premier à partager du contenu !"}
+            </p>
+            {isAuthenticated ? (
                 <button
                     onClick={() => navigateTo('upload')}
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg inline-flex items-center gap-2"
+                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg flex items-center gap-2"
                 >
-                    <Play size={20} />
-                    Uploader ma première punchline
+                    <Play className="h-5 w-5" />
+                    Télécharger une vidéo
                 </button>
-            </div>
-        );
-    } else {
-        return (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
-                <Play className="mx-auto h-24 w-24 text-gray-300 mb-4" />
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Aucune punchline disponible
-                </h3>
-                <p className="text-gray-600 mb-8">
-                    Connectez-vous pour être le premier à partager du contenu !
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button
-                        onClick={() => navigateTo('login')}
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg inline-flex items-center justify-center gap-2"
-                    >
-                        <LogIn size={20} />
-                        Se connecter
-                    </button>
-                    <button
-                        onClick={() => navigateTo('register')}
-                        className="bg-white border-2 border-gray-300 text-gray-700 px-8 py-3.5 rounded-xl font-semibold hover:bg-gray-50 transition-all inline-flex items-center justify-center gap-2"
-                    >
-                        Créer un compte
-                    </button>
-                </div>
-            </div>
-        );
-    }
+            ) : (
+                <button
+                    onClick={() => navigateTo('login')}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg flex items-center gap-2"
+                >
+                    <LogIn className="h-5 w-5" />
+                    Se connecter pour partager
+                </button>
+            )}
+        </div>
+    );
 };
 
 const VideoCard = ({ video, onClick }) => {
     const [authorData, setAuthorData] = useState(null);
     const [loadingAuthor, setLoadingAuthor] = useState(true);
+    const [imageError, setImageError] = useState({
+        thumbnail: false,
+        avatar: false
+    });
 
     useEffect(() => {
         const loadAuthorData = async () => {
-            if (!video.author_id && !video.auteur_id && !video.user_id) {
+            if (!video?.user_id) {
                 setLoadingAuthor(false);
                 return;
             }
 
             try {
-                const userId = video.author_id || video.auteur_id || video.user_id;
-                const abonnesData = await apiService.getNombreAbonnes(userId);
-
-                setAuthorData({
-                    id: userId,
-                    username: video.auteur || video.author || 'Créateur',
-                    subscribersCount: abonnesData.count || 0
-                });
+                const profileResponse = await apiService.getUserProfile(video.user_id);
+                if (profileResponse?.success && profileResponse?.data) {
+                    setAuthorData({
+                        id: video.user_id,
+                        username: profileResponse.data.username || 'Utilisateur',
+                        avatar_url: profileResponse.data.avatar_url || null,
+                        subscribersCount: profileResponse.data.subscribers_count || 0
+                    });
+                } else {
+                    setAuthorData({
+                        id: video.user_id,
+                        username: video.author_name || 'Utilisateur',
+                        avatar_url: null,
+                        subscribersCount: 0
+                    });
+                }
             } catch (err) {
+                console.error('Erreur lors du chargement de l\'auteur:', err);
                 setAuthorData({
-                    id: video.author_id || video.auteur_id || video.user_id,
-                    username: video.auteur || video.author || 'Créateur',
+                    id: video.user_id,
+                    username: video.author_name || 'Utilisateur',
+                    avatar_url: null,
                     subscribersCount: 0
                 });
             } finally {
@@ -284,7 +277,12 @@ const VideoCard = ({ video, onClick }) => {
         loadAuthorData();
     }, [video]);
 
-    const getThumbnailUrl = (videoId) => apiService.getThumbnailUrl(videoId);
+    const getThumbnailUrl = (videoId) => {
+        if (imageError.thumbnail) {
+            return '/images/placeholder-video.png';
+        }
+        return apiService.getThumbnailUrl(videoId);
+    };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'Date inconnue';
@@ -336,10 +334,11 @@ const VideoCard = ({ video, onClick }) => {
         }
     };
 
-    const getProfileImageUrl = (userId) => {
-        const localImage = localStorage.getItem(`profileImage_${userId}`);
-        if (localImage) return localImage;
-        return apiService.getProfileImageUrl(userId);
+    const getAvatarUrl = () => {
+        if (imageError.avatar || !authorData?.avatar_url) {
+            return null;
+        }
+        return `${window.location.origin}${authorData.avatar_url}`;
     };
 
     return (
@@ -354,9 +353,8 @@ const VideoCard = ({ video, onClick }) => {
                     alt={video.title ?? "Vidéo"}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     onError={(e) => {
-                        if (e.currentTarget.dataset.fallbackApplied) return;
-                        e.currentTarget.dataset.fallbackApplied = "1";
-                        e.currentTarget.src = "/images/placeholder-video.png";
+                        setImageError(prev => ({ ...prev, thumbnail: true }));
+                        e.currentTarget.src = '/images/placeholder-video.png';
                     }}
                 />
 
@@ -412,21 +410,23 @@ const VideoCard = ({ video, onClick }) => {
                             className="flex items-center gap-3 hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors cursor-pointer"
                         >
                             <div className="relative flex-shrink-0">
-                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 bg-gradient-to-br from-blue-500 to-blue-600">
-                                    <img
-                                        src={getProfileImageUrl(authorData.id)}
-                                        loading="lazy"
-                                        alt={authorData.username}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            e.target.style.display = 'none';
-                                            e.target.parentElement.innerHTML = `
-                                                <div class="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-gradient-to-br from-blue-500 to-blue-600">
-                                                    ${authorData.username.charAt(0).toUpperCase()}
-                                                </div>
-                                            `;
-                                        }}
-                                    />
+                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                    {getAvatarUrl() ? (
+                                        <img
+                                            src={getAvatarUrl()}
+                                            loading="lazy"
+                                            alt={authorData.username}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                setImageError(prev => ({ ...prev, avatar: true }));
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold">
+                                            {authorData.username.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

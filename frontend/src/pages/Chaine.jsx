@@ -16,9 +16,19 @@ import {
 } from 'lucide-react';
 
 const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
-    const avatarUrl = channelUser?.profile_image ? `${window.location.origin}${channelUser.profile_image}` : null;
+    const getAvatarUrl = () => {
+        if (!channelUser?.avatar_url) return null;
+        return channelUser.avatar_url.startsWith('http')
+            ? channelUser.avatar_url
+            : `${window.location.origin}${channelUser.avatar_url}`;
+    };
 
-    const coverUrl = channelUser?.profile_cover ? `${window.location.origin}${channelUser.profile_cover}` : null;
+    const getCoverUrl = () => {
+        if (!channelUser?.cover_url) return null;
+        return channelUser.cover_url.startsWith('http')
+            ? channelUser.cover_url
+            : `${window.location.origin}${channelUser.cover_url}`;
+    };
 
     const formatSubscribers = (count) => {
         if (!count || count === 0) return '0';
@@ -38,11 +48,17 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
     return (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="relative h-56">
-                {coverUrl ? (
+                {getCoverUrl() ? (
                     <img
-                        src={coverUrl}
+                        src={getCoverUrl()}
                         alt="Couverture"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement.innerHTML = `
+                                <div class="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"></div>
+                            `;
+                        }}
                     />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"></div>
@@ -52,11 +68,19 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
             <div className="relative px-8 pb-8">
                 <div className="absolute -top-20 left-8">
                     <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                        {avatarUrl ? (
+                        {getAvatarUrl() ? (
                             <img
-                                src={avatarUrl}
+                                src={getAvatarUrl()}
                                 alt="Avatar"
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.parentElement.innerHTML = `
+                                        <span class="text-white text-5xl font-bold">
+                                            ${channelUser.username.charAt(0).toUpperCase()}
+                                        </span>
+                                    `;
+                                }}
                             />
                         ) : (
                             <span className="text-white text-5xl font-bold">
@@ -191,32 +215,31 @@ const VideoGrid = ({ videos, onVideoClick }) => {
                             alt={video.title || "Vidéo"}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             onError={(e) => {
-                                e.currentTarget.src =
-                                    "https://via.placeholder.com/640x360/4F46E5/FFFFFF?text=Vidéo";
+                                e.currentTarget.src = '/images/placeholder-video.png';
                             }}
                         />
 
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="bg-white bg-opacity-90 rounded-full p-3">
-                                    <Play size={24} className="text-blue-600" fill="currentColor" />
+                                <div className="bg-white bg-opacity-90 rounded-full p-4">
+                                    <Play className="h-8 w-8 text-blue-600" fill="currentColor" />
                                 </div>
                             </div>
                         </div>
 
                         {video.duration && (
-                            <span className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded">
+                            <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
                                 {video.duration}
-                            </span>
+                            </div>
                         )}
                     </div>
 
                     <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                            {video.title}
+                        <h3 className="font-bold text-gray-900 line-clamp-2 mb-2">
+                            {video.title || 'Sans titre'}
                         </h3>
 
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
                             <span className="flex items-center gap-1">
                                 <Eye size={14} />
                                 {formatNumber(video.views || 0)}
