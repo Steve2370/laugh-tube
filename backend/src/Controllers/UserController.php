@@ -716,7 +716,7 @@ class UserController
                 return;
             }
 
-            $basePath = __DIR__ . '/../../uploads/covers/';
+            $basePath = '/var/www/html/public/uploads/covers/';
             $possiblePaths = [
                 $basePath . $userId . '.jpg',
                 $basePath . $userId . '.jpeg',
@@ -790,7 +790,7 @@ class UserController
                 return;
             }
 
-            $basePath = __DIR__ . '/../../uploads/profiles/';
+            $basePath = '/var/www/html/public/uploads/profiles/';
             $possiblePaths = [
                 $basePath . $userId . '.jpg',
                 $basePath . $userId . '.jpeg',
@@ -857,8 +857,8 @@ class UserController
     private function servePlaceholderImage(string $type = 'profile'): void
     {
         $placeholders = [
-            'profile' => __DIR__ . '/../../public/images/default-avatar.png',
-            'cover' => __DIR__ . '/../../public/images/default-cover.png',
+            'profile' => '/var/www/html/public/images/default-avatar.png',
+            'cover' => '/var/www/html/public/images/default-cover.png',
         ];
 
         $placeholderPath = $placeholders[$type] ?? $placeholders['profile'];
