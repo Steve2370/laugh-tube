@@ -555,12 +555,13 @@ const AnalyticsTab = ({ stats, videos }) => {
 };
 
 const Profile = () => {
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, loading } = useAuth();
     const toast = useToast();
     const { videos: userVideos, loading: videosLoading, getUserVideos } = useVideos();
     const isOwnProfile = true;
     const targetUserId = user?.id;
     const [activeTab, setActiveTab] = useState('videos');
+    const [videos, setVideos] = useState([]);
     const [stats, setStats] = useState({
         totalVideos: 0,
         totalViews: 0,
@@ -568,6 +569,10 @@ const Profile = () => {
         totalComments: 0,
         engagementRate: 0,
     });
+
+    if (loading || !user) {
+        return <LoadingState />;
+    }
 
     const loadUserData = useCallback(async () => {
         if (!user?.id) return;
@@ -601,8 +606,14 @@ const Profile = () => {
     }, [loadUserData]);
 
     useEffect(() => {
-        if (userVideos.length > 0) {
+        if (videos.length > 0) {
             calculateStats();
+        }
+    }, [videos]);
+
+    useEffect(() => {
+        if (userVideos) {
+            setVideos(userVideos);
         }
     }, [userVideos]);
 
