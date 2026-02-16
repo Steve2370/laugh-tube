@@ -328,12 +328,12 @@ try {
         return;
     }
 
-    if (preg_match('#^/users/(\d+)/profile-image$#', $uri, $m) && $method === 'GET') {
+    if (preg_match('#^/users/(\d+)/profile-image$#', $uri, $m) && ($method === 'GET' || $method === 'HEAD')) {
         $userController->getProfileImage((int)$m[1]);
         return;
     }
 
-    if (preg_match('#^/users/(\d+)/cover-image$#', $uri, $m) && $method === 'GET') {
+    if (preg_match('#^/users/(\d+)/cover-image$#', $uri, $m) && ($method === 'GET' || $method === 'HEAD')) {
         $userController->getCoverImage((int)$m[1]);
         return;
     }
