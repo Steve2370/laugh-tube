@@ -18,15 +18,11 @@ class ReactionController
     {
         try {
             $currentUser = $this->authMiddleware->handleRequired();
-            if (!$currentUser) {
-                http_response_code(401);
-                return;
-            }
 
             $result = $this->reactionService->toggleLike($currentUser['user_id'], $videoId);
 
             if (!$result['success']) {
-                http_response_code(404);
+                http_response_code($result['code'] ?? 404);
                 echo json_encode([
                     'success' => false,
                     'error' => $result['message']
@@ -44,10 +40,10 @@ class ReactionController
 
         } catch (\Exception $e) {
             error_log("ReactionController::like - Error: " . $e->getMessage());
-            http_response_code(500);
+            http_response_code(401);
             echo json_encode([
                 'success' => false,
-                'error' => 'Erreur serveur'
+                'error' => 'Non authentifié'
             ]);
         }
     }
@@ -56,15 +52,11 @@ class ReactionController
     {
         try {
             $currentUser = $this->authMiddleware->handleRequired();
-            if (!$currentUser) {
-                http_response_code(401);
-                return;
-            }
 
             $result = $this->reactionService->toggleDislike($currentUser['user_id'], $videoId);
 
             if (!$result['success']) {
-                http_response_code(404);
+                http_response_code($result['code'] ?? 404);
                 echo json_encode([
                     'success' => false,
                     'error' => $result['message']
@@ -82,10 +74,10 @@ class ReactionController
 
         } catch (\Exception $e) {
             error_log("ReactionController::dislike - Error: " . $e->getMessage());
-            http_response_code(500);
+            http_response_code(401);
             echo json_encode([
                 'success' => false,
-                'error' => 'Erreur serveur'
+                'error' => 'Non authentifié'
             ]);
         }
     }
@@ -129,17 +121,15 @@ class ReactionController
         try {
             $result = $this->reactionService->getReactionCounts($videoId);
 
-            header('Content-Type: application/json');
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'likes_count' => $result['likes_count'] ?? 0,
-                'dislikes_count' => $result['dislikes_count'] ?? 0
+                'likes_count' => $result['like_count'],
+                'dislikes_count' => $result['dislike_count']
             ]);
 
         } catch (\Exception $e) {
             error_log("ReactionController::getCounts - Error: " . $e->getMessage());
-            header('Content-Type: application/json');
             http_response_code(500);
             echo json_encode([
                 'success' => false,
