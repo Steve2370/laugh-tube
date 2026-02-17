@@ -16,6 +16,7 @@ if (is_file($dotenvPath)) {
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use App\Controllers\AbonnementController;
 use App\Controllers\AuthController;
 use App\Controllers\CommentaireController;
 use App\Controllers\NotificationController;
@@ -210,6 +211,11 @@ try {
         $authMiddleware
     );
 
+    $abonnementController = new AbonnementController(
+        $abonnementService,
+        $authMiddleware
+    );
+
 } catch (Throwable $e) {
     error_log('Initialization error: ' . $e->getMessage());
     if (isDev()) error_log($e->getTraceAsString());
@@ -373,14 +379,14 @@ try {
     if (preg_match('#^/users/(\d+)/subscribe$#', $uri, $m) && $method === 'POST') {
         $user = AuthMiddleware::requireAuth();
         if (!$user || !isset($user['sub'])) return;
-        $userController->subscribe((int)$m[1], (int)$user['sub']);
+        $abonnementController->subscribe((int)$m[1], (int)$user['sub']);
         return;
     }
 
     if (preg_match('#^/users/(\d+)/unsubscribe$#', $uri, $m) && $method === 'DELETE') {
         $user = AuthMiddleware::requireAuth();
         if (!$user || !isset($user['sub'])) return;
-        $userController->unsubscribe((int)$m[1], (int)$user['sub']);
+        $abonnementController->unsubscribe((int)$m[1], (int)$user['sub']);
         return;
     }
 

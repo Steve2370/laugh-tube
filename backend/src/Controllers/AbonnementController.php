@@ -12,13 +12,12 @@ class AbonnementController
     public function __construct(
         private AbonnementService $abonnementService,
         private AuthMiddleware $authMiddleware,
-        private AuditService $auditService
     ) {}
 
     public function subscribe(int $targetUserId): void
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            $currentUser = $this->authMiddleware->handleRequired();
             if (!$currentUser) {
                 http_response_code(401);
                 return;
@@ -64,7 +63,7 @@ class AbonnementController
     public function unsubscribe(int $targetUserId): void
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            $currentUser = $this->authMiddleware->handleRequired();
             if (!$currentUser) {
                 http_response_code(401);
                 return;
