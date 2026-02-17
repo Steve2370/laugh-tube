@@ -274,6 +274,7 @@ class ApiService {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
+            // Endpoint peut ne pas exister ou retourner vide
             if (!response.ok || response.status === 404) return { enabled: false };
 
             const text = await response.text();
@@ -422,9 +423,17 @@ class ApiService {
      */
     async recordView(videoId, data = {}) {
         try {
+            const sessionId = this.getOrCreateSessionId();
+            const payload = {
+                session_id:       data.session_id      ?? sessionId,
+                user_id:          data.user_id          ?? null,
+                watch_time:       data.watch_time       ?? 0,
+                watch_percentage: data.watch_percentage ?? 0,
+                completed:        data.completed        ?? false,
+            };
             return await this.request(`/videos/${videoId}/record-view`, {
                 method: 'POST',
-                body: JSON.stringify(data),
+                body: JSON.stringify(payload),
             });
         } catch (error) {
             console.warn('Erreur enregistrement vue:', error);
@@ -510,16 +519,22 @@ class ApiService {
     }
 
     async createComment(videoId, content) {
+        if (!videoId) throw new Error('ID de la vidéo manquant');
+        const trimmed = (content || '').trim();
+        if (trimmed.length === 0) throw new Error('Le commentaire ne peut pas être vide');
         return this.request(`/videos/${videoId}/comments`, {
             method: 'POST',
-            body: JSON.stringify({ content }),
+            body: JSON.stringify({ content: trimmed }),
         });
     }
 
     async replyToComment(commentId, content) {
+        if (!commentId) throw new Error('ID du commentaire manquant');
+        const trimmed = (content || '').trim();
+        if (trimmed.length === 0) throw new Error('La réponse ne peut pas être vide');
         return this.request(`/comments/${commentId}/replies`, {
             method: 'POST',
-            body: JSON.stringify({ content }),
+            body: JSON.stringify({ content: trimmed }),
         });
     }
 
@@ -544,9 +559,12 @@ class ApiService {
     }
 
     async postReply(commentId, content) {
+        if (!commentId) throw new Error('ID du commentaire manquant');
+        const trimmed = (content || '').trim();
+        if (trimmed.length === 0) throw new Error('La réponse ne peut pas être vide');
         return this.request(`/comments/${commentId}/replies`, {
             method: 'POST',
-            body: JSON.stringify({ content })
+            body: JSON.stringify({ content: trimmed })
         });
     }
 
@@ -598,7 +616,6 @@ class ApiService {
         const raw = response.data || response.videos || response;
         const list = Array.isArray(raw) ? raw : [];
 
-        // Normalisation des champs selon les variantes possibles du backend
         return list.map(v => ({
             ...v,
             views:    v.views    ?? v.nb_vues           ?? v.view_count    ?? v.views_count    ?? 0,
