@@ -506,24 +506,35 @@ class ApiService {
         });
     }
 
-    async getReplies(commentId) {
-        const response = await this.request(`/comments/${commentId}/replies`);
-        return response.data || response.replies || response;
-    }
-
     async likeComment(commentId) {
         return this.request(`/comments/${commentId}/like`, { method: 'POST' });
-    }
-
-    async getCommentLikeStatus(commentId) {
-        const response = await this.request(`/comments/${commentId}/like-status`);
-        return response.data || response;
     }
 
     async toggleReplyLike(replyId) {
         return this.request(`/comments/replies/${replyId}/like`, {
             method: 'POST'
         });
+    }
+
+    async toggleCommentLike(commentId) {
+        return this.request(`/comments/${commentId}/like`, {
+            method: 'POST'
+        });
+    }
+
+    async getCommentLikeStatus(commentId) {
+        return this.request(`/comments/${commentId}/like-status`);
+    }
+
+    async postReply(commentId, content) {
+        return this.request(`/comments/${commentId}/replies`, {
+            method: 'POST',
+            body: JSON.stringify({ content })
+        });
+    }
+
+    async getReplies(commentId) {
+        return this.request(`/comments/${commentId}/replies`);
     }
 
     async toggleReplyDislike(replyId) {

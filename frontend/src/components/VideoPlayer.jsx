@@ -180,6 +180,7 @@ const VideoPlayer = ({
             if (isPlaying) setShowControls(false);
         }, 3000);
     };
+    const viewedRef = useRef(false);
 
     if (hasError) {
         if (!src) {
@@ -226,7 +227,6 @@ const VideoPlayer = ({
                 src={src}
                 poster={poster}
                 onPlay={() => {
-                    const viewedRef = useRef(false);
                     if (viewedRef.current) return;
                     viewedRef.current = true;
                     onViewRecorded?.();
