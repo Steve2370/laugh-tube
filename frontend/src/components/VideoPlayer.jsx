@@ -229,7 +229,7 @@ const VideoPlayer = ({
                 onPlay={() => {
                     if (viewedRef.current) return;
                     viewedRef.current = true;
-                    onViewRecorded?.();
+                    onPlay?.();
                 }}
                 onPause={() => setIsPlaying(false)}
                 onTimeUpdate={handleTimeUpdate}
