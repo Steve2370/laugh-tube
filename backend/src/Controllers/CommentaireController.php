@@ -135,7 +135,7 @@ class CommentaireController
             }
 
             $comment = $this->db->fetchOne(
-                "SELECT id, video_id FROM commentaires WHERE id = $1 AND deleted_at IS NULL",
+                "SELECT id, video_id FROM commentaires WHERE id = $1",
                 [$commentId]
             );
 
@@ -175,7 +175,7 @@ class CommentaireController
                 "SELECT cr.*, u.username, u.id as user_id
                  FROM comment_replies cr
                  JOIN users u ON cr.user_id = u.id
-                 WHERE cr.comment_id = $1 AND cr.deleted_at IS NULL
+                 WHERE cr.comment_id = $1
                  ORDER BY cr.created_at ASC",
                 [$commentId]
             );
