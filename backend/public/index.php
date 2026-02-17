@@ -372,7 +372,7 @@ try {
     if (preg_match('#^/users/(\d+)/subscribe-status$#', $uri, $m) && $method === 'GET') {
         $user = AuthMiddleware::optionalAuth();
         $currentUserId = $user ? ($user['sub'] ?? null) : null;
-        $userController->getSubscribeStatus((int)$m[1], $currentUserId);
+        $abonnementController->getStatus((int)$m[1]);
         return;
     }
 
