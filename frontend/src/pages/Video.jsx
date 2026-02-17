@@ -27,6 +27,7 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
+import videoService from "../services/videoService.js";
 
 
 const ReplyItem = ({ reply, isAuthenticated, userId, onUserClick, onReply }) => {
@@ -404,10 +405,12 @@ const Video = () => {
             setShowLoginModal(true);
             return;
         }
+
         try {
-            await likeVideo();
-            await loadUserReaction();
+            const result = await videoService.likeVideo(videoId);
+            setUserReaction(result.liked ? 'like' : null);
             await loadReactions();
+
         } catch (err) {
             toast.error('Erreur lors du like');
         }
@@ -418,10 +421,12 @@ const Video = () => {
             setShowLoginModal(true);
             return;
         }
+
         try {
-            await dislikeVideo();
-            await loadUserReaction();
+            const result = await videoService.dislikeVideo(videoId);
+            setUserReaction(result.disliked ? 'dislike' : null);
             await loadReactions();
+
         } catch (err) {
             toast.error('Erreur lors du dislike');
         }

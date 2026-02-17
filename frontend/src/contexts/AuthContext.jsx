@@ -68,11 +68,10 @@ export function AuthProvider({ children }) {
     const login = async (email, password) => {
         try {
             await apiService.login(email, password);
-
             const me = await apiService.getMe();
-
             setUser(me);
             setIsAuthenticated(true);
+            localStorage.setItem('user', JSON.stringify(me));
 
             return { success: true, user: me };
         } catch (error) {
