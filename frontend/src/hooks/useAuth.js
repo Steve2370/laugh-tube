@@ -54,7 +54,7 @@ export const useAuth = () => {
             await new Promise(resolve => setTimeout(resolve, 100));
 
             await checkAuth();
-            console.log('✅ Auth updated:', isAuthenticated);
+            console.log('Auth updated:', isAuthenticated);
             return { success: true, requires_2fa: false };
 
         } catch (err) {
@@ -87,7 +87,22 @@ export const useAuth = () => {
             setLoading(true);
             setError(null);
 
-            await apiService.register(username, email, password);
+            const response = await apiService.register({ username, email, password });
+
+            if (response?.token) {
+                apiService.setToken(response.token);
+                if (response.user) apiService.setUser(response.user);
+            } else if (!response?.requires_verification) {
+                try {
+                    const loginResp = await apiService.login(email, password);
+                    if (loginResp?.token) {
+                        apiService.setToken(loginResp.token);
+                        if (loginResp.user) apiService.setUser(loginResp.user);
+                    }
+                } catch (_) {
+                }
+            }
+
             await new Promise(resolve => setTimeout(resolve, 100));
             await checkAuth();
 

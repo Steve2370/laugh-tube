@@ -199,36 +199,38 @@ const VideoCard = ({ video, onClick }) => {
 
     useEffect(() => {
         const loadAuthorData = async () => {
+            const fallback = {
+                id: video.user_id || null,
+                username: video.username || video.author_name || video.auteur || 'Utilisateur',
+                avatar_url: null,
+                subscribersCount: 0
+            };
+
             if (!video?.user_id) {
+                setAuthorData(fallback);
                 setLoadingAuthor(false);
                 return;
             }
 
             try {
                 const profileResponse = await apiService.getUserProfile(video.user_id);
-                if (profileResponse?.success && profileResponse?.data) {
+                if (profileResponse?.success) {
+                    const raw = profileResponse?.data?.profile
+                        || profileResponse?.data
+                        || profileResponse?.profile
+                        || {};
                     setAuthorData({
                         id: video.user_id,
-                        username: profileResponse.data.username || 'Utilisateur',
-                        avatar_url: profileResponse.data.avatar_url || null,
-                        subscribersCount: profileResponse.data.subscribers_count || 0
+                        username: raw.username || fallback.username,
+                        avatar_url: raw.avatar_url || raw.avatar || null,
+                        subscribersCount: raw.subscribers_count || raw.subscribersCount || 0
                     });
                 } else {
-                    setAuthorData({
-                        id: video.user_id,
-                        username: video.author_name || 'Utilisateur',
-                        avatar_url: null,
-                        subscribersCount: 0
-                    });
+                    setAuthorData(fallback);
                 }
             } catch (err) {
                 console.error('Erreur lors du chargement de l\'auteur:', err);
-                setAuthorData({
-                    id: video.user_id,
-                    username: video.author_name || 'Utilisateur',
-                    avatar_url: null,
-                    subscribersCount: 0
-                });
+                setAuthorData(fallback);
             } finally {
                 setLoadingAuthor(false);
             }

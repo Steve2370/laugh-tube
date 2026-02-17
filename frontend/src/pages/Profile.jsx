@@ -574,36 +574,28 @@ const Profile = () => {
         }
     }, [user?.id, getUserVideos, toast]);
 
-    const calculateStats = () => {
-        const totalViews = userVideos.reduce((sum, v) => sum + (v.views || 0), 0);
-        const totalLikes = userVideos.reduce((sum, v) => sum + (v.likes || 0), 0);
-        const totalComments = userVideos.reduce((sum, v) => sum + (v.comments || 0), 0);
-        const engagementRate =
-            totalViews > 0 ? Math.round(((totalLikes + totalComments) / totalViews) * 100) : 0;
-
-        setStats({
-            totalVideos: userVideos.length,
-            totalViews,
-            totalLikes,
-            totalComments,
-            engagementRate,
-        });
-    };
-
     useEffect(() => {
         loadUserData();
     }, [loadUserData]);
 
     useEffect(() => {
-        if (videos.length > 0) {
-            calculateStats();
-        }
-    }, [videos]);
+        const list = Array.isArray(userVideos) ? userVideos : [];
+        setVideos(list);
 
-    useEffect(() => {
-        if (userVideos) {
-            setVideos(userVideos);
-        }
+        const totalViews    = list.reduce((sum, v) => sum + (v.views    || v.views_count    || 0), 0);
+        const totalLikes    = list.reduce((sum, v) => sum + (v.likes    || v.likes_count    || 0), 0);
+        const totalComments = list.reduce((sum, v) => sum + (v.comments || v.comments_count || 0), 0);
+        const engagementRate = totalViews > 0
+            ? Math.round(((totalLikes + totalComments) / totalViews) * 100)
+            : 0;
+
+        setStats({
+            totalVideos: list.length,
+            totalViews,
+            totalLikes,
+            totalComments,
+            engagementRate,
+        });
     }, [userVideos]);
 
     if (loading || !user) {
