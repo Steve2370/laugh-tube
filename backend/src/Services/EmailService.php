@@ -176,9 +176,9 @@ HTML;
                     style="display:block; margin:0 auto; max-width:250px; height:auto;"
                 >
             </div>
-            <h1>Bienvenue sur Laugh Tube !</h1>
         </div>
         <div class="content">
+            <h1>Bienvenue sur Laugh Tube !</h1>
             <h2>Bonjour {$username} !</h2>
             <p>Votre email a été vérifié avec succès. Votre compte est maintenant actif !</p>
             <h3>Que pouvez-vous faire sur Laugh Tube ?</h3>

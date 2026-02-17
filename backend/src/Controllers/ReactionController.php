@@ -17,7 +17,7 @@ class ReactionController
     public function like(int $videoId): void
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            $currentUser = $this->authMiddleware->handleRequired();
             if (!$currentUser) {
                 http_response_code(401);
                 return;
@@ -38,7 +38,8 @@ class ReactionController
             echo json_encode([
                 'success' => true,
                 'action' => $result['action'],
-                'likes_count' => $result['likes_count']
+                'liked' => $result['liked'],
+                'disliked' => $result['disliked']
             ]);
 
         } catch (\Exception $e) {
@@ -54,7 +55,7 @@ class ReactionController
     public function dislike(int $videoId): void
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            $currentUser = $this->authMiddleware->handleRequired();
             if (!$currentUser) {
                 http_response_code(401);
                 return;
@@ -75,7 +76,8 @@ class ReactionController
             echo json_encode([
                 'success' => true,
                 'action' => $result['action'],
-                'dislikes_count' => $result['dislikes_count']
+                'liked' => $result['liked'],
+                'disliked' => $result['disliked']
             ]);
 
         } catch (\Exception $e) {
