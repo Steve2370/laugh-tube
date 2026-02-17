@@ -548,7 +548,7 @@ class UserController
         }
     }
 
-    public function subscribe(int $targetUserId, $subscriberId)
+    public function subscribe(int $targetUserId, $subscriberId): void
     {
         try {
             if ($targetUserId === $subscriberId) {
@@ -590,7 +590,7 @@ class UserController
         }
     }
 
-    public function unsubscribe(int $targetUserId, $subscriberId)
+    public function unsubscribe(int $targetUserId, $subscriberId): void
     {
         try {
             $isSubscribed = $this->userModel->isSubscribed($subscriberId, $targetUserId);
