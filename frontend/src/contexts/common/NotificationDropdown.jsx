@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotification';
 import { useToast } from '../ToastContext.jsx';
-import apiService from '../../services/apiService';
+import apiService from '../../services/apiService.js';
 
 const NotificationDropdown = () => {
     const [isOpen, setIsOpen] = useState(false);
