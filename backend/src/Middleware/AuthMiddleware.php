@@ -22,14 +22,16 @@ class AuthMiddleware
         private AuditService $auditService
     ) {}
 
-    public static function optionalAuth(): ?array
+    public static function optionalAuth(): array
     {
         $token = self::getBearerToken();
-        if (!$token) return null;
-
+        if (!$token) {
+            return [];
+        }
         $payload = self::decodeToken($token);
-        return $payload ?: null;
+        return is_array($payload) ? $payload : [];
     }
+
 
     private static function getBearerToken(): ?string
     {
