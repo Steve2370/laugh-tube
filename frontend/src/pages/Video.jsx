@@ -645,7 +645,7 @@ const Video = () => {
                                 <div className="mb-6">
                                     <form onSubmit={handleCommentSubmit} className="flex items-start gap-3">
                                         {user && (getProfileImage(user.id) || user.avatar_url) ? (
-                                            <img src={getProfileImage(user.id) || `/api${user.avatar_url}`} alt="Votre photo" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                                            <img src={auteurImage} alt="Votre photo" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
                                         ) : (
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
                                                 <User size={18} className="text-white" />

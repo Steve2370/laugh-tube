@@ -196,11 +196,17 @@ class VideoService
             $videos = $this->videoModel->findByUser($userId);
 
             foreach ($videos as &$video) {
-                $video['views'] = (int)$video['views'];
-                $video['unique_views'] = (int)$video['unique_views'];
-                $video['likes'] = (int)($video['likes'] ?? 0);
-                $video['dislikes'] = (int)($video['dislikes'] ?? 0);
-                $video['comments'] = (int)($video['comments'] ?? 0);
+                $video['views']       = (int)$video['views'];
+                $video['unique_views'] = (int)($video['unique_views'] ?? 0);
+                $video['likes']    = isset($video['likes']) && $video['likes'] !== null
+                    ? (int)$video['likes']
+                    : $this->reactionModel->countLikes($video['id']);
+                $video['dislikes'] = isset($video['dislikes']) && $video['dislikes'] !== null
+                    ? (int)$video['dislikes']
+                    : $this->reactionModel->countDislikes($video['id']);
+                $video['comments'] = isset($video['comments']) && $video['comments'] !== null
+                    ? (int)$video['comments']
+                    : $this->commentaireModel->countByVideo($video['id']);
             }
 
             return [
@@ -285,9 +291,9 @@ class VideoService
         int $videoId,
         ?int $userId,
         ?string $sessionId,
-        int $watchTime,
-        float $watchPercentage,
-        bool $completed
+        int $watchTime = 0,
+        float $watchPercentage = 0.0,
+        bool $completed = false
     ): array {
         try {
             $video = $this->videoModel->findById($videoId);
@@ -301,33 +307,24 @@ class VideoService
                 ];
             }
 
-            $checkSql = "SELECT COUNT(*) as count
-                         FROM video_views
-                         WHERE video_id = $1
-                         AND (($2::int IS NOT NULL AND user_id = $2::int)
-                         OR ($2::int IS NULL AND session_id = $3))";
+            if ($userId !== null) {
+                $checkSql = "SELECT COUNT(*) as count FROM video_views WHERE video_id = ? AND user_id = ?";
+                $existing = $this->db->fetchOne($checkSql, [$videoId, $userId]);
+            } else {
+                $checkSql = "SELECT COUNT(*) as count FROM video_views WHERE video_id = ? AND session_id = ?";
+                $existing = $this->db->fetchOne($checkSql, [$videoId, $sessionId]);
+            }
 
-            $existing = $this->db->fetchOne($checkSql, [$videoId, $userId, $sessionId]);
             $alreadyViewed = (int)($existing['count'] ?? 0) > 0;
 
             if ($alreadyViewed) {
-                $updateSql = "UPDATE video_views
-                              SET watch_time = $1,
-                                  watch_percentage = $2,
-                                  completed = $3,
-                                  viewed_at = NOW()
-                              WHERE video_id = $4
-                              AND (($5::int IS NOT NULL AND user_id = $5::int)
-                              OR ($5::int IS NULL AND session_id = $6))";
-
-                $this->db->execute($updateSql, [
-                    $watchTime,
-                    $watchPercentage,
-                    $completed,
-                    $videoId,
-                    $userId,
-                    $sessionId
-                ]);
+                if ($userId !== null) {
+                    $updateSql = "UPDATE video_views SET watch_time = ?, watch_percentage = ?, completed = ?, viewed_at = NOW() WHERE video_id = ? AND user_id = ?";
+                    $this->db->execute($updateSql, [$watchTime, $watchPercentage, $completed ? 1 : 0, $videoId, $userId]);
+                } else {
+                    $updateSql = "UPDATE video_views SET watch_time = ?, watch_percentage = ?, completed = ?, viewed_at = NOW() WHERE video_id = ? AND session_id = ?";
+                    $this->db->execute($updateSql, [$watchTime, $watchPercentage, $completed ? 1 : 0, $videoId, $sessionId]);
+                }
 
                 return [
                     'success' => true,
@@ -336,9 +333,8 @@ class VideoService
                 ];
             }
 
-            $insertSql = "INSERT INTO video_views 
-                          (video_id, user_id, session_id, watch_time, watch_percentage, completed, viewed_at)
-                          VALUES ($1, $2, $3, $4, $5, $6, NOW())";
+            $insertSql = "INSERT INTO video_views (video_id, user_id, session_id, watch_time, watch_percentage, completed, viewed_at)
+                          VALUES (?, ?, ?, ?, ?, ?, NOW())";
 
             $this->db->execute($insertSql, [
                 $videoId,
@@ -346,7 +342,7 @@ class VideoService
                 $sessionId,
                 $watchTime,
                 $watchPercentage,
-                $completed
+                $completed ? 1 : 0
             ]);
 
             $this->videoModel->incrementViews($videoId);
