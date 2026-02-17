@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import videoService from '../services/videoService';
+import apiService from '../services/apiService.js';
 
 export const useVideoPlayer = (videoId) => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -15,9 +15,12 @@ export const useVideoPlayer = (videoId) => {
         if (viewRecordedRef.current) return;
 
         try {
-            await videoService.recordView(videoId, {
-                watchTime,
-                watchPercentage: percentage,
+            const currentUser = apiService.getCurrentUser();
+            await apiService.recordView(videoId, {
+                user_id: currentUser?.id || null,
+                session_id: apiService.getOrCreateSessionId(),
+                watch_time: Math.floor(watchTime / 1000),
+                watch_percentage: percentage * 100,
                 completed: percentage >= 0.95
             });
 

@@ -283,7 +283,7 @@ const Chaine = () => {
         totalComments: 0,
     });
 
-    const { subscribersCount, isSubscribed, toggle, refresh: refreshAbonnement } = useAbonnement(channelUser?.id);
+    const { subscribersCount, refresh: refreshAbonnement } = useAbonnement(channelUser?.id);
 
     useEffect(() => {
         if (channelUser?.id) {
@@ -298,8 +298,6 @@ const Chaine = () => {
     useEffect(() => {
         if (videos.length > 0) {
             calculateStats();
-        } else {
-            setStats({ totalVideos: 0, totalViews: 0, totalLikes: 0, totalComments: 0 });
         }
     }, [videos]);
 
