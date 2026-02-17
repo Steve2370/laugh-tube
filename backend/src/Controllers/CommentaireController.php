@@ -143,7 +143,7 @@ class CommentaireController
                 JsonResponse::notFound(['error' => 'Commentaire non trouvé']);
             }
 
-            $replyId = $this->db->insert(
+            $replyId = $this->db->execute(
                 "INSERT INTO comment_replies (comment_id, user_id, content, created_at) 
                  VALUES ($1, $2, $3, NOW()) RETURNING id",
                 [$commentId, $userId, $content]

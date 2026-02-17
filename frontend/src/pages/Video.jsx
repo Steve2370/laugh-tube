@@ -392,8 +392,8 @@ const Video = () => {
         try {
             const res = await apiService.getVideoReactions(videoId);
             setReactionsCount({
-                likes: res.likes || 0,
-                dislikes: res.dislikes || 0
+                likes: res.likes_count || res.likes || 0,
+                dislikes: res.dislikes_count || res.dislikes || 0
             });
         } catch (err) {
             console.error('Erreur chargement réactions:', err);
