@@ -329,7 +329,15 @@ const Video = () => {
 
     const [videoId, setVideoId] = useState(null);
     const { video, comments, loading, error: videoError, likeVideo, dislikeVideo, postComment, reload } = useVideo(videoId);
-    const { videoRef, recordView } = useVideoPlayer(videoId);
+    const { videoRef, recordView: _recordView } = useVideoPlayer(videoId);
+
+    const recordView = async (...args) => {
+        try {
+            await _recordView(...args);
+            setViewsCount(prev => prev + 1);
+        } catch (_) {
+        }
+    };
 
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
@@ -356,19 +364,15 @@ const Video = () => {
 
     useEffect(() => {
         if (video) {
-            setViewsCount(video.views || 0);
-            setAuteurId(video.author_id || video.auteur_id || video.user_id);
-
-            if (auteurId) {
-                const localImage = localStorage.getItem(`profileImage_${auteurId}`);
-                if (localImage) {
-                    setAuteurImage(localImage);
-                } else {
-                    setAuteurImage(apiService.getProfileImageUrl(auteurId));
-                }
+            setViewsCount(video.views || video.views_count || 0);
+            const id = video.author_id || video.auteur_id || video.user_id;
+            setAuteurId(id);
+            if (id) {
+                const localImage = localStorage.getItem(`profileImage_${id}`);
+                setAuteurImage(localImage || apiService.getProfileImageUrl(id));
             }
         }
-    }, [video, auteurId]);
+    }, [video]);
 
     useEffect(() => {
         if (videoId && isAuthenticated) {

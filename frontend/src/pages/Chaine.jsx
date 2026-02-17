@@ -238,15 +238,15 @@ const VideoGrid = ({ videos, onVideoClick }) => {
                         <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
                             <span className="flex items-center gap-1">
                                 <Eye size={14} />
-                                {formatNumber(video.views || 0)}
+                                {formatNumber(video.views || video.views_count || 0)}
                             </span>
                             <span className="flex items-center gap-1">
                                 <ThumbsUp size={14} />
-                                {formatNumber(video.likes || 0)}
+                                {formatNumber(video.likes || video.likes_count || 0)}
                             </span>
                             <span className="flex items-center gap-1">
                                 <MessageCircle size={14} />
-                                {formatNumber(video.comments || 0)}
+                                {formatNumber(video.comments || video.comments_count || 0)}
                             </span>
                         </div>
 
@@ -283,7 +283,13 @@ const Chaine = () => {
         totalComments: 0,
     });
 
-    const { subscribersCount } = useAbonnement(channelUser?.id);
+    const { subscribersCount, isSubscribed, toggle, refresh: refreshAbonnement } = useAbonnement(channelUser?.id);
+
+    useEffect(() => {
+        if (channelUser?.id) {
+            refreshAbonnement();
+        }
+    }, [channelUser?.id]);
 
     useEffect(() => {
         loadChannelData();
@@ -292,6 +298,8 @@ const Chaine = () => {
     useEffect(() => {
         if (videos.length > 0) {
             calculateStats();
+        } else {
+            setStats({ totalVideos: 0, totalViews: 0, totalLikes: 0, totalComments: 0 });
         }
     }, [videos]);
 
@@ -339,9 +347,9 @@ const Chaine = () => {
     };
 
     const calculateStats = () => {
-        const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
-        const totalLikes = videos.reduce((sum, v) => sum + (v.likes || 0), 0);
-        const totalComments = videos.reduce((sum, v) => sum + (v.comments || 0), 0);
+        const totalViews    = videos.reduce((sum, v) => sum + (v.views    || v.views_count    || 0), 0);
+        const totalLikes    = videos.reduce((sum, v) => sum + (v.likes    || v.likes_count    || 0), 0);
+        const totalComments = videos.reduce((sum, v) => sum + (v.comments || v.comments_count || 0), 0);
 
         setStats({
             totalVideos: videos.length,
