@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useVideos } from '../hooks/useVideos';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
+import apiService from '../services/apiService.js';
 import { Upload as UploadIcon, X, FileVideo, Check, Lock, AlertCircle } from 'lucide-react';
 
 const Upload = () => {
@@ -12,7 +12,6 @@ const Upload = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
 
-    const { uploadVideo } = useVideos();
     const { isAuthenticated, user, loading } = useAuth();
     const toast = useToast();
 
@@ -77,29 +76,34 @@ const Upload = () => {
         setUploading(true);
         setUploadProgress(0);
 
-        const metadata = { title, description };
+        try {
+            const formData = new FormData();
+            formData.append('video', selectedFile);
+            formData.append('title', title.trim());
+            formData.append('description', description.trim());
 
-        const result = await uploadVideo(selectedFile, metadata, (progress) => {
-            setUploadProgress(Math.round(progress));
-        });
+            await apiService.uploadVideo(formData, (percent) => {
+                setUploadProgress(percent);
+            });
 
-        if (result.success) {
             toast.success("Vidéo uploadée avec succès !");
             setTitle('');
             setDescription('');
             setSelectedFile(null);
             setPreview(null);
-            setUploadProgress(0);
+            setUploadProgress(100);
 
             setTimeout(() => {
                 window.location.hash = '#/home';
             }, 1500);
-        } else {
-            toast.error(result.error || "Erreur lors de l'upload");
-            setUploadProgress(0);
-        }
 
-        setUploading(false);
+        } catch (err) {
+            console.error('Erreur upload:', err);
+            toast.error(err.message || "Erreur lors de l'upload");
+            setUploadProgress(0);
+        } finally {
+            setUploading(false);
+        }
     };
 
     const removeFile = () => {
