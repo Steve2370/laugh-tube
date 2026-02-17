@@ -4,6 +4,7 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import { useVideos } from '../hooks/useVideos';
 import { useAbonnement } from '../hooks/useAbonnement';
 import apiService from '../services/apiService.js';
+import VideoCard from '../components/VideoCard.jsx';
 
 import {
     User,
@@ -394,9 +395,7 @@ const VideosTab = ({ videos, onVideoClick, onDelete, isOwnProfile }) => {
         return (
             <div className="text-center py-16">
                 <Video size={64} className="mx-auto text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                    Aucune vidéo
-                </h3>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucune vidéo</h3>
                 <p className="text-gray-500">
                     {isOwnProfile
                         ? "Vous n'avez pas encore publié de vidéos."
@@ -409,69 +408,25 @@ const VideosTab = ({ videos, onVideoClick, onDelete, isOwnProfile }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {videos.map((video) => (
-                <div
-                    key={video.id}
-                    className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 group"
-                >
-                    <div
-                        onClick={() => onVideoClick(video)}
-                        className="relative aspect-video bg-gray-200 overflow-hidden cursor-pointer"
-                    >
-                        <img
-                            src={apiService.getThumbnailUrl(video.id)}
-                            alt={video.title || 'Vidéo'}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                            onError={(e) => {
-                                e.currentTarget.src = '/images/placeholder-video.png';
-                            }}
-                        />
-
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="bg-white bg-opacity-90 rounded-full p-3">
-                                    <Eye className="h-6 w-6 text-blue-600" />
-                                </div>
-                            </div>
+                <div key={video.id} className="relative">
+                    <VideoCard video={video} onClick={() => onVideoClick(video)} />
+                    {isOwnProfile && (
+                        <div className="mt-2 px-1">
+                            <button
+                                onClick={() => onDelete(video)}
+                                className="w-full px-3 py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm"
+                            >
+                                <Trash2 size={16} />
+                                Supprimer
+                            </button>
                         </div>
-                    </div>
-
-                    <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2">
-                            {video.title}
-                        </h3>
-
-                        <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
-                            <span className="flex items-center gap-1">
-                                <Eye size={14} />
-                                {video.views || 0} vues
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <ThumbsUp size={14} />
-                                {video.likes || 0}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <MessageCircle size={14} />
-                                {video.comments || 0}
-                            </span>
-                        </div>
-
-                        {isOwnProfile && (
-                            <div className="flex gap-2 pt-3 border-t border-gray-100">
-                                <button
-                                    onClick={() => onDelete(video)}
-                                    className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-                                >
-                                    <Trash2 size={16} />
-                                    Supprimer
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div>
             ))}
         </div>
     );
 };
+
 
 const AnalyticsTab = ({ stats, videos }) => {
     return (

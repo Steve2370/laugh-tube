@@ -1,4 +1,3 @@
-
 const API_URL = window.location.origin;
 
 class ApiService {
@@ -268,6 +267,16 @@ class ApiService {
                 new_password: newPassword,
             }),
         });
+    }
+
+    async check2FAStatus() {
+        try {
+            const response = await this.request('/auth/2fa/status');
+            return response.data || response;
+        } catch (error) {
+            console.warn('2FA status non disponible:', error.message);
+            return { enabled: false };
+        }
     }
 
     async verify2FA(userId, code) {
@@ -557,6 +566,10 @@ class ApiService {
      * @param {number} userId
      */
     async getUserProfile(userId) {
+        if (!userId) {
+            console.warn('getUserProfile appelé sans userId');
+            return null;
+        }
         const response = await this.request(`/users/${userId}/profile`);
         return response.data || response.profile || response;
     }
@@ -677,7 +690,12 @@ class ApiService {
 
     async getSubscribersCount(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
-        return response.count || response.subscribers_count || 0;
+        return response;
+    }
+
+    async getSubscribersCountValue(userId) {
+        const response = await this.request(`/users/${userId}/subscribers-count`);
+        return response.count ?? response.subscribers_count ?? response.data?.count ?? 0;
     }
 
     async getNotifications(limit = 20, offset = 0) {

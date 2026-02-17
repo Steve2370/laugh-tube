@@ -67,7 +67,6 @@ const VideoCard = ({ video, onClick }) => {
                         v?.data?.subscribers_count ??
                         0;
                 } else {
-                    // fallback si l’endpoint count plante
                     subscribersCount = rawProfile.subscribers_count ?? rawProfile.subscribersCount ?? 0;
                 }
 
