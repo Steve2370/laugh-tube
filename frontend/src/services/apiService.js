@@ -520,6 +520,18 @@ class ApiService {
         return response.data || response;
     }
 
+    async toggleReplyLike(replyId) {
+        return this.request(`/comments/replies/${replyId}/like`, {
+            method: 'POST'
+        });
+    }
+
+    async toggleReplyDislike(replyId) {
+        return this.request(`/comments/replies/${replyId}/dislike`, {
+            method: 'POST'
+        });
+    }
+
     async likeReply(replyId) {
         return this.request(`/replies/${replyId}/like`, { method: 'POST' });
     }
