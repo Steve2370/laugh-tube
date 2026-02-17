@@ -71,6 +71,10 @@ class ApiService {
         }
     }
 
+    /**
+     *
+     * @private
+     */
     async handleResponse(response) {
         const contentType = response.headers.get('content-type');
 
@@ -543,7 +547,7 @@ class ApiService {
     }
 
     async toggleReplyLike(replyId) {
-        return this.request(`/comments/replies/${replyId}/like`, {
+        return this.request(`/replies/${replyId}/like`, {
             method: 'POST'
         });
     }
@@ -573,7 +577,7 @@ class ApiService {
     }
 
     async toggleReplyDislike(replyId) {
-        return this.request(`/comments/replies/${replyId}/dislike`, {
+        return this.request(`/replies/${replyId}/dislike`, {
             method: 'POST'
         });
     }
@@ -594,6 +598,7 @@ class ApiService {
     async getUserProfile(userId) {
         if (!userId) {
             console.warn('getUserProfile appelé sans userId');
+            // Retourne un objet vide safe pour eviter les crashes dans les appelants
             return { success: false, data: null, error: 'userId manquant' };
         }
         try {
@@ -616,6 +621,7 @@ class ApiService {
         const raw = response.data || response.videos || response;
         const list = Array.isArray(raw) ? raw : [];
 
+        // Normalisation des champs selon les variantes possibles du backend
         return list.map(v => ({
             ...v,
             views:    v.views    ?? v.nb_vues           ?? v.view_count    ?? v.views_count    ?? 0,
@@ -731,9 +737,11 @@ class ApiService {
 
     async getSubscribersCount(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
+        // Retourne l'objet complet pour que les appelants puissent extraire le bon champ
         return response;
     }
 
+    // Methode utilitaire pour obtenir directement le nombre
     async getSubscribersCountValue(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
         return response.count ?? response.subscribers_count ?? response.data?.count ?? response.data?.subscribers_count ?? 0;

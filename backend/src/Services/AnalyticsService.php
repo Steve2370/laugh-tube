@@ -52,9 +52,9 @@ class AnalyticsService
         error_log("AnalyticsService::recordView - Completed: $completedStr (type: " . gettype($completedStr) . ")");
 
         $sql = "INSERT INTO video_views
-            (video_id, user_id, session_id, watch_time, watch_percentage, completed, ip_address, user_agent)
+            (video_id, user_id, session_id, watch_time, watch_percentage, completed, ip_address, user_agent, viewed_at)
         VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8)";
+            ($1, $2, $3, $4, $5, $6, $7, $8, NOW())";
 
         try {
             $this->db->execute($sql, [
