@@ -1,9 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
+import apiService from '../services/apiService.js';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
 const VideoPlayer = ({
     src,
     poster,
+    videoId = null,
     onPlay,
     onTimeUpdate,
     onEnded,
@@ -227,8 +229,23 @@ const VideoPlayer = ({
                 src={src}
                 poster={poster}
                 onPlay={() => {
+                    setIsPlaying(true);
                     if (viewedRef.current) return;
                     viewedRef.current = true;
+
+                    if (videoId) {
+                        const userId = apiService.decodeToken(
+                            localStorage.getItem('access_token')
+                        )?.sub ?? null;
+
+                        if (!apiService.hasViewedVideo(videoId, userId)) {
+                            apiService.recordView(videoId, { user_id: userId }).then(() => {
+                                apiService.markVideoAsViewed(videoId, userId);
+                            }).catch(() => {
+                            });
+                        }
+                    }
+
                     onPlay?.();
                 }}
                 onPause={() => setIsPlaying(false)}
