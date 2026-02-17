@@ -13,7 +13,10 @@ class AnalyticsService
 
     public function recordView(int $videoId, array $data): array
     {
-        if (empty($data['session_id']) && empty($data['user_id'])) {
+        $hasUserId = !empty($data['user_id']);
+        $hasSessionId = isset($data['session_id']) && $data['session_id'] !== '' && $data['session_id'] !== null;
+
+        if (!$hasUserId && !$hasSessionId) {
             return [
                 'success' => false,
                 'code' => 400,

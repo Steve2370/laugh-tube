@@ -135,19 +135,22 @@ class CommentaireController
             }
 
             $comment = $this->db->fetchOne(
-                "SELECT id, video_id FROM comments WHERE id = $1 AND deleted_at IS NULL",
+                "SELECT id, video_id FROM commentaires WHERE id = $1 AND deleted_at IS NULL",
                 [$commentId]
             );
 
             if (!$comment) {
                 JsonResponse::notFound(['error' => 'Commentaire non trouvé']);
+                return;
             }
 
-            $replyId = $this->db->execute(
+            $result = $this->db->fetchOne(
                 "INSERT INTO comment_replies (comment_id, user_id, content, created_at) 
                  VALUES ($1, $2, $3, NOW()) RETURNING id",
                 [$commentId, $userId, $content]
             );
+
+            $replyId = $result['id'] ?? null;
 
             $this->auditService->logSecurityEvent($userId, 'comment_reply_created', [
                 'comment_id' => $commentId,
