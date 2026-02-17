@@ -289,66 +289,44 @@ class User
 
     public function isSubscribed(int $subscriberId, int $targetUserId): bool
     {
-        try {
-            $result = $this->db->fetchOne("
-            SELECT 1 FROM abonnements
-            WHERE subscriber_id = $1
-            AND subscribed_to_id = $2
-            LIMIT 1
-        ", [$subscriberId, $targetUserId]);
+        $result = $this->db->fetchOne("
+        SELECT 1 FROM subscriptions
+        WHERE subscriber_id = $1
+        AND creator_id = $2
+        LIMIT 1
+    ", [$subscriberId, $targetUserId]);
 
-            return $result !== null;
-        } catch (\Exception $e) {
-            error_log("User::isSubscribed - Error: " . $e->getMessage());
-            return false;
-        }
+        return $result !== null;
     }
 
     public function subscribe(int $subscriberId, int $targetUserId): bool
     {
-        try {
-            $result = $this->db->query("
-            INSERT INTO abonnements (subscriber_id, subscribed_to_id, created_at)
-            VALUES ($1, $2, NOW())
-            ON CONFLICT DO NOTHING
-        ", [$subscriberId, $targetUserId]);
-
-            return $result !== false;
-        } catch (\Exception $e) {
-            error_log("User::subscribe - Error: " . $e->getMessage());
-            return false;
-        }
+        return $this->db->query("
+        INSERT INTO subscriptions (subscriber_id, creator_id, created_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT DO NOTHING
+    ", [$subscriberId, $targetUserId]) !== false;
     }
+
 
     public function unsubscribe(int $subscriberId, int $targetUserId): bool
     {
-        try {
-            $result = $this->db->query("
-            DELETE FROM abonnements
-            WHERE subscriber_id = $1
-              AND subscribed_to_id = $2
-        ", [$subscriberId, $targetUserId]);
-
-            return $result !== false;
-        } catch (\Exception $e) {
-            error_log("User::unsubscribe - Error: " . $e->getMessage());
-            return false;
-        }
+        return $this->db->query("
+        DELETE FROM subscriptions
+        WHERE subscriber_id = $1
+        AND creator_id = $2
+    ", [$subscriberId, $targetUserId]) !== false;
     }
 
     public function getSubscribersCount(int $userId): int
     {
-        try {
-            $result = $this->db->fetchOne("
-            SELECT COUNT(*) as total
-            FROM abonnements
-            WHERE subscribed_to_id = $1
-        ", [$userId]);
+        $result = $this->db->fetchOne("
+        SELECT COUNT(*) as total
+        FROM subscriptions
+        WHERE creator_id = $1
+    ", [$userId]);
 
-            return (int)($result['total'] ?? 0);
-        } catch (\Exception $e) {
-            error_log("User::getSubscribersCount - Error: " . $e->getMessage());
-            return 0;
-        }
+        return (int)($result['total'] ?? 0);
     }
+
 }
