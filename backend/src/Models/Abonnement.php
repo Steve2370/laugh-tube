@@ -34,12 +34,21 @@ class Abonnement
             return 0;
         }
     }
-    public function desabonneToi(int $abonneId, int $targetUserId): bool
-    {
-        $sql = "DELETE FROM abonnements 
-                WHERE subscriber_id = $1 AND subscribed_to_id = $2";
 
-        return $this->db->execute($sql, [$abonneId, $targetUserId]);
+    public function desabonneToi(int $subscriberId, int $targetUserId): bool
+    {
+        try {
+            $result = $this->db->query("
+            DELETE FROM abonnements
+            WHERE subscriber_id = $1
+              AND subscribed_to_id = $2
+        ", [$subscriberId, $targetUserId]);
+
+            return $result !== false;
+        } catch (\Exception $e) {
+            error_log("User::unsubscribe - Error: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function isAbonne(int $abonneId, int $targetUserId): bool

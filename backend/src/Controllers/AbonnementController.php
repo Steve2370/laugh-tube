@@ -18,45 +18,34 @@ class AbonnementController
     {
         try {
             $currentUser = $this->authMiddleware->handleRequired();
-            if (!$currentUser) {
-                http_response_code(401);
+            $currentUserId = $currentUser['sub'] ?? null;
+
+            if (!$currentUserId) {
+                JsonResponse::unauthorized(['success' => false, 'error' => 'Non authentifié']);
                 return;
             }
 
-            if ($currentUser['user_id'] === $targetUserId) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Vous ne pouvez pas vous abonner à vous-même'
-                ]);
+            if ($currentUserId === $targetUserId) {
+                JsonResponse::badRequest(['success' => false, 'error' => 'Vous ne pouvez pas vous abonner à vous-même']);
                 return;
             }
 
-            $result = $this->abonnementService->subscribe($currentUser['user_id'], $targetUserId);
+            $result = $this->abonnementService->subscribe($currentUserId, $targetUserId);
 
-            if (!$result['success']) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'error' => $result['message']
-                ]);
+            if (!($result['success'] ?? false)) {
+                JsonResponse::badRequest(['success' => false, 'error' => $result['message'] ?? 'Erreur abonnement']);
                 return;
             }
 
-            http_response_code(200);
-            echo json_encode([
+            JsonResponse::success([
                 'success' => true,
-                'subscribed' => true,
-                'subscribers_count' => $result['subscribers_count']
+                'is_subscribed' => true,
+                'subscribers_count' => $result['subscribers_count'] ?? 0
             ]);
 
-        } catch (\Exception $e) {
-            error_log("AbonnementController::subscribe - Error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Erreur serveur'
-            ]);
+        } catch (\Throwable $e) {
+            error_log("AbonnementController::subscribe - " . $e->getMessage());
+            JsonResponse::serverError(['success' => false, 'error' => 'Erreur serveur']);
         }
     }
 
@@ -97,14 +86,11 @@ class AbonnementController
         }
     }
 
-    public function getStatus(int $targetUserId): void
+    public function getStatus(int $targetUserId, ?int $currentUserId): void
     {
         try {
-            $currentUser = $this->authMiddleware->handleOptional();
-
-            if (!$currentUser) {
-                http_response_code(200);
-                echo json_encode([
+            if (!$currentUserId) {
+                JsonResponse::success([
                     'success' => true,
                     'is_subscribed' => false,
                     'subscribers_count' => $this->abonnementService->getSubscribersCount($targetUserId)
@@ -112,22 +98,16 @@ class AbonnementController
                 return;
             }
 
-            $result = $this->abonnementService->getStatus($currentUser['user_id'], $targetUserId);
+            $result = $this->abonnementService->getStatus($currentUserId, $targetUserId);
 
-            http_response_code(200);
-            echo json_encode([
+            JsonResponse::success([
                 'success' => true,
-                'is_subscribed' => $result['is_subscribed'],
-                'subscribers_count' => $result['subscribers_count']
+                'is_subscribed' => (bool)($result['is_subscribed'] ?? false),
+                'subscribers_count' => (int)($result['subscribers_count'] ?? 0),
             ]);
-
-        } catch (\Exception $e) {
-            error_log("AbonnementController::getStatus - Error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Erreur serveur'
-            ]);
+        } catch (\Throwable $e) {
+            error_log("AbonnementController::getStatus - " . $e->getMessage());
+            JsonResponse::serverError(['success' => false, 'error' => 'Erreur serveur']);
         }
     }
 

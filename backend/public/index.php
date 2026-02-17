@@ -371,10 +371,11 @@ try {
 
     if (preg_match('#^/users/(\d+)/subscribe-status$#', $uri, $m) && $method === 'GET') {
         $user = AuthMiddleware::optionalAuth();
-        $currentUserId = $user ? ($user['sub'] ?? null) : null;
-        $abonnementController->getStatus((int)$m[1]);
+        $currentUserId = $user['sub'] ?? null;
+        $abonnementController->getStatus((int)$m[1], $currentUserId);
         return;
     }
+
 
     if (preg_match('#^/users/(\d+)/subscribe$#', $uri, $m) && $method === 'POST') {
         $user = AuthMiddleware::requireAuth();
