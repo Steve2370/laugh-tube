@@ -95,6 +95,62 @@ class UserController
     }
 
 
+
+    public function getUserVideos(int $userId): void
+    {
+        try {
+            $db = \App\Config\Database::getInstance()->getConnection();
+
+            $stmt = $db->prepare("
+                SELECT
+                    v.*,
+                    COALESCE((
+                        SELECT COUNT(*) FROM reactions r
+                        WHERE r.video_id = v.id AND r.type = 'like'
+                    ), 0) AS likes,
+                    COALESCE((
+                        SELECT COUNT(*) FROM reactions r
+                        WHERE r.video_id = v.id AND r.type = 'dislike'
+                    ), 0) AS dislikes,
+                    COALESCE((
+                        SELECT COUNT(*) FROM comments c
+                        WHERE c.video_id = v.id
+                        AND (c.deleted_at IS NULL OR c.deleted_at = '')
+                    ), 0) AS comments
+                FROM videos v
+                WHERE v.user_id = :user_id
+                AND v.deleted_at IS NULL
+                AND v.status = 'ready'
+                ORDER BY v.created_at DESC
+            ");
+
+            $stmt->execute([':user_id' => $userId]);
+            $videos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Convertir les types numeriques
+            $videos = array_map(function ($v) {
+                $v['id']       = (int)$v['id'];
+                $v['user_id']  = (int)$v['user_id'];
+                $v['views']    = (int)($v['views'] ?? 0);
+                $v['view_count'] = (int)($v['view_count'] ?? $v['views'] ?? 0);
+                $v['likes']    = (int)($v['likes'] ?? 0);
+                $v['dislikes'] = (int)($v['dislikes'] ?? 0);
+                $v['comments'] = (int)($v['comments'] ?? 0);
+                return $v;
+            }, $videos);
+
+            JsonResponse::success([
+                'videos' => $videos,
+                'count'  => count($videos),
+                'user_id' => $userId,
+            ]);
+
+        } catch (\Exception $e) {
+            error_log("UserController::getUserVideos - Error: " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur récupération vidéos']);
+        }
+    }
+
     public function getSubscribersCount(int $userId): void
     {
         try {
@@ -362,44 +418,6 @@ class UserController
         }
     }
 
-//    public function getProfileImage(int $userId)
-//    {
-//        try {
-//            $user = $this->userModel->findById($userId);
-//
-//            if (!$user) {
-//                JsonResponse::notFound(['error' => 'Utilisateur non trouvé']);
-//                return;
-//            }
-//
-//            if (empty($user['photo_profil'])) {
-//                http_response_code(404);
-//                header('Content-Type: image/svg+xml');
-//                echo '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ccc" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#666" font-size="40">?</text></svg>';
-//                return;
-//            }
-//
-//            $imagePath = __DIR__ . '/../../uploads/avatars/' . $user['photo_profil'];
-//
-//            if (!file_exists($imagePath)) {
-//                http_response_code(404);
-//                header('Content-Type: image/svg+xml');
-//                echo '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ccc" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#666" font-size="40">?</text></svg>';
-//                return;
-//            }
-//
-//            $mimeType = mime_content_type($imagePath);
-//            header('Content-Type: ' . $mimeType);
-//            header('Content-Length: ' . filesize($imagePath));
-//            header('Cache-Control: public, max-age=31536000');
-//            readfile($imagePath);
-//
-//        } catch (\Exception $e) {
-//            error_log('Get profile image error: ' . $e->getMessage());
-//            http_response_code(500);
-//        }
-//    }
-
     public function getWatchHistory(int $userId)
     {
         try {
@@ -506,22 +524,6 @@ class UserController
             http_response_code(500);
         }
     }
-
-//    public function getSubscribersCount(int $userId)
-//    {
-//        try {
-//            $count = $this->userModel->getSubscribersCount($userId);
-//
-//            JsonResponse::success([
-//                'user_id' => $userId,
-//                'subscribers_count' => $count
-//            ]);
-//
-//        } catch (\Exception $e) {
-//            error_log('Get subscribers count error: ' . $e->getMessage());
-//            JsonResponse::serverError(['error' => 'Erreur lors de la récupération du nombre d\'abonnés']);
-//        }
-//    }
 
     public function getSubscribeStatus(int $targetUserId, $currentUserId = null)
     {

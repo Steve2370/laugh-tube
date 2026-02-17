@@ -71,10 +71,6 @@ class ApiService {
         }
     }
 
-    /**
-     *
-     * @private
-     */
     async handleResponse(response) {
         const contentType = response.headers.get('content-type');
 
@@ -602,11 +598,7 @@ class ApiService {
         const raw = response.data || response.videos || response;
         const list = Array.isArray(raw) ? raw : [];
 
-        if (list.length > 0) {
-            console.log('[getUserVideos] Champs:', Object.keys(list[0]));
-            console.log('[getUserVideos] Exemple:', list[0]);
-        }
-
+        // Normalisation des champs selon les variantes possibles du backend
         return list.map(v => ({
             ...v,
             views:    v.views    ?? v.nb_vues           ?? v.view_count    ?? v.views_count    ?? 0,
@@ -722,7 +714,6 @@ class ApiService {
 
     async getSubscribersCount(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
-        console.log('[getSubscribersCount] userId:', userId, 'response:', response);
         return response;
     }
 
