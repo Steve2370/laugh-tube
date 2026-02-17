@@ -271,8 +271,20 @@ class ApiService {
 
     async check2FAStatus() {
         try {
-            const response = await this.request('/auth/2fa/status');
-            return response.data || response;
+            const token = localStorage.getItem('access_token');
+            if (!token) return { enabled: false };
+
+            const response = await fetch(`${this.baseURL}/api/auth/2fa/status`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok || response.status === 404) return { enabled: false };
+
+            const text = await response.text();
+            if (!text || text.trim() === '') return { enabled: false };
+
+            const data = JSON.parse(text);
+            return data.data || data;
         } catch (error) {
             console.warn('2FA status non disponible:', error.message);
             return { enabled: false };
@@ -568,10 +580,16 @@ class ApiService {
     async getUserProfile(userId) {
         if (!userId) {
             console.warn('getUserProfile appelé sans userId');
-            return null;
+            return { success: false, data: null, error: 'userId manquant' };
         }
-        const response = await this.request(`/users/${userId}/profile`);
-        return response.data || response.profile || response;
+        try {
+            const response = await this.request(`/users/${userId}/profile`);
+            const data = response.data || response.profile || response;
+            return { success: true, data };
+        } catch (error) {
+            console.error('getUserProfile erreur:', error.message);
+            return { success: false, data: null, error: error.message };
+        }
     }
 
     async getUserStats(userId) {
@@ -581,7 +599,21 @@ class ApiService {
 
     async getUserVideos(userId) {
         const response = await this.request(`/users/${userId}/videos`);
-        return response.data || response.videos || response;
+        const raw = response.data || response.videos || response;
+        const list = Array.isArray(raw) ? raw : [];
+
+        if (list.length > 0) {
+            console.log('[getUserVideos] Champs:', Object.keys(list[0]));
+            console.log('[getUserVideos] Exemple:', list[0]);
+        }
+
+        return list.map(v => ({
+            ...v,
+            views:    v.views    ?? v.nb_vues           ?? v.view_count    ?? v.views_count    ?? 0,
+            likes:    v.likes    ?? v.nb_likes           ?? v.likes_count   ?? v.like_count     ?? 0,
+            comments: v.comments ?? v.nb_commentaires    ?? v.comments_count ?? v.comment_count ?? 0,
+            user_id:  v.user_id  ?? v.userId             ?? v.author_id     ?? v.authorId       ?? null,
+        }));
     }
 
     async updateProfile(data) {
@@ -690,12 +722,13 @@ class ApiService {
 
     async getSubscribersCount(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
+        console.log('[getSubscribersCount] userId:', userId, 'response:', response);
         return response;
     }
 
     async getSubscribersCountValue(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
-        return response.count ?? response.subscribers_count ?? response.data?.count ?? 0;
+        return response.count ?? response.subscribers_count ?? response.data?.count ?? response.data?.subscribers_count ?? 0;
     }
 
     async getNotifications(limit = 20, offset = 0) {
