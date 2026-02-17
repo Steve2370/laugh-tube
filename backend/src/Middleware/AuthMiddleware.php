@@ -5,9 +5,13 @@ use App\Interfaces\DatabaseInterface;
 use App\Repositories\SessionRepository;
 use App\Services\AuditService;
 use App\Services\TokenService;
+use App\Utils\JsonResponse;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class AuthMiddleware
 {
+    private const AUTH_HEADER = 'HTTP_AUTHORIZATION';
     private ?array $user = null;
     private ?string $token = null;
 
@@ -18,12 +22,52 @@ class AuthMiddleware
         private AuditService $auditService
     ) {}
 
-    public static function optionalAuth()
+    public static function optionalAuth(): ?array
     {
+        $token = self::getBearerToken();
+        if (!$token) return null;
+
+        $payload = self::decodeToken($token);
+        return $payload ?: null;
     }
 
-    public static function requireAuth()
+    private static function getBearerToken(): ?string
     {
+        $header = $_SERVER[self::AUTH_HEADER] ?? $_SERVER['Authorization'] ?? null;
+
+        if (!$header && function_exists('getallheaders')) {
+            $headers = getallheaders();
+            $header = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+        }
+
+        if (!$header) return null;
+
+        if (preg_match('/Bearer\s+(.+)/i', $header, $m)) {
+            return trim($m[1]);
+        }
+        return null;
+    }
+
+    public static function requireAuth(): array
+    {
+        $payload = self::optionalAuth();
+        if (!$payload) {
+            JsonResponse::unauthorized(['error' => 'AUTH_REQUIRED']);
+        }
+        return $payload;
+    }
+
+    private static function decodeToken(string $token): ?array
+    {
+        try {
+            $secret = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? null;
+            if (!$secret) return null;
+
+            $payload = JWT::decode($token, new Key($secret, 'HS256'));
+            return json_decode(json_encode($payload), true);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function handle(): bool
