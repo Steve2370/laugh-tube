@@ -4,15 +4,12 @@ import {useAbonnement} from '../hooks/useAbonnement.js';
 import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
+import VideoCard from '../components/VideoCard.jsx';
 import {
     ArrowLeft,
     Calendar,
-    Eye,
-    ThumbsUp,
-    MessageCircle,
     Users,
     Video,
-    Play,
 } from 'lucide-react';
 
 const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
@@ -153,108 +150,19 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
 };
 
 const VideoGrid = ({ videos, onVideoClick }) => {
-    const formatNumber = (num) => {
-        if (!num) return '0';
-        if (num < 1000) return num.toString();
-        if (num < 1000000) return `${Math.floor(num / 100) / 10}k`;
-        return `${Math.floor(num / 100000) / 10}M`;
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'Date inconnue';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
-
-        const secondes = Math.floor(diff / 1000);
-        const minutes = Math.floor(diff / 60000);
-        const heures = Math.floor(diff / 3600000);
-        const jours = Math.floor(diff / 86400000);
-        const semaines = Math.floor(diff / 604800000);
-        const mois = Math.floor(diff / 2592000000);
-        const annees = Math.floor(diff / 31536000000);
-
-        if (secondes < 60) return secondes <= 1 ? 'À l\'instant' : `Il y a ${secondes}s`;
-        if (minutes < 60) return minutes === 1 ? 'Il y a 1min' : `Il y a ${minutes}min`;
-        if (heures < 24) return heures === 1 ? 'Il y a 1h' : `Il y a ${heures}h`;
-        if (jours < 7) return jours === 1 ? 'Il y a 1j' : `Il y a ${jours}j`;
-        if (semaines < 4) return semaines === 1 ? 'Il y a 1 semaine' : `Il y a ${semaines} semaines`;
-        if (mois < 12) return mois === 1 ? 'Il y a 1 mois' : `Il y a ${mois} mois`;
-        return annees === 1 ? 'Il y a 1 an' : `Il y a ${annees} ans`;
-    };
-
     if (videos.length === 0) {
         return (
             <div className="text-center py-16">
                 <Video size={64} className="mx-auto text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                    Aucune vidéo
-                </h3>
-                <p className="text-gray-500">
-                    Cette chaîne n'a pas encore publié de vidéos.
-                </p>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucune vidéo</h3>
+                <p className="text-gray-500">Cette chaîne n'a pas encore publié de vidéos.</p>
             </div>
         );
     }
-
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {videos.map((video) => (
-                <div
-                    key={video.id}
-                    onClick={() => onVideoClick(video)}
-                    className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
-                >
-                    <div className="relative aspect-video bg-gray-200 overflow-hidden">
-                        <img
-                            src={apiService.getThumbnailUrl(video.id)}
-                            alt={video.title || "Vidéo"}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                            onError={(e) => {
-                                e.currentTarget.src = '/images/placeholder-video.png';
-                            }}
-                        />
-
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="bg-white bg-opacity-90 rounded-full p-4">
-                                    <Play className="h-8 w-8 text-blue-600" fill="currentColor" />
-                                </div>
-                            </div>
-                        </div>
-
-                        {video.duration && (
-                            <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                                {video.duration}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="p-4">
-                        <h3 className="font-bold text-gray-900 line-clamp-2 mb-2">
-                            {video.title || 'Sans titre'}
-                        </h3>
-
-                        <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
-                            <span className="flex items-center gap-1">
-                                <Eye size={14} />
-                                {formatNumber(video.views || video.views_count || 0)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <ThumbsUp size={14} />
-                                {formatNumber(video.likes || video.likes_count || 0)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <MessageCircle size={14} />
-                                {formatNumber(video.comments || video.comments_count || 0)}
-                            </span>
-                        </div>
-
-                        <p className="text-xs text-gray-500 mt-2">
-                            {formatDate(video.created_at)}
-                        </p>
-                    </div>
-                </div>
+                <VideoCard key={video.id} video={video} onClick={() => onVideoClick(video)} />
             ))}
         </div>
     );
