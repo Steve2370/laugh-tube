@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useVideo } from '../hooks/useVideo';
 import { useVideoPlayer } from '../hooks/useVideoPlayer';
 import { useAuth } from '../hooks/useAuth';
@@ -74,10 +74,9 @@ const ReplyItem = ({ reply, isAuthenticated, userId, onUserClick, onReply }) => 
         return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     };
 
-    const localAvatar = localStorage.getItem(`profileImage_${reply.user_id}`);
-    const hasValidAvatar = reply.avatar_url &&
-        reply.avatar_url !== '/uploads/avatars/default.png';
-    const avatarUrl = localAvatar || (hasValidAvatar ? `/api${reply.avatar_url}` : null);
+    const avatarUrl = reply.user_id
+        ? `/api/users/${reply.user_id}/profile-image`
+        : null;
 
     return (
         <div className="flex items-start gap-2 py-2">
@@ -218,10 +217,9 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
         return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     };
 
-    const localAvatar = localStorage.getItem(`profileImage_${comment.user_id}`);
-    const hasValidAvatar = comment.avatar_url &&
-        comment.avatar_url !== '/uploads/avatars/default.png';
-    const avatarUrl = localAvatar || (hasValidAvatar ? `/api${comment.avatar_url}` : null);
+    const avatarUrl = comment.user_id
+        ? `/api/users/${comment.user_id}/profile-image`
+        : null;
     const replyCount = comment.reply_count || replies.length || 0;
 
     return (
@@ -331,13 +329,15 @@ const Video = () => {
     const { video, comments, loading, error: videoError, likeVideo, dislikeVideo, postComment, reload } = useVideo(videoId);
     const { videoRef, recordView: _recordView } = useVideoPlayer(videoId);
 
-    const recordView = async (...args) => {
+    const recordView = useCallback(async () => {
         try {
-            await _recordView(...args);
-            setViewsCount(prev => prev + 1);
+            const result = await _recordView();
+            if (result?.success && !result?.alreadyViewed) {
+                setViewsCount(prev => prev + 1);
+            }
         } catch (_) {
         }
-    };
+    }, [_recordView]);
 
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);

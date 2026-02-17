@@ -29,7 +29,7 @@ export function useAbonnement(targetUserId) {
 
         try {
             const countResponse = await apiService.request(`/users/${targetUserId}/subscribers-count`);
-            setSubscribersCount(countResponse.subscribers_count || 0);
+            setSubscribersCount(countResponse.count ?? countResponse.subscribers_count ?? 0);
 
             if (isAuthRef.current && userIdRef.current) {
                 const statusResponse = await apiService.request(`/users/${targetUserId}/subscribe-status`);
