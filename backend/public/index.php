@@ -372,13 +372,15 @@ try {
 
     if (preg_match('#^/users/(\d+)/subscribe$#', $uri, $m) && $method === 'POST') {
         $user = AuthMiddleware::requireAuth();
-        $userController->subscribe((int)$m[1], $user['sub']);
+        if (!$user || !isset($user['sub'])) return;
+        $userController->subscribe((int)$m[1], (int)$user['sub']);
         return;
     }
 
     if (preg_match('#^/users/(\d+)/unsubscribe$#', $uri, $m) && $method === 'DELETE') {
         $user = AuthMiddleware::requireAuth();
-        $userController->unsubscribe((int)$m[1], $user['sub']);
+        if (!$user || !isset($user['sub'])) return;
+        $userController->unsubscribe((int)$m[1], (int)$user['sub']);
         return;
     }
 

@@ -322,16 +322,18 @@ class User
 
     public function unsubscribe(int $subscriberId, int $targetUserId): bool
     {
-        $stmt = $this->db->prepare("
+        try {
+            $result = $this->db->query("
             DELETE FROM abonnements
-            WHERE subscriber_id = :subscriber_id
-            AND user_id = :user_id
-        ");
+            WHERE subscriber_id = $1
+              AND subscribed_to_id = $2
+        ", [$subscriberId, $targetUserId]);
 
-        return $stmt->execute([
-            'subscriber_id' => $subscriberId,
-            'user_id' => $targetUserId
-        ]);
+            return $result !== false;
+        } catch (\Exception $e) {
+            error_log("User::unsubscribe - Error: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function getSubscribersCount(int $userId): int
