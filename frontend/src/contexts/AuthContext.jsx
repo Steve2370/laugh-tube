@@ -1,159 +1,193 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import apiService from '../services/apiService.js';
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
+export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        let mounted = true;
-
-        const init = async () => {
-            try {
-                setLoading(true);
-
-                const authenticated = apiService.isAuthenticated();
-                if (!authenticated) {
-                    if (!mounted) return;
-                    setUser(null);
-                    setIsAuthenticated(false);
-                    localStorage.removeItem('user');
-                    return;
-                }
-
-                const cachedUser = localStorage.getItem('user');
-                if (cachedUser) {
-                    try {
-                        const parsed = JSON.parse(cachedUser);
-                        setUser(parsed);
-                        setIsAuthenticated(true);
-                    } catch (e) {
-                        console.error('Parse error:', e);
-                    }
-                }
-
+    const checkAuth = useCallback(async () => {
+        try {
+            const authenticated = apiService.isAuthenticated();
+            if (authenticated) {
                 const currentUser = await apiService.getMe();
-
-                if (!mounted) return;
-
-                if (currentUser) {
-                    setUser(currentUser);
-                    setIsAuthenticated(true);
-                    localStorage.setItem('user', JSON.stringify(currentUser));
-                } else {
-                    setUser(null);
-                    setIsAuthenticated(false);
-                    localStorage.removeItem('user');
-                }
-            } catch (err) {
-                console.error("Auth init error:", err);
-                if (!mounted) return;
+                setUser(currentUser);
+                setIsAuthenticated(true);
+            } else {
                 setUser(null);
                 setIsAuthenticated(false);
-            } finally {
-                if (mounted) setLoading(false);
             }
-        };
-
-        init();
-
-        return () => {
-            mounted = false;
-        };
+        } catch (err) {
+            setUser(null);
+            setIsAuthenticated(false);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    const login = async (email, password) => {
+    useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
+
+    const updateUser = useCallback((patch) => {
+        setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+    }, []);
+
+    const login = useCallback(async (email, password) => {
         try {
-            await apiService.login(email, password);
-            const me = await apiService.getMe();
-            setUser(me);
-            setIsAuthenticated(true);
-            localStorage.setItem('user', JSON.stringify(me));
-
-            return { success: true, user: me };
-        } catch (error) {
-            console.error("Login error:", error);
-            setUser(null);
-            setIsAuthenticated(false);
-            return { success: false, message: error?.message ?? "Erreur login" };
+            setLoading(true);
+            setError(null);
+            const response = await apiService.login(email, password);
+            if (response.requires_2fa) {
+                return { success: true, requires_2fa: true, user_id: response.user_id };
+            }
+            await checkAuth();
+            return { success: true, requires_2fa: false };
+        } catch (err) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
         }
-    };
+    }, [checkAuth]);
 
-    const register = async (username, email, password) => {
+    const verify2FA = useCallback(async (userId, code) => {
         try {
-            await apiService.register(username, email, password);
-
-            const me = await apiService.getMe();
-
-            setUser(me);
-            setIsAuthenticated(true);
-
-            return { success: true, user: me };
-        } catch (error) {
-            console.error("Register error:", error);
-            setUser(null);
-            setIsAuthenticated(false);
-            return { success: false, message: error?.message ?? "Erreur inscription" };
+            setLoading(true);
+            setError(null);
+            await apiService.verify2FA(userId, code);
+            await checkAuth();
+            return { success: true };
+        } catch (err) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
         }
-    };
+    }, [checkAuth]);
 
-    const logout = async () => {
+    const register = useCallback(async (username, email, password) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await apiService.register({ username, email, password });
+            if (response?.token) {
+                apiService.setToken(response.token);
+                if (response.user) apiService.setUser(response.user);
+            } else if (!response?.requires_verification) {
+                try {
+                    const loginResp = await apiService.login(email, password);
+                    if (loginResp?.token) {
+                        apiService.setToken(loginResp.token);
+                        if (loginResp.user) apiService.setUser(loginResp.user);
+                    }
+                } catch (_) {}
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await checkAuth();
+            return { success: true };
+        } catch (err) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    }, [checkAuth]);
+
+    const logout = useCallback(async () => {
         try {
             await apiService.logout();
-        } catch (e) {
-            console.warn("Logout warning:", e);
-        } finally {
             setUser(null);
             setIsAuthenticated(false);
-            localStorage.removeItem('user');
+            return { success: true };
+        } catch (err) {
+            setError(err.message);
+            return { success: false, error: err.message };
         }
-    };
+    }, []);
 
-    const updateUser = (patch) => {
-        setUser((prev) => {
-            if (!prev) return prev;
-            const updated = { ...prev, ...patch };
-            localStorage.setItem('user', JSON.stringify(updated));
-            return updated;
-        });
-    };
-
-    const refreshUser = async () => {
+    const changePassword = useCallback(async (currentPassword, newPassword) => {
         try {
-            const me = await apiService.getMe();
-            setUser(me);
-            setIsAuthenticated(true);
-            return me;
-        } catch (e) {
-            console.error("refreshUser error:", e);
-            setUser(null);
-            setIsAuthenticated(false);
-            return null;
+            setLoading(true);
+            setError(null);
+            await apiService.changePassword(currentPassword, newPassword);
+            return { success: true };
+        } catch (err) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
         }
-    };
+    }, []);
 
-    const value = useMemo(
-        () => ({
-            user,
-            isAuthenticated,
-            loading,
-            login,
-            register,
-            logout,
-            updateUser,
-            refreshUser,
-        }),
-        [user, isAuthenticated, loading]
-    );
+    const requestPasswordReset = useCallback(async (email) => {
+        try {
+            setLoading(true);
+            setError(null);
+            await apiService.requestPasswordReset(email);
+            return { success: true };
+        } catch (err) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const resetPassword = useCallback(async (token, password, confirmPassword) => {
+        try {
+            setLoading(true);
+            setError(null);
+            await apiService.resetPassword(token, password, confirmPassword);
+            return { success: true };
+        } catch (err) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const resendVerification = useCallback(async (email) => {
+        try {
+            setLoading(true);
+            setError(null);
+            await apiService.resendVerification(email);
+            return { success: true };
+        } catch (err) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const value = {
+        user,
+        isAuthenticated,
+        loading,
+        error,
+        login,
+        verify2FA,
+        register,
+        logout,
+        changePassword,
+        requestPasswordReset,
+        resetPassword,
+        resendVerification,
+        reload: checkAuth,
+        updateUser,
+    };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+};
 
-export function useAuth() {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
-    return ctx;
-}
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) throw new Error('useAuth doit être utilisé dans <AuthProvider>');
+    return context;
+};

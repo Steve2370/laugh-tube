@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { useVideos } from '../hooks/useVideos';
 import { useAbonnement } from '../hooks/useAbonnement';
 import apiService from '../services/apiService.js';
 import VideoCard from '../components/VideoCard.jsx';
@@ -505,11 +504,11 @@ const AnalyticsTab = ({ stats, videos }) => {
 const Profile = () => {
     const { user, isAuthenticated, loading } = useAuth();
     const toast = useToast();
-    const { videos: userVideos, loading: videosLoading, getUserVideos } = useVideos();
     const isOwnProfile = true;
     const targetUserId = user?.id;
     const [activeTab, setActiveTab] = useState('videos');
     const [videos, setVideos] = useState([]);
+    const [videosLoading, setVideosLoading] = useState(false);
     const [stats, setStats] = useState({
         totalVideos: 0,
         totalViews: 0,
@@ -521,37 +520,40 @@ const Profile = () => {
     const loadUserData = useCallback(async () => {
         if (!user?.id) return;
 
+        setVideosLoading(true);
         try {
-            await getUserVideos(user.id);
+            const response = await apiService.getUserVideos(user.id);
+            const list = response.success
+                ? (response.videos || [])
+                : Array.isArray(response) ? response : [];
+
+            setVideos(list);
+
+            const totalViews    = list.reduce((sum, v) => sum + (v.views    || v.view_count    || 0), 0);
+            const totalLikes    = list.reduce((sum, v) => sum + (v.likes    || v.likes_count    || 0), 0);
+            const totalComments = list.reduce((sum, v) => sum + (v.comments || v.comments_count || 0), 0);
+            const engagementRate = totalViews > 0
+                ? Math.round(((totalLikes + totalComments) / totalViews) * 100)
+                : 0;
+
+            setStats({
+                totalVideos: list.length,
+                totalViews,
+                totalLikes,
+                totalComments,
+                engagementRate,
+            });
         } catch (err) {
             console.error('Erreur chargement données:', err);
             toast.error('Erreur lors du chargement des vidéos');
+        } finally {
+            setVideosLoading(false);
         }
-    }, [user?.id, getUserVideos, toast]);
+    }, [user?.id, toast]);
 
     useEffect(() => {
         loadUserData();
     }, [loadUserData]);
-
-    useEffect(() => {
-        const list = Array.isArray(userVideos) ? userVideos : [];
-        setVideos(list);
-
-        const totalViews    = list.reduce((sum, v) => sum + (v.views    || v.views_count    || 0), 0);
-        const totalLikes    = list.reduce((sum, v) => sum + (v.likes    || v.likes_count    || 0), 0);
-        const totalComments = list.reduce((sum, v) => sum + (v.comments || v.comments_count || 0), 0);
-        const engagementRate = totalViews > 0
-            ? Math.round(((totalLikes + totalComments) / totalViews) * 100)
-            : 0;
-
-        setStats({
-            totalVideos: list.length,
-            totalViews,
-            totalLikes,
-            totalComments,
-            engagementRate,
-        });
-    }, [userVideos]);
 
     if (loading || !user) {
         return <LoadingState />;
@@ -628,7 +630,7 @@ const Profile = () => {
                                         }`}
                                     >
                                         <Video size={18} />
-                                        Vidéos ({userVideos.length})
+                                        Vidéos ({videos.length})
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('analytics')}
