@@ -379,14 +379,14 @@ try {
     if (preg_match('#^/users/(\d+)/subscribe$#', $uri, $m) && $method === 'POST') {
         $user = AuthMiddleware::requireAuth();
         if (!$user || !isset($user['sub'])) return;
-        $abonnementController->subscribe((int)$m[1], (int)$user['sub']);
+        $abonnementController->subscribe((int)$m[1]);
         return;
     }
 
     if (preg_match('#^/users/(\d+)/unsubscribe$#', $uri, $m) && $method === 'DELETE') {
         $user = AuthMiddleware::requireAuth();
         if (!$user || !isset($user['sub'])) return;
-        $abonnementController->unsubscribe((int)$m[1], (int)$user['sub']);
+        $abonnementController->unsubscribe((int)$m[1]);
         return;
     }
 
