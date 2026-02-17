@@ -13,6 +13,7 @@ const VideoPlayer = ({
     className = ""
 }) => {
     const videoRef = useRef(null);
+    const viewedRef = useRef(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -180,7 +181,6 @@ const VideoPlayer = ({
             if (isPlaying) setShowControls(false);
         }, 3000);
     };
-    const viewedRef = useRef(false);
 
     if (hasError) {
         if (!src) {
