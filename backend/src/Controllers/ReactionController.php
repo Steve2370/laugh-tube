@@ -36,6 +36,7 @@ class ReactionController
                 'action' => $result['action'],
                 'liked' => $result['liked'],
                 'disliked' => $result['disliked']
+
             ]);
 
         } catch (\Exception $e) {
