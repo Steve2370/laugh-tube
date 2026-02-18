@@ -162,9 +162,9 @@ class VideoController
 
             $viewData = [
                 'user_id' => $userId,
-                'session_id' => SecurityHelper::sanitizeInput($data['sessionId'] ?? ''),
-                'watch_time' => (int)($data['watchTime'] ?? 0),
-                'watch_percentage' => (float)($data['watchPercentage'] ?? 0.0),
+                'session_id' => SecurityHelper::sanitizeInput($data['session_id'] ?? $data['sessionId'] ?? ''),
+                'watch_time' => (int)($data['watch_time'] ?? $data['watchTime'] ?? 0),
+                'watch_percentage' => (float)($data['watch_percentage'] ?? $data['watchPercentage'] ?? 0.0),
                 'completed' => (bool)($data['completed'] ?? false),
                 'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
                 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
@@ -173,7 +173,9 @@ class VideoController
             $result = $this->analyticsService->recordView($videoId, $viewData);
 
             if (!$result['success']) {
-                JsonResponse::notFound(['error' => $result['message']]);
+                http_response_code($result['code'] ?? 400);
+                echo json_encode(['error' => $result['message']]);
+                return;
             }
 
             JsonResponse::success(['message' => 'Vue enregistrée']);
