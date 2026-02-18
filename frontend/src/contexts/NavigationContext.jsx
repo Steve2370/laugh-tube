@@ -1,18 +1,20 @@
-import React, {
-    createContext,
-    useContext,
-    useState,
-    useCallback,
-    useEffect,
-    useMemo,
-} from "react";
+import React, {createContext, useCallback, useContext, useEffect, useMemo, useState,} from "react";
 
 const NavigationContext = createContext(null);
 
 const getPageFromHash = () => {
     const hash = window.location.hash || "";
-    const page = hash.replace(/^#\//, "").trim();
+    const withoutPrefix = hash.replace(/^#\//, "").trim();
+    const page = withoutPrefix.split("?")[0];
     return page || "home";
+};
+
+const getQueryFromHash = () => {
+    const hash = window.location.hash || "";
+    const withoutPrefix = hash.replace(/^#\//, "").trim();
+    const queryString = withoutPrefix.split("?")[1] || "";
+    const params = new URLSearchParams(queryString);
+    return params.get("q") || "";
 };
 
 const setHashPage = (page) => {
@@ -22,13 +24,15 @@ const setHashPage = (page) => {
 export const NavigationProvider = ({ children }) => {
     const [currentPage, setCurrentPage] = useState(getPageFromHash());
     const [selectedVideo, setSelectedVideo] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(getQueryFromHash);
     const [navigationHistory, setNavigationHistory] = useState([getPageFromHash()]);
 
     useEffect(() => {
         const onHashChange = () => {
             const page = getPageFromHash();
+            const query = getQueryFromHash();
             setCurrentPage(page);
+            setSearchQuery(query);
             setNavigationHistory((prev) => {
                 if (prev[prev.length - 1] === page) return prev;
                 return [...prev, page];
