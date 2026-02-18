@@ -9,6 +9,7 @@ const VideoPlayer = ({
     onPlay,
     onTimeUpdate,
     onEnded,
+    onViewRecorded,
     onError,
     onLoadedMetadata,
     autoPlay = true,
@@ -160,6 +161,14 @@ const VideoPlayer = ({
             completed: false,
         });
         console.log("recordView response:", res);
+        if (res?.success === true) {
+            viewedRef.current = true;
+            apiService.markVideoAsViewed(videoId, userId);
+
+            if (res.alreadyViewed === false) {
+                onViewRecorded?.();
+            }
+        }
     };
 
 
