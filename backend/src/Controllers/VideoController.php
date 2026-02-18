@@ -157,33 +157,55 @@ class VideoController
             $this->authMiddleware->handleOptional();
             $userId = $this->authMiddleware->getUserId();
 
-            $rawInput = file_get_contents('php://input');
-            $data = json_decode($rawInput, true) ?? [];
+            $rawInput = file_get_contents('php://input') ?: '';
+            $data = json_decode($rawInput, true);
+            if (!is_array($data)) {
+                $data = [];
+            }
 
-            $viewData = [
-                'user_id' => $userId,
-                'session_id' => SecurityHelper::sanitizeInput($data['sessionId'] ?? ''),
-                'watch_time' => (int)($data['watchTime'] ?? 0),
-                'watch_percentage' => (float)($data['watchPercentage'] ?? 0.0),
-                'completed' => (bool)($data['completed'] ?? false),
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
-            ];
-
-            $result = $this->analyticsService->recordView($videoId, $viewData);
-
-            if (!$result['success']) {
-                $code = $result['code'] ?? 400;
-                http_response_code($code);
-                echo json_encode(['error' => $result['message']]);
+            $sessionId = (string)($data['session_id'] ?? $data['sessionId'] ?? '');
+            $watchTime = (int)($data['watch_time'] ?? $data['watchTime'] ?? 0);
+            $watchPct  = (float)($data['watch_percentage'] ?? $data['watchPercentage'] ?? 0.0);
+            $completed = (bool)($data['completed'] ?? false);
+            $sessionId = SecurityHelper::sanitizeInput($sessionId);
+            if (($userId === null || $userId === 0) && $sessionId === '') {
+                JsonResponse::badRequest(['error' => 'session_id requis pour un utilisateur non connecté']);
                 return;
             }
 
-            JsonResponse::success(['message' => 'Vue enregistrée']);
+            $viewData = [
+                'user_id' => $userId ?: null,
+                'session_id' => $sessionId,
+                'watch_time' => max(0, $watchTime),
+                'watch_percentage' => max(0.0, min(100.0, $watchPct)),
+                'completed' => $completed,
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ];
 
-        } catch (\Exception $e) {
+            $result = $this->videoService->recordView(
+                $videoId,
+                $viewData['user_id'],
+                $viewData['session_id'],
+                $viewData['watch_time'],
+                $viewData['watch_percentage'],
+                $viewData['completed']
+            );
+
+            if (!($result['success'] ?? false)) {
+                $code = (int)($result['code'] ?? 400);
+                JsonResponse::json(['success' => false, 'error' => $result['message'] ?? 'Erreur'], $code);
+                return;
+            }
+
+            JsonResponse::success([
+                'success' => true,
+                'message' => $result['message'] ?? 'Vue enregistrée',
+                'alreadyViewed' => (bool)($result['alreadyViewed'] ?? false),
+            ]);
+        } catch (\Throwable $e) {
             error_log("VideoController::recordView - Error: " . $e->getMessage());
-            JsonResponse::serverError(['error' => 'Erreur serveur']);
+            JsonResponse::serverError(['success' => false, 'error' => 'Erreur serveur']);
         }
     }
 

@@ -121,4 +121,8 @@ class JsonResponse
     {
         self::send($data, 405);
     }
+
+    public static function json(array $array, int $code)
+    {
+    }
 }

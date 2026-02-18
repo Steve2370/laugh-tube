@@ -297,7 +297,6 @@ class VideoService
     ): array {
         try {
             $video = $this->videoModel->findById($videoId);
-
             if (!$video) {
                 return [
                     'success' => false,
@@ -307,23 +306,65 @@ class VideoService
                 ];
             }
 
+            $watchTime = max(0, (int)$watchTime);
+            $watchPercentage = max(0.0, min(100.0, (float)$watchPercentage));
+            $completed = (bool)$completed;
+
+            $userId = ($userId !== null && $userId > 0) ? (int)$userId : null;
+            $sessionId = $sessionId !== null ? trim((string)$sessionId) : null;
+
+            if ($userId === null && ($sessionId === null || $sessionId === '')) {
+                return [
+                    'success' => false,
+                    'message' => 'session_id requis pour un utilisateur non connecté',
+                    'alreadyViewed' => false,
+                    'code' => 400
+                ];
+            }
+
             if ($userId !== null) {
-                $checkSql = "SELECT COUNT(*) as count FROM video_views WHERE video_id = ? AND user_id = ?";
+                $checkSql = "SELECT 1 FROM video_views WHERE video_id = $1 AND user_id = $2 LIMIT 1";
                 $existing = $this->db->fetchOne($checkSql, [$videoId, $userId]);
             } else {
-                $checkSql = "SELECT COUNT(*) as count FROM video_views WHERE video_id = ? AND session_id = ?";
+                $checkSql = "SELECT 1 FROM video_views WHERE video_id = $1 AND session_id = $2 LIMIT 1";
                 $existing = $this->db->fetchOne($checkSql, [$videoId, $sessionId]);
             }
 
-            $alreadyViewed = (int)($existing['count'] ?? 0) > 0;
+            $alreadyViewed = $existing !== null;
 
             if ($alreadyViewed) {
                 if ($userId !== null) {
-                    $updateSql = "UPDATE video_views SET watch_time = ?, watch_percentage = ?, completed = ?, viewed_at = NOW() WHERE video_id = ? AND user_id = ?";
-                    $this->db->execute($updateSql, [$watchTime, $watchPercentage, $completed ? 1 : 0, $videoId, $userId]);
+                    $updateSql = "
+                    UPDATE video_views
+                    SET watch_time = $1,
+                        watch_percentage = $2,
+                        completed = $3,
+                        viewed_at = NOW()
+                    WHERE video_id = $4 AND user_id = $5
+                ";
+                    $this->db->execute($updateSql, [
+                        $watchTime,
+                        $watchPercentage,
+                        $completed ? 1 : 0,
+                        $videoId,
+                        $userId
+                    ]);
                 } else {
-                    $updateSql = "UPDATE video_views SET watch_time = ?, watch_percentage = ?, completed = ?, viewed_at = NOW() WHERE video_id = ? AND session_id = ?";
-                    $this->db->execute($updateSql, [$watchTime, $watchPercentage, $completed ? 1 : 0, $videoId, $sessionId]);
+                    $updateSql = "
+                    UPDATE video_views
+                    SET watch_time = $1,
+                        watch_percentage = $2,
+                        completed = $3,
+                        viewed_at = NOW()
+                    WHERE video_id = $4 AND session_id = $5
+                ";
+                    $this->db->execute($updateSql, [
+                        $watchTime,
+                        $watchPercentage,
+                        $completed ? 1 : 0,
+                        $videoId,
+                        $sessionId
+                    ]);
                 }
 
                 return [
@@ -333,8 +374,12 @@ class VideoService
                 ];
             }
 
-            $insertSql = "INSERT INTO video_views (video_id, user_id, session_id, watch_time, watch_percentage, completed, viewed_at)
-                          VALUES (?, ?, ?, ?, ?, ?, NOW())";
+            $insertSql = "
+            INSERT INTO video_views
+                (video_id, user_id, session_id, watch_time, watch_percentage, completed, viewed_at)
+            VALUES
+                ($1, $2, $3, $4, $5, $6, NOW())
+        ";
 
             $this->db->execute($insertSql, [
                 $videoId,
@@ -352,13 +397,12 @@ class VideoService
                 'message' => 'Vue enregistrée avec succès',
                 'alreadyViewed' => false
             ];
-
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log("VideoService::recordView - Error: " . $e->getMessage());
 
             return [
                 'success' => false,
-                'message' => 'Erreur lors de l\'enregistrement',
+                'message' => "Erreur lors de l'enregistrement",
                 'alreadyViewed' => false,
                 'code' => 500
             ];
