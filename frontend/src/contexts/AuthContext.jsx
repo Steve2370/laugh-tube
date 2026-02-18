@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await apiService.register({ username, email, password });
+            const response = await apiService.register(username, email, password);
             if (response?.token) {
                 apiService.setToken(response.token);
                 if (response.user) apiService.setUser(response.user);
@@ -100,14 +100,13 @@ export const AuthProvider = ({ children }) => {
 
     const logout = useCallback(async () => {
         try {
-            await apiService.logout();
+            await apiService.request('/auth/logout', { method: 'POST', skipAuth: false }).catch(() => {});
+        } finally {
+            apiService.clearAuth();
             setUser(null);
             setIsAuthenticated(false);
-            return { success: true };
-        } catch (err) {
-            setError(err.message);
-            return { success: false, error: err.message };
         }
+        return { success: true };
     }, []);
 
     const changePassword = useCallback(async (currentPassword, newPassword) => {

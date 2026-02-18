@@ -196,14 +196,14 @@ class ApiService {
     }
 
     async logout() {
-        try {
-            await this.request('/auth/logout', { method: 'POST' });
-        } catch (error) {
-            console.error('Erreur lors de la déconnexion:', error);
-        } finally {
-            this.clearAuth();
-            window.location.hash = '#/login';
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            fetch(`${this.baseURL}/api/auth/logout`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).catch(() => {});
         }
+        this.clearAuth();
     }
 
     /**
@@ -278,7 +278,6 @@ class ApiService {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            // Endpoint peut ne pas exister ou retourner vide
             if (!response.ok || response.status === 404) return { enabled: false };
 
             const text = await response.text();
@@ -598,7 +597,6 @@ class ApiService {
     async getUserProfile(userId) {
         if (!userId) {
             console.warn('getUserProfile appelé sans userId');
-            // Retourne un objet vide safe pour eviter les crashes dans les appelants
             return { success: false, data: null, error: 'userId manquant' };
         }
         try {
@@ -621,7 +619,6 @@ class ApiService {
         const raw = response.data || response.videos || response;
         const list = Array.isArray(raw) ? raw : [];
 
-        // Normalisation des champs selon les variantes possibles du backend
         return list.map(v => ({
             ...v,
             views:    v.views    ?? v.nb_vues           ?? v.view_count    ?? v.views_count    ?? 0,
@@ -737,11 +734,9 @@ class ApiService {
 
     async getSubscribersCount(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
-        // Retourne l'objet complet pour que les appelants puissent extraire le bon champ
         return response;
     }
 
-    // Methode utilitaire pour obtenir directement le nombre
     async getSubscribersCountValue(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
         return response.count ?? response.subscribers_count ?? response.data?.count ?? response.data?.subscribers_count ?? 0;
