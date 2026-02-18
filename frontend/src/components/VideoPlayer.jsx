@@ -115,7 +115,9 @@ const VideoPlayer = ({
                 console.log("play start");
                 await video.play();
                 setIsPlaying(true);
+                console.log("before sendViewStartOnce");
                 await sendViewStartOnce();
+                console.log("after sendViewStartOnce");
                 onPlay?.();
             } catch (e) {
                 console.warn("play failed:", e);
@@ -127,14 +129,28 @@ const VideoPlayer = ({
     };
 
     const sendViewStartOnce = async () => {
-        if (!videoId) return;
+        console.log("sendViewStartOnce called", { videoId });
+
+        if (!videoId) {
+            console.warn("sendViewStartOnce STOP: missing videoId");
+            return;
+        }
 
         const tokenPayload = apiService.decodeToken(localStorage.getItem('access_token'));
         const userId = tokenPayload?.sub ?? tokenPayload?.user_id ?? null;
         const sessionId = apiService.getOrCreateSessionId();
+        console.log("sendViewStartOnce data", { userId, sessionId });
 
-        if (viewedRef.current) return;
-        if (apiService.hasViewedVideo(videoId, userId)) return;
+        if (viewedRef.current) {
+            console.warn("sendViewStartOnce STOP: viewedRef already true");
+            return;
+        }
+
+        if (apiService.hasViewedVideo(videoId, userId)) {
+            console.warn("sendViewStartOnce STOP: hasViewedVideo true");
+            return;
+        }
+        console.log("sendViewStartOnce -> calling recordView");
 
         const res = await apiService.recordView(videoId, {
             user_id: userId,
@@ -143,17 +159,9 @@ const VideoPlayer = ({
             watch_percentage: 0,
             completed: false,
         });
-
         console.log("recordView response:", res);
-
-        if (res?.success !== true) {
-            console.warn("recordView NOT success:", res);
-            return;
-        }
-
-        viewedRef.current = true;
-        apiService.markVideoAsViewed(videoId, userId);
     };
+
 
     const toggleMute = () => {
         const video = videoRef.current;
