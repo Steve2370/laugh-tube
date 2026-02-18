@@ -346,7 +346,7 @@ const Video = () => {
     const [reactionsCount, setReactionsCount] = useState({ likes: 0, dislikes: 0 });
     const [auteurImage, setAuteurImage] = useState(null);
     const [auteurId, setAuteurId] = useState(null);
-    const [viewsCount, setViewsCount] = useState(0);
+    const [viewsCount, setViewsCount] = useState(video?.views ?? 0);
     const videoSrc = video?.filename
         ? `/uploads/videos/${video.filename}`
         : null;
@@ -373,6 +373,10 @@ const Video = () => {
             }
         }
     }, [video]);
+
+    const handleViewRecorded = () => {
+        setViewsCount((v) => v + 1);
+    };
 
     useEffect(() => {
         if (videoId && isAuthenticated) {
@@ -542,7 +546,7 @@ const Video = () => {
                             <VideoPlayer
                                 src={videoSrc}
                                 videoId={video?.id}
-                                onViewRecorded={recordView}
+                                onViewRecorded={handleViewRecorded}
                                 poster={video?.thumbnail ? `/uploads/thumbnails/${video.thumbnail}` : undefined}
                             />
                         </div>
