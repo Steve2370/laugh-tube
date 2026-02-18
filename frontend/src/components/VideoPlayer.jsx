@@ -128,6 +128,7 @@ const VideoPlayer = ({
 
     const sendViewStartOnce = async () => {
         if (!videoId) return;
+
         const tokenPayload = apiService.decodeToken(localStorage.getItem('access_token'));
         const userId = tokenPayload?.sub ?? tokenPayload?.user_id ?? null;
         const sessionId = apiService.getOrCreateSessionId();
@@ -143,12 +144,15 @@ const VideoPlayer = ({
             completed: false,
         });
 
-        if (res && (res.success === true || res.message)) {
-            viewedRef.current = true;
-            apiService.markVideoAsViewed(videoId, userId);
-        } else {
-            console.warn('recordView start failed:', res);
+        console.log("recordView response:", res);
+
+        if (res?.success !== true) {
+            console.warn("recordView NOT success:", res);
+            return;
         }
+
+        viewedRef.current = true;
+        apiService.markVideoAsViewed(videoId, userId);
     };
 
     const toggleMute = () => {
@@ -276,7 +280,7 @@ const VideoPlayer = ({
                             ? Math.round((vid.currentTime / vid.duration) * 100)
                             : 100;
 
-                        apiService.recordView(videoId, {
+                        const res = apiService.recordView(videoId, {
                             user_id: userId,
                             session_id: sessionId,
                             watch_time: watchedSec,
@@ -287,6 +291,8 @@ const VideoPlayer = ({
                                 apiService.markVideoAsViewed(videoId, userId);
                             })
                             .catch(() => {});
+
+                        console.log("recordView response:", res);
                     }
 
                     onEnded?.();
