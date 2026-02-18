@@ -106,17 +106,47 @@ const VideoPlayer = ({
         };
     }, [src, autoPlay, onLoadedMetadata, onError]);
 
-    const togglePlay = () => {
+    const togglePlay = async () => {
         const video = videoRef.current;
         if (!video) return;
 
         if (video.paused) {
-            video.play();
-            setIsPlaying(true);
-            if (onPlay) onPlay();
+            try {
+                await video.play();
+                setIsPlaying(true);
+                await sendViewStartOnce();
+                if (onPlay) onPlay();
+            } catch (e) {
+                console.warn("play failed:", e);
+            }
         } else {
             video.pause();
             setIsPlaying(false);
+        }
+    };
+
+    const sendViewStartOnce = async () => {
+        if (!videoId) return;
+        const tokenPayload = apiService.decodeToken(localStorage.getItem('access_token'));
+        const userId = tokenPayload?.sub ?? tokenPayload?.user_id ?? null;
+        const sessionId = apiService.getOrCreateSessionId();
+
+        if (viewedRef.current) return;
+        if (apiService.hasViewedVideo(videoId, userId)) return;
+
+        const res = await apiService.recordView(videoId, {
+            user_id: userId,
+            session_id: sessionId,
+            watch_time: 0,
+            watch_percentage: 0,
+            completed: false,
+        });
+
+        if (res && (res.success === true || res.message)) {
+            viewedRef.current = true;
+            apiService.markVideoAsViewed(videoId, userId);
+        } else {
+            console.warn('recordView start failed:', res);
         }
     };
 
