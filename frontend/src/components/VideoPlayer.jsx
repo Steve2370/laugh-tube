@@ -258,46 +258,18 @@ const VideoPlayer = ({
                 className="w-full aspect-video"
                 src={src}
                 poster={poster}
-                onPlay={() => {
-                    setIsPlaying(true);
-                    if (viewedRef.current) return;
-                    viewedRef.current = true;
-
-                    if (videoId) {
-                        const tokenPayload = apiService.decodeToken(
-                            localStorage.getItem('access_token')
-                        );
-                        const userId = tokenPayload?.sub ?? tokenPayload?.user_id ?? null;
-                        const sessionId = apiService.getOrCreateSessionId();
-
-                        if (!apiService.hasViewedVideo(videoId, userId)) {
-                            apiService.recordView(videoId, {
-                                user_id: userId,
-                                session_id: sessionId,
-                                watch_time: 0,
-                                watch_percentage: 0,
-                                completed: false,
-                            }).then(() => {
-                                apiService.markVideoAsViewed(videoId, userId);
-                            }).catch(() => {
-                            });
-                        }
-                    }
-
-                    onPlay?.();
-                }}
+                onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={() => {
                     setIsPlaying(false);
 
                     if (videoId && viewedRef.current) {
-                        const tokenPayload = apiService.decodeToken(
-                            localStorage.getItem('access_token')
-                        );
+                        const tokenPayload = apiService.decodeToken(localStorage.getItem('access_token'));
                         const userId = tokenPayload?.sub ?? tokenPayload?.user_id ?? null;
                         const sessionId = apiService.getOrCreateSessionId();
                         const vid = videoRef.current;
+
                         const watchedSec = vid ? Math.floor(vid.currentTime) : 0;
                         const pct = vid && vid.duration > 0
                             ? Math.round((vid.currentTime / vid.duration) * 100)
@@ -309,10 +281,14 @@ const VideoPlayer = ({
                             watch_time: watchedSec,
                             watch_percentage: pct,
                             completed: true,
-                        }).catch(() => {});
+                        })
+                            .then(() => {
+                                apiService.markVideoAsViewed(videoId, userId);
+                            })
+                            .catch(() => {});
                     }
 
-                    if (onEnded) onEnded();
+                    onEnded?.();
                 }}
                 playsInline
                 preload="metadata"
