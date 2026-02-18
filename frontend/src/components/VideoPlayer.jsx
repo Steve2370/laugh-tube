@@ -113,12 +113,8 @@ const VideoPlayer = ({
 
         if (video.paused) {
             try {
-                console.log("play start");
                 await video.play();
                 setIsPlaying(true);
-                console.log("before sendViewStartOnce");
-                await sendViewStartOnce();
-                console.log("after sendViewStartOnce");
                 onPlay?.();
             } catch (e) {
                 console.warn("play failed:", e);
@@ -128,6 +124,7 @@ const VideoPlayer = ({
             setIsPlaying(false);
         }
     };
+
 
     const sendViewStartOnce = async () => {
         console.log("sendViewStartOnce called", { videoId });
@@ -280,7 +277,10 @@ const VideoPlayer = ({
                 className="w-full aspect-video"
                 src={src}
                 poster={poster}
-                onPlay={() => setIsPlaying(true)}
+                onPlaying={() => {
+                    setIsPlaying(true);
+                    sendViewStartOnce();
+                }}
                 onPause={() => setIsPlaying(false)}
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={() => {
