@@ -112,10 +112,11 @@ const VideoPlayer = ({
 
         if (video.paused) {
             try {
+                console.log("play start");
                 await video.play();
                 setIsPlaying(true);
                 await sendViewStartOnce();
-                if (onPlay) onPlay();
+                onPlay?.();
             } catch (e) {
                 console.warn("play failed:", e);
             }
