@@ -242,11 +242,13 @@ class ApiService {
 
     decodeToken(token) {
         try {
-            const parts = token.split('.');
+            if (!token || typeof token !== "string") return null;
+            const parts = token.split(".");
             if (parts.length !== 3) return null;
-            return JSON.parse(atob(parts[1]));
-        } catch (error) {
-            console.error('Erreur décodage token:', error);
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+            return payload ?? null;
+        } catch (e) {
+            console.warn("Erreur décodage token:", e);
             return null;
         }
     }
