@@ -157,55 +157,30 @@ class VideoController
             $this->authMiddleware->handleOptional();
             $userId = $this->authMiddleware->getUserId();
 
-            $rawInput = file_get_contents('php://input') ?: '';
-            $data = json_decode($rawInput, true);
-            if (!is_array($data)) {
-                $data = [];
-            }
-
-            $sessionId = (string)($data['session_id'] ?? $data['sessionId'] ?? '');
-            $watchTime = (int)($data['watch_time'] ?? $data['watchTime'] ?? 0);
-            $watchPct  = (float)($data['watch_percentage'] ?? $data['watchPercentage'] ?? 0.0);
-            $completed = (bool)($data['completed'] ?? false);
-            $sessionId = SecurityHelper::sanitizeInput($sessionId);
-            if (($userId === null || $userId === 0) && $sessionId === '') {
-                JsonResponse::badRequest(['error' => 'session_id requis pour un utilisateur non connecté']);
-                return;
-            }
+            $rawInput = file_get_contents('php://input');
+            $data = json_decode($rawInput, true) ?? [];
 
             $viewData = [
-                'user_id' => $userId ?: null,
-                'session_id' => $sessionId,
-                'watch_time' => max(0, $watchTime),
-                'watch_percentage' => max(0.0, min(100.0, $watchPct)),
-                'completed' => $completed,
+                'user_id' => $userId,
+                'session_id' => SecurityHelper::sanitizeInput($data['sessionId'] ?? ''),
+                'watch_time' => (int)($data['watchTime'] ?? 0),
+                'watch_percentage' => (float)($data['watchPercentage'] ?? 0.0),
+                'completed' => (bool)($data['completed'] ?? false),
                 'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
             ];
 
-            $result = $this->videoService->recordView(
-                $videoId,
-                $viewData['user_id'],
-                $viewData['session_id'],
-                $viewData['watch_time'],
-                $viewData['watch_percentage'],
-                $viewData['completed']
-            );
+            $result = $this->analyticsService->recordView($videoId, $viewData);
 
-            if (!($result['success'] ?? false)) {
-                $code = (int)($result['code'] ?? 400);
-                JsonResponse::json(['success' => false, 'error' => $result['message'] ?? 'Erreur'], $code);
-                return;
+            if (!$result['success']) {
+                JsonResponse::notFound(['error' => $result['message']]);
             }
 
-            JsonResponse::success([
-                'success' => true,
-                'message' => $result['message'] ?? 'Vue enregistrée',
-                'alreadyViewed' => (bool)($result['alreadyViewed'] ?? false),
-            ]);
-        } catch (\Throwable $e) {
+            JsonResponse::success(['message' => 'Vue enregistrée']);
+
+        } catch (\Exception $e) {
             error_log("VideoController::recordView - Error: " . $e->getMessage());
-            JsonResponse::serverError(['success' => false, 'error' => 'Erreur serveur']);
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
         }
     }
 
@@ -271,7 +246,11 @@ class VideoController
     {
         try {
             $videos = $this->db->fetchAll(
-                "SELECT v.*, COUNT(DISTINCT vv.id) as view_count
+                "SELECT v.*,
+                        COUNT(DISTINCT vv.id) as view_count,
+                        (SELECT COUNT(*) FROM likes l WHERE l.video_id = v.id) AS likes,
+                        (SELECT COUNT(*) FROM dislikes d WHERE d.video_id = v.id) AS dislikes,
+                        (SELECT COUNT(*) FROM commentaires c WHERE c.video_id = v.id) AS comments
                  FROM videos v
                  LEFT JOIN video_views vv ON v.id = vv.video_id
                  WHERE v.user_id = $1 AND v.deleted_at IS NULL
@@ -279,6 +258,14 @@ class VideoController
                  ORDER BY v.created_at DESC",
                 [$userId]
             );
+
+            $videos = array_map(function($v) {
+                $v['views']    = (int)($v['views']      ?? $v['view_count'] ?? 0);
+                $v['likes']    = (int)($v['likes']      ?? 0);
+                $v['dislikes'] = (int)($v['dislikes']   ?? 0);
+                $v['comments'] = (int)($v['comments']   ?? 0);
+                return $v;
+            }, $videos);
 
             JsonResponse::success(['videos' => $videos]);
 
