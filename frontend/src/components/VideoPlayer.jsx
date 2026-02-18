@@ -150,21 +150,24 @@ const VideoPlayer = ({
         }
         console.log("sendViewStartOnce -> calling recordView");
 
-        const res = await apiService.recordView(videoId, {
-            user_id: userId,
-            session_id: sessionId,
-            watch_time: 0,
-            watch_percentage: 0,
-            completed: false,
-        });
-        console.log("recordView response:", res);
-        if (res?.success === true) {
-            viewedRef.current = true;
-            apiService.markVideoAsViewed(videoId, userId);
+        viewedRef.current = true;
+        apiService.markVideoAsViewed(videoId, userId);
 
-            if (res.alreadyViewed === false) {
+        try {
+            const res = await apiService.recordView(videoId, {
+                user_id: userId,
+                session_id: sessionId,
+                watch_time: 0,
+                watch_percentage: 0,
+                completed: false,
+            });
+
+            const ok = res?.success === true || res?.message != null;
+            if (ok && !res?.alreadyViewed) {
                 onViewRecorded?.();
             }
+        } catch (e) {
+            viewedRef.current = false;
         }
     };
 
