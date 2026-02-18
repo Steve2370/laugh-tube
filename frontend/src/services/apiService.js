@@ -5,7 +5,6 @@ class ApiService {
         this.baseURL = API_URL;
         this.isRefreshing = false;
         this.failedQueue = [];
-        console.log('API Service initialisé:', this.baseURL);
     }
 
     /**
@@ -108,8 +107,6 @@ class ApiService {
             skipAuth: true,
         });
 
-        console.log('Réponse login:', response);
-
         const accessToken = response.token || response.data?.token ||
             response.access_token || response.data?.access_token;
         const refreshToken = response.refresh_token || response.data?.refresh_token;
@@ -119,7 +116,6 @@ class ApiService {
             if (refreshToken) {
                 localStorage.setItem('refresh_token', refreshToken);
             }
-            console.log('Tokens sauvegardés');
         } else {
             console.error('Aucun token dans la réponse:', response);
         }
@@ -141,8 +137,6 @@ class ApiService {
             skipAuth: true,
         });
 
-        console.log('Réponse register:', response);
-
         const accessToken = response.token || response.data?.token ||
             response.access_token || response.data?.access_token;
         const refreshToken = response.refresh_token || response.data?.refresh_token;
@@ -152,7 +146,6 @@ class ApiService {
             if (refreshToken) {
                 localStorage.setItem('refresh_token', refreshToken);
             }
-            console.log('Tokens sauvegardés après inscription');
         } else {
             console.error('Aucun token dans la réponse register:', response);
         }
@@ -183,7 +176,6 @@ class ApiService {
 
             if (accessToken) {
                 localStorage.setItem('access_token', accessToken);
-                console.log('Token rafraîchi avec succès');
                 return true;
             }
 
@@ -231,7 +223,6 @@ class ApiService {
     clearAuth() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        console.log('🔓 Authentification effacée');
     }
 
     /**
