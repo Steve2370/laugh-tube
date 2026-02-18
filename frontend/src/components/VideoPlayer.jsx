@@ -3,18 +3,18 @@ import apiService from '../services/apiService.js';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
 const VideoPlayer = ({
-                         src,
-                         poster,
-                         videoId = null,
-                         onPlay,
-                         onTimeUpdate,
-                         onEnded,
-                         onViewRecorded,
-                         onError,
-                         onLoadedMetadata,
-                         autoPlay = true,
-                         className = ""
-                     }) => {
+    src,
+    poster,
+    videoId = null,
+    onPlay,
+    onTimeUpdate,
+    onEnded,
+    onViewRecorded,
+    onError,
+    onLoadedMetadata,
+    autoPlay = true,
+    className = ""
+}) => {
     const videoRef = useRef(null);
     const viewedRef = useRef(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -113,7 +113,13 @@ const VideoPlayer = ({
 
         if (video.paused) {
             try {
+                console.log("play start");
                 await video.play();
+                setIsPlaying(true);
+                console.log("before sendViewStartOnce");
+                await sendViewStartOnce();
+                console.log("after sendViewStartOnce");
+                onPlay?.();
             } catch (e) {
                 console.warn("play failed:", e);
             }
@@ -124,22 +130,28 @@ const VideoPlayer = ({
     };
 
     const sendViewStartOnce = async () => {
+        console.log("sendViewStartOnce called", { videoId });
 
         if (!videoId) {
+            console.warn("sendViewStartOnce STOP: missing videoId");
             return;
         }
 
         const tokenPayload = apiService.decodeToken(localStorage.getItem('access_token'));
         const userId = tokenPayload?.sub ?? tokenPayload?.user_id ?? null;
         const sessionId = apiService.getOrCreateSessionId();
+        console.log("sendViewStartOnce data", { userId, sessionId });
 
         if (viewedRef.current) {
+            console.warn("sendViewStartOnce STOP: viewedRef already true");
             return;
         }
 
         if (apiService.hasViewedVideo(videoId, userId)) {
+            console.warn("sendViewStartOnce STOP: hasViewedVideo true");
             return;
         }
+        console.log("sendViewStartOnce -> calling recordView");
 
         const res = await apiService.recordView(videoId, {
             user_id: userId,
@@ -148,6 +160,7 @@ const VideoPlayer = ({
             watch_percentage: 0,
             completed: false,
         });
+        console.log("recordView response:", res);
         if (res?.success === true) {
             viewedRef.current = true;
             apiService.markVideoAsViewed(videoId, userId);
@@ -267,14 +280,7 @@ const VideoPlayer = ({
                 className="w-full aspect-video"
                 src={src}
                 poster={poster}
-                onPlay={() => {
-                    setIsPlaying(true);
-                    console.log("before sendViewStartOnce");
-                    sendViewStartOnce();
-                    console.log("after sendViewStartOnce");
-                    console.log("VideoPlayer rendered", videoId);
-                    onPlay?.();
-                }}
+                onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={() => {
@@ -303,6 +309,7 @@ const VideoPlayer = ({
                             })
                             .catch(() => {});
 
+                        console.log("recordView response:", res);
                     }
 
                     onEnded?.();
