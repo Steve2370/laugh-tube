@@ -390,6 +390,11 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 };
 
 const VideosTab = ({ videos, onVideoClick, onDelete, isOwnProfile }) => {
+    const handleVideoClick = (video) => {
+        localStorage.setItem("currentVideo", JSON.stringify(video));
+        window.location.hash = "#/video";
+    };
+
     if (videos.length === 0) {
         return (
             <div className="text-center py-16">
@@ -408,7 +413,7 @@ const VideosTab = ({ videos, onVideoClick, onDelete, isOwnProfile }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {videos.map((video) => (
                 <div key={video.id} className="relative">
-                    <VideoCard video={video} onClick={() => onVideoClick(video)} />
+                    <VideoCard key={video.id} video={video} onClick={() => handleVideoClick(video)}/>
                     {isOwnProfile && (
                         <div className="mt-2 px-1">
                             <button
