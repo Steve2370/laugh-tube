@@ -6,7 +6,7 @@ use App\Interfaces\DatabaseInterface;
 
 use PDO;
 
-class User extends \App\Repositories\UserRepository
+class User
 {
     public function __construct(private DatabaseInterface $db) {}
 

@@ -160,8 +160,8 @@ try {
     $analyticsService = new AnalyticsService($db);
 
     $authService = new AuthService(
-        $userModel,
         $userRepository,
+        $logRepository,
         $tokenService,
         $validationService,
         $sessionRepository,
