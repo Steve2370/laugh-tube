@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
+import apiService from '../services/apiService.js';
 import {
     Settings as SettingsIcon,
     User,
@@ -34,8 +35,13 @@ const Settings = () => {
         success('Profil mis à jour avec succès !');
     };
 
-    const handlePasswordChange = (e) => {
+    const handlePasswordChange = async (e) => {
         e.preventDefault();
+
+        if (!currentPassword || !newPassword) {
+            error("Mot de passe actuel et nouveau mot de passe requis");
+            return;
+        }
 
         if (newPassword !== confirmPassword) {
             error('Les mots de passe ne correspondent pas');
@@ -47,10 +53,27 @@ const Settings = () => {
             return;
         }
 
-        success('Mot de passe changé avec succès !');
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+        try {
+            const res = await apiService.request('/auth/change-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                }),
+            });
+
+            if (res?.success !== true) {
+                error(res?.error || res?.message || "Impossible de changer le mot de passe");
+                return;
+            }
+
+            success(res?.message || 'Mot de passe changé avec succès !');
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (err) {
+            error(err?.message || "Erreur lors du changement de mot de passe");
+        }
     };
 
     const tabs = [
