@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Interfaces\DatabaseInterface;
 use App\Middleware\AuthAide;
 use App\Middleware\AuthMiddleware;
 use App\Services\AbonnementService;
@@ -16,14 +17,16 @@ class UserController
     private User $userModel;
     private AbonnementService $abonnementService;
     private AuthMiddleware $authMiddleware;
+    private DatabaseInterface $db;
 
-    public function __construct($userService, $uploadService, $userModel, $abonnementService, $authMiddleware)
+    public function __construct($userService, $uploadService, $userModel, $abonnementService, $authMiddleware, $db)
     {
         $this->userService = $userService;
         $this->uploadService = $uploadService;
         $this->userModel = $userModel;
         $this->abonnementService = $abonnementService;
         $this->authMiddleware = $authMiddleware;
+        $this->db = $db;
     }
 
     public function uploadAvatar(): void
@@ -127,7 +130,6 @@ class UserController
             $stmt->execute([':user_id' => $userId]);
             $videos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-            // Convertir les types numeriques
             $videos = array_map(function ($v) {
                 $v['id']       = (int)$v['id'];
                 $v['user_id']  = (int)$v['user_id'];
@@ -896,6 +898,30 @@ class UserController
 
         readfile($placeholderPath);
         exit;
+    }
+
+    public function getSubscribersList(int $userId): void
+    {
+        try {
+            if (!$this->db) {
+                JsonResponse::serverError(['error' => 'Service non disponible']);
+                return;
+            }
+
+            $rows = $this->db->fetchAll(
+                "SELECT u.id, u.username, u.avatar_url, a.created_at AS subscribed_at
+                 FROM abonnements a
+                 JOIN users u ON u.id = a.subscriber_id
+                 WHERE a.subscribed_to_id = $1 AND u.deleted_at IS NULL
+                 ORDER BY a.created_at DESC",
+                [$userId]
+            );
+
+            JsonResponse::success(['subscribers' => $rows ?? []]);
+        } catch (\Exception $e) {
+            error_log("UserController::getSubscribersList - Error: " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
     private function hasUserImage(int $userId, string $type = 'avatar'): bool

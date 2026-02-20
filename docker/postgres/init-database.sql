@@ -545,10 +545,15 @@ ALTER TABLE users
     ADD COLUMN IF NOT EXISTS account_locked_until TIMESTAMP,
     ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ADD COLUMN IF NOT EXISTS ip_registration VARCHAR(45),
+    ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(64),
+    ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS verification_token VARCHAR(64),
     ADD COLUMN IF NOT EXISTS user_agent_registration TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_users_email_verified ON users(email_verified);
 CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token);
+CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token);
 CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token);
 
 CREATE TABLE IF NOT EXISTS sessions

@@ -39,9 +39,6 @@ class TokenService
         return JWT::encode($payload, $this->secret, $this->algorithm);
     }
 
-    /**
-     * @throws RandomException
-     */
     public function generateRefreshToken(array $userData): string
     {
         $payload = [
@@ -105,5 +102,59 @@ class TokenService
         }
 
         return $this->generateToken($userData);
+    }
+
+    public function generateTokenFromPayload(array $payload): string
+    {
+        if (!isset($payload['iat'])) $payload['iat'] = time();
+        if (!isset($payload['exp'])) $payload['exp'] = time() + $this->expirationTime;
+        if (!isset($payload['jti'])) $payload['jti'] = bin2hex(random_bytes(16));
+
+        return JWT::encode($payload, $this->secret, $this->algorithm);
+    }
+
+    public function refreshToken(string $refreshToken): array
+    {
+        try {
+            $payload = $this->validateToken($refreshToken);
+
+            if (!$payload) {
+                return [
+                    'success' => false,
+                    'message' => 'Token invalide ou expiré',
+                    'code'    => 401,
+                ];
+            }
+
+            if (isset($payload['type']) && $payload['type'] !== 'refresh') {
+                return [
+                    'success' => false,
+                    'message' => 'Token de rafraîchissement requis',
+                    'code'    => 401,
+                ];
+            }
+
+            $userData = [
+                'id'       => $payload['sub'],
+                'username' => $payload['username'] ?? '',
+                'role'     => $payload['role']     ?? 'user',
+            ];
+
+            $newToken = $this->generateToken($userData);
+
+            return [
+                'success' => true,
+                'token'   => $newToken,
+                'user'    => $userData,
+            ];
+
+        } catch (\Exception $e) {
+            error_log("TokenService::refreshToken - " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur lors du rafraîchissement',
+                'code'    => 500,
+            ];
+        }
     }
 }

@@ -1,9 +1,15 @@
 <?php
 namespace App\Controllers;
 
+use App\Interfaces\DatabaseInterface;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\InputSanitizerMiddleware;
+use App\Repositories\SessionRepository;
 use App\Services\AuditService;
 use App\Services\AuthService;
+use App\Services\EmailService;
+use App\Services\TokenService;
+use App\Services\TwoFactorService;
 use App\Services\ValidationService;
 use App\Utils\JsonResponse;
 use App\Utils\SecurityHelper;
@@ -14,7 +20,11 @@ class AuthController
         private AuthService $authService,
         private ValidationService $validationService,
         private AuditService $auditService,
-        private AuthMiddleware $authMiddleware
+        private AuthMiddleware $authMiddleware,
+        private DatabaseInterface $db,
+        private SessionRepository $sessionRepository,
+        private TwoFactorService $twoFactorService,
+        private TokenService $tokenService,
     ) {}
 
     public function register(): void
@@ -333,43 +343,364 @@ class AuthController
         }
     }
 
-    public function refresh()
+    public function refresh(): void
     {
+        try {
+            $input = InputSanitizerMiddleware::validateJsonInput();
+            $refreshToken = $input['refresh_token'] ?? null;
+
+            if (!$refreshToken) {
+                JsonResponse::badRequest(['error' => 'refresh_token requis']);
+                return;
+            }
+
+            $result = $this->tokenService->refreshToken($refreshToken);
+
+            if (!$result['success']) {
+                http_response_code($result['code'] ?? 401);
+                echo json_encode(['error' => $result['message']]);
+                return;
+            }
+
+            JsonResponse::success($result);
+        } catch (\Exception $e) {
+            error_log("AuthController::refresh - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
-    public function verify2FALogin()
+    public function verify2FALogin(): void
     {
+        try {
+            $input = InputSanitizerMiddleware::validateJsonInput();
+            if (!$input) return;
+
+            $userId = (int)($input['user_id'] ?? 0);
+            $code   = SecurityHelper::sanitizeInput($input['code'] ?? '');
+
+            if (empty($userId) || empty($code)) {
+                JsonResponse::badRequest(['error' => 'user_id et code requis']);
+                return;
+            }
+
+            $result = $this->twoFactorService->verifyCode($userId, $code);
+
+            if (!$result['success']) {
+                $httpCode = $result['code'] ?? 401;
+                http_response_code($httpCode);
+                echo json_encode(['error' => $result['message']]);
+                return;
+            }
+
+            $user = $this->db->fetchOne(
+                "SELECT id, username, email, role FROM users WHERE id = $1 AND deleted_at IS NULL",
+                [$userId]
+            );
+
+            if (!$user) {
+                JsonResponse::notFound(['error' => 'Utilisateur introuvable']);
+                return;
+            }
+
+            $ip        = SecurityHelper::getClientIp();
+            $userAgent = SecurityHelper::getUserAgent();
+            $sessionId = $this->sessionRepository->createSession([
+                'user_id'    => $userId,
+                'token'      => bin2hex(random_bytes(32)),
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+                'expires_at' => date('Y-m-d H:i:s', time() + 604800),
+            ]);
+
+            $token = $this->authService->generateToken([
+                'sub'            => $userId,
+                'username'       => $user['username'],
+                'email'          => $user['email'],
+                'role'           => $user['role'],
+                'session_id'     => $sessionId,
+                'two_fa_verified' => true,
+            ]);
+
+            $this->auditService->logSecurityEvent($userId, '2fa_verified', ['method' => $result['method'] ?? 'totp']);
+
+            JsonResponse::success([
+                'success' => true,
+                'token'   => $token,
+                'user'    => [
+                    'id'       => $user['id'],
+                    'username' => $user['username'],
+                    'email'    => $user['email'],
+                    'role'     => $user['role'],
+                ],
+            ]);
+        } catch (\Exception $e) {
+            error_log("AuthController::verify2FALogin - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
-    public function check2FAStatus()
+    public function check2FAStatus(): void
     {
+        try {
+            if (!$this->authMiddleware->handle()) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
+            $userId = $this->authMiddleware->getUserId();
+            $result = $this->twoFactorService->get2FAStatus($userId);
+            JsonResponse::success($result);
+        } catch (\Exception $e) {
+            error_log("AuthController::check2FAStatus - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
-    public function enable2FA()
+    public function enable2FA(): void
     {
+        try {
+            if (!$this->authMiddleware->handle()) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
+            $userId = $this->authMiddleware->getUserId();
+            $result = $this->twoFactorService->enable2FA($userId);
+
+            if (!$result['success']) {
+                http_response_code($result['code'] ?? 400);
+                echo json_encode(['error' => $result['message']]);
+                return;
+            }
+
+            JsonResponse::success([
+                'secret'       => $result['secret'],
+                'qr_code'      => $result['qr_code_url'],
+                'backup_codes' => $result['backup_codes'],
+                'message'      => $result['message'],
+            ]);
+        } catch (\Exception $e) {
+            error_log("AuthController::enable2FA - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
-    public function verify2FASetup()
+    public function verify2FASetup(): void
     {
+        try {
+            if (!$this->authMiddleware->handle()) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
+
+            $input = InputSanitizerMiddleware::validateJsonInput();
+            if (!$input) return;
+
+            $userId = $this->authMiddleware->getUserId();
+            $code   = SecurityHelper::sanitizeInput($input['code'] ?? '');
+
+            if (empty($code)) {
+                JsonResponse::badRequest(['error' => 'Code requis']);
+                return;
+            }
+
+            $result = $this->twoFactorService->verify2FASetup($userId, $code);
+
+            if (!$result['success']) {
+                http_response_code($result['code'] ?? 400);
+                echo json_encode(['error' => $result['message']]);
+                return;
+            }
+
+            JsonResponse::success(['message' => $result['message']]);
+        } catch (\Exception $e) {
+            error_log("AuthController::verify2FASetup - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
-    public function disable2FA()
+    public function disable2FA(): void
     {
+        try {
+            if (!$this->authMiddleware->handle()) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
+
+            $input = InputSanitizerMiddleware::validateJsonInput();
+            if (!$input) return;
+
+            $userId   = $this->authMiddleware->getUserId();
+            $password = $input['password'] ?? '';
+
+            if (empty($password)) {
+                JsonResponse::badRequest(['error' => 'Mot de passe requis']);
+                return;
+            }
+
+            $result = $this->twoFactorService->disable2FA($userId, $password);
+
+            if (!$result['success']) {
+                http_response_code($result['code'] ?? 400);
+                echo json_encode(['error' => $result['message']]);
+                return;
+            }
+
+            JsonResponse::success(['message' => $result['message']]);
+        } catch (\Exception $e) {
+            error_log("AuthController::disable2FA - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
-    public function requestPasswordReset()
+    public function requestPasswordReset(): void
     {
+        try {
+            $input = InputSanitizerMiddleware::validateJsonInput();
+            if (!$input) return;
+
+            $email = SecurityHelper::sanitizeInput($input['email'] ?? '');
+
+            if (empty($email)) {
+                JsonResponse::badRequest(['error' => 'Email requis']);
+                return;
+            }
+
+            $result = $this->authService->requestPasswordReset($email);
+            JsonResponse::success(['message' => 'Si ce compte existe, un email a été envoyé']);
+        } catch (\Exception $e) {
+            error_log("AuthController::requestPasswordReset - " . $e->getMessage());
+            JsonResponse::success(['message' => 'Si ce compte existe, un email a été envoyé']);
+        }
     }
 
-    public function resetPassword()
+    public function resetPassword(): void
     {
+        try {
+            $input = InputSanitizerMiddleware::validateJsonInput();
+            if (!$input) return;
+
+            $token       = SecurityHelper::sanitizeInput($input['token']        ?? '');
+            $newPassword = $input['new_password'] ?? '';
+
+            if (empty($token) || empty($newPassword)) {
+                JsonResponse::badRequest(['error' => 'Token et nouveau mot de passe requis']);
+                return;
+            }
+
+            $result = $this->authService->resetPassword($token, $newPassword);
+
+            if (!$result['success']) {
+                http_response_code($result['code'] ?? 400);
+                echo json_encode(['error' => $result['message']]);
+                return;
+            }
+
+            JsonResponse::success(['message' => 'Mot de passe réinitialisé avec succès']);
+        } catch (\Exception $e) {
+            error_log("AuthController::resetPassword - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
-    public function resendVerification()
+    public function resendVerification(): void
     {
+        try {
+            $input = InputSanitizerMiddleware::validateJsonInput();
+            if (!$input) return;
+
+            $email = SecurityHelper::sanitizeInput($input['email'] ?? '');
+
+            if (empty($email)) {
+                JsonResponse::badRequest(['error' => 'Email requis']);
+                return;
+            }
+
+            $result = $this->authService->resendVerificationEmail($email);
+
+            if (!$result['success']) {
+                http_response_code($result['code'] ?? 400);
+                echo json_encode(['error' => $result['message']]);
+                return;
+            }
+
+            JsonResponse::success(['message' => 'Email de vérification envoyé']);
+        } catch (\Exception $e) {
+            error_log("AuthController::resendVerification - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 
-    public function verify2FA()
+    public function verify2FA(): void
     {
+        $this->verify2FASetup();
+    }
+
+    public function cancelAccountDeletion(): void
+    {
+        try {
+            if (!$this->authMiddleware->handle()) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
+
+            $userId = $this->authMiddleware->getUserId();
+
+            $user = $this->db->fetchOne(
+                "SELECT id, deletion_scheduled_at FROM users WHERE id = $1",
+                [$userId]
+            );
+
+            if (!$user || empty($user['deletion_scheduled_at'])) {
+                JsonResponse::badRequest(['error' => 'Aucune suppression en attente']);
+                return;
+            }
+
+            $this->db->execute(
+                "UPDATE users SET deletion_scheduled_at = NULL, deleted_at = NULL, updated_at = NOW() WHERE id = $1",
+                [$userId]
+            );
+
+            $this->auditService->logSecurityEvent($userId, 'account_deletion_cancelled', []);
+
+            JsonResponse::success(['message' => 'Suppression annulée']);
+        } catch (\Exception $e) {
+            error_log("AuthController::cancelAccountDeletion - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
+    }
+
+    public function deleteAccount(): void
+    {
+        try {
+            if (!$this->authMiddleware->handle()) {
+                JsonResponse::unauthorized(['error' => 'Non authentifié']);
+                return;
+            }
+
+            $input = InputSanitizerMiddleware::validateJsonInput();
+            if (!$input) return;
+
+            $userId   = $this->authMiddleware->getUserId();
+            $password = $input['password'] ?? '';
+            $reason   = isset($input['reason']) ? SecurityHelper::sanitizeInput($input['reason']) : null;
+
+            if (empty($password)) {
+                $this->auditService->logSecurityEvent($userId, 'account_deletion_attempt_no_password', []);
+                JsonResponse::badRequest(['error' => 'Mot de passe requis']);
+                return;
+            }
+
+            $result = $this->authService->deleteAccount($userId, $password, $reason);
+
+            if (!$result['success']) {
+                http_response_code($result['code'] ?? 400);
+                echo json_encode(['error' => $result['message']]);
+                return;
+            }
+
+            JsonResponse::success($result);
+        } catch (\Exception $e) {
+            error_log("AuthController::deleteAccount - " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
     }
 }
