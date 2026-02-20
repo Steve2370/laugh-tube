@@ -71,28 +71,20 @@ class ApiService {
         }
     }
 
-    /**
-     *
-     * @private
-     */
     async handleResponse(response) {
-        const contentType = response.headers.get('content-type');
+        const text = await response.text();
+        let data = null;
 
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || data.error || `Erreur ${response.status}`);
-            }
-
-            return data;
+        if (text && text.trim().length > 0) {
+            try { data = JSON.parse(text); } catch (_) { data = null; }
         }
 
         if (!response.ok) {
-            throw new Error(`Erreur ${response.status}`);
+            const msg = data?.message || data?.error || `Erreur ${response.status}`;
+            throw new Error(msg);
         }
 
-        return response;
+        return data ?? { success: true };
     }
 
     /**

@@ -160,8 +160,8 @@ try {
     $analyticsService = new AnalyticsService($db);
 
     $authService = new AuthService(
+        $userModel,
         $userRepository,
-        $logRepository,
         $tokenService,
         $validationService,
         $sessionRepository,
@@ -174,14 +174,24 @@ try {
 
     $authMiddleware = new AuthMiddleware($tokenService, $sessionRepository, $db, $auditService);
 
-    $authController = new AuthController($authService, $validationService, $auditService, $authMiddleware);
+    $authController = new AuthController(
+        $authService,
+        $validationService,
+        $auditService,
+        $authMiddleware,
+        $db,
+        $sessionRepository,
+        $twoFactorService,
+        $tokenService,
+        $emailService);
 
     $userController = new UserController(
         $userService,
         $uploadService,
         $userModel,
         $abonnementService,
-        $authMiddleware
+        $authMiddleware,
+        $db
     );
 
     $videoController = new VideoController(
@@ -289,6 +299,16 @@ try {
         return;
     }
 
+    if ($uri === '/auth/delete-account' && $method === 'POST') {
+        $authController->deleteAccount();
+        return;
+    }
+
+    if ($uri === '/auth/cancel-deletion' && $method === 'POST') {
+        $authController->cancelAccountDeletion();
+        return;
+    }
+
     if ($uri === '/resetPasswordRequest.php' && $method === 'POST') {
         $authController->requestPasswordReset();
         return;
@@ -366,6 +386,11 @@ try {
 
     if (preg_match('#^/users/(\d+)/subscribers-count$#', $uri, $m) && $method === 'GET') {
         $userController->getSubscribersCount((int)$m[1]);
+        return;
+    }
+
+    if (preg_match('#^/users/(\d+)/subscribers$#', $uri, $m) && $method === 'GET') {
+        $userController->getSubscribersList((int)$m[1]);
         return;
     }
 

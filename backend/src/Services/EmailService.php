@@ -357,4 +357,9 @@ HTML;
 </html>
 HTML;
     }
+
+    public function resendVerificationEmail(int $userId, string $email, string $username, string $token): bool
+    {
+        return $this->sendVerificationEmail($userId, $email, $username, $token);
+    }
 }

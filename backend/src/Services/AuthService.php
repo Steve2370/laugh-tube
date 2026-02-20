@@ -9,9 +9,10 @@ use PDOException;
 
 class AuthService
 {
+
     public function __construct(
         private UserRepository $userModel,
-        private LogRepository $logRepo,
+        private UserRepository $userRepository,
         private TokenService $tokenService,
         private ValidationService $validationService,
         private SessionRepository $sessionRepository,
@@ -492,5 +493,142 @@ class AuthService
                 'message' => 'Erreur lors de la suppression du compte'
             ];
         }
+    }
+
+    public function requestPasswordReset(string $email): array
+    {
+        try {
+            $user = $this->userRepository->findByEmail($email);
+
+            if (!$user) {
+                return ['success' => true, 'message' => 'Si ce compte existe, un email a été envoyé'];
+            }
+
+            $token   = bin2hex(random_bytes(32));
+            $expires = date('Y-m-d H:i:s', time() + 3600); // 1 hour
+
+            $this->userRepository->savePasswordResetToken($user['id'], $token, $expires);
+
+            $this->emailService->sendPasswordResetEmail(
+                $user['id'],
+                $user['email'],
+                $user['username'],
+                $token
+            );
+
+            $this->auditService->logSecurityEvent($user['id'], 'password_reset_requested', []);
+
+            return ['success' => true, 'message' => 'Si ce compte existe, un email a été envoyé'];
+
+        } catch (\Exception $e) {
+            error_log("AuthService::requestPasswordReset - " . $e->getMessage());
+            return ['success' => true, 'message' => 'Si ce compte existe, un email a été envoyé'];
+        }
+    }
+
+    public function resetPassword(string $token, string $newPassword): array
+    {
+        try {
+            $record = $this->userRepository->findByPasswordResetToken($token);
+
+            if (!$record) {
+                return [
+                    'success' => false,
+                    'message' => 'Token invalide ou expiré',
+                    'code'    => 400,
+                ];
+            }
+
+            if (strtotime($record['password_reset_expires_at']) < time()) {
+                $this->userRepository->clearPasswordResetToken($record['id']);
+                return [
+                    'success' => false,
+                    'message' => 'Token expiré. Veuillez refaire une demande.',
+                    'code'    => 400,
+                ];
+            }
+
+            $errors = $this->validationService->validatePassword($newPassword);
+            if (!empty($errors)) {
+                return [
+                    'success' => false,
+                    'message' => implode(', ', $errors),
+                    'code'    => 400,
+                ];
+            }
+
+            $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+            $this->userRepository->updatePassword($record['id'], $hashedPassword);
+            $this->userRepository->clearPasswordResetToken($record['id']);
+
+            $this->sessionRepository->invalidateAllUserSessions($record['id']);
+
+            $this->auditService->logSecurityEvent($record['id'], 'password_reset_completed', []);
+
+            return ['success' => true, 'message' => 'Mot de passe réinitialisé avec succès'];
+
+        } catch (\Exception $e) {
+            error_log("AuthService::resetPassword - " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur serveur',
+                'code'    => 500,
+            ];
+        }
+    }
+
+    public function resendVerificationEmail(string $email): array
+    {
+        try {
+            $user = $this->userRepository->findByEmail($email);
+
+            if (!$user) {
+                return ['success' => true, 'message' => 'Email de vérification envoyé si le compte existe'];
+            }
+
+            if (!empty($user['email_verified_at'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Ce compte est déjà vérifié',
+                    'code'    => 400,
+                ];
+            }
+
+            $token = bin2hex(random_bytes(32));
+            $this->userRepository->saveVerificationToken($user['id'], $token);
+
+            $this->emailService->sendVerificationEmail(
+                $user['id'],
+                $user['email'],
+                $user['username'],
+                $token
+            );
+
+            $this->auditService->logSecurityEvent($user['id'], 'verification_email_resent', []);
+
+            return ['success' => true, 'message' => 'Email de vérification envoyé'];
+
+        } catch (\Exception $e) {
+            error_log("AuthService::resendVerificationEmail - " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur serveur',
+                'code'    => 500,
+            ];
+        }
+    }
+
+    public function generateToken(array $payload): string
+    {
+        if (isset($payload['sub'])) {
+            return $this->tokenService->generateTokenFromPayload($payload);
+        }
+
+        return $this->tokenService->generateToken($payload);
+    }
+
+    public function refreshToken(string $refreshToken): array
+    {
+        return $this->tokenService->refreshToken($refreshToken);
     }
 }

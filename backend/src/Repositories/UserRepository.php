@@ -253,4 +253,46 @@ class UserRepository {
 
         return $this->db->execute($sql, [$verificationToken, $expires, $userId]);
     }
+
+    public function savePasswordResetToken(mixed $id, string $token, string $expires): void
+    {
+        $this->db->execute(
+            "UPDATE users 
+             SET password_reset_token = $1, password_reset_expires_at = $2, updated_at = NOW()
+             WHERE id = $3",
+            [$token, $expires, $id]
+        );
+    }
+
+    public function findByPasswordResetToken(string $token): ?array
+    {
+        $user = $this->db->fetchOne(
+            "SELECT id, username, email, password_reset_expires_at
+             FROM users
+             WHERE password_reset_token = $1 AND deleted_at IS NULL",
+            [$token]
+        );
+
+        return $user ?: null;
+    }
+
+    public function clearPasswordResetToken(mixed $id): void
+    {
+        $this->db->execute(
+            "UPDATE users 
+             SET password_reset_token = NULL, password_reset_expires_at = NULL, updated_at = NOW()
+             WHERE id = $1",
+            [$id]
+        );
+    }
+
+    public function saveVerificationToken(mixed $id, string $token): void
+    {
+        $this->db->execute(
+            "UPDATE users 
+             SET verification_token = $1, updated_at = NOW()
+             WHERE id = $2",
+            [$token, $id]
+        );
+    }
 }
