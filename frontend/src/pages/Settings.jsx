@@ -11,9 +11,9 @@ import {
 
 const Settings = () => {
     const { user, updateUser, logout } = useAuth();
+
     const toast = useToast();
     const [activeTab, setActiveTab] = useState('profile');
-
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [savingProfile, setSavingProfile] = useState(false);
@@ -259,7 +259,15 @@ const Settings = () => {
                                         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
                                             <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2"><QrCode size={20} /> Scannez le QR code</h3>
                                             <p className="text-sm text-blue-700 mb-4">Ouvrez Google Authenticator ou Authy et scannez ce code.</p>
-                                            {twoFASetupData.qr_code && <div className="bg-white p-4 rounded-lg inline-block" dangerouslySetInnerHTML={{ __html: twoFASetupData.qr_code }} />}
+                                            {twoFASetupData.qr_code && (
+                                                <div className="bg-white p-4 rounded-lg inline-block">
+                                                    {twoFASetupData.qr_code.startsWith('http') ? (
+                                                        <img src={twoFASetupData.qr_code} alt="QR Code 2FA" className="w-48 h-48" />
+                                                    ) : (
+                                                        <div dangerouslySetInnerHTML={{ __html: twoFASetupData.qr_code }} />
+                                                    )}
+                                                </div>
+                                            )}
                                             {twoFASetupData.secret && (
                                                 <div className="mt-4">
                                                     <p className="text-xs text-blue-600 mb-1">Code manuel :</p>
