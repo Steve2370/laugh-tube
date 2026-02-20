@@ -268,7 +268,7 @@ class AuthController
     public function changePassword(): void
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            $currentUser = $this->authMiddleware->handleRequired();
 
             if (!$currentUser) {
                 http_response_code(401);
