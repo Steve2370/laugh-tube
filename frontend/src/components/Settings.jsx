@@ -37,7 +37,7 @@ const Settings = () => {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-
+        console.log("HANDLE PASSWORD CHANGE V2");
         if (!currentPassword || !newPassword) {
             error("Mot de passe actuel et nouveau mot de passe requis");
             return;
