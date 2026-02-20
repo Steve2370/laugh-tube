@@ -161,7 +161,7 @@ try {
 
     $authService = new AuthService(
         $userRepository,
-        $logRepository,
+        $userRepository,
         $tokenService,
         $validationService,
         $sessionRepository,
