@@ -5,6 +5,7 @@ use App\Middleware\AuthMiddleware;
 use App\Services\AuditService;
 use App\Services\AuthService;
 use App\Services\ValidationService;
+use App\Utils\JsonResponse;
 use App\Utils\SecurityHelper;
 
 class AuthController
@@ -268,66 +269,67 @@ class AuthController
     public function changePassword(): void
     {
         try {
-            $currentUser = $this->authMiddleware->handleRequired();
+            $currentUser = $this->authMiddleware->handle();
 
-            if (!$currentUser) {
-                http_response_code(401);
+            if (!$currentUser || !is_array($currentUser)) {
+                JsonResponse::json(['success' => false, 'error' => 'Non autorisé'], 401);
                 return;
             }
 
-            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $raw = file_get_contents('php://input') ?: '';
+            $data = json_decode($raw, true);
+            if (!is_array($data)) {
+                JsonResponse::badRequest(['success' => false, 'error' => 'JSON invalide']);
+                return;
+            }
 
-            $currentPassword = $data['current_password'] ?? '';
-            $newPassword = $data['new_password'] ?? '';
+            $currentPassword = (string)($data['current_password'] ?? '');
+            $newPassword     = (string)($data['new_password'] ?? '');
 
             $errors = [];
-            if (empty($currentPassword)) {
-                $errors['current_password'] = 'Mot de passe actuel requis';
-            }
-            if (empty($newPassword)) {
-                $errors['new_password'] = 'Nouveau mot de passe requis';
+            if ($currentPassword === '') $errors['current_password'] = 'Mot de passe actuel requis';
+            if ($newPassword === '')     $errors['new_password'] = 'Nouveau mot de passe requis';
+
+            if ($newPassword !== '' && strlen($newPassword) < 8) {
+                $errors['new_password'] = 'Le nouveau mot de passe doit contenir au moins 8 caractères';
             }
 
             if (!empty($errors)) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'errors' => $errors]);
+                JsonResponse::json(['success' => false, 'errors' => $errors], 400);
                 return;
             }
 
-            $result = $this->authService->changePassword(
-                $currentUser['user_id'],
-                $currentPassword,
-                $newPassword
-            );
+            $userId = (int)($currentUser['user_id'] ?? $currentUser['sub'] ?? 0);
+            if ($userId <= 0) {
+                JsonResponse::serverError(['success' => false, 'error' => 'Utilisateur invalide']);
+                return;
+            }
 
-            if (!$result['success']) {
-                http_response_code(400);
-                echo json_encode([
+            $result = $this->authService->changePassword($userId, $currentPassword, $newPassword);
+
+            if (!is_array($result)) {
+                error_log("AuthService::changePassword returned non-array: " . gettype($result));
+                JsonResponse::serverError(['success' => false, 'error' => 'Erreur serveur']);
+                return;
+            }
+
+            if (($result['success'] ?? false) !== true) {
+                JsonResponse::json([
                     'success' => false,
-                    'error' => $result['message']
-                ]);
+                    'error' => (string)($result['message'] ?? 'Changement refusé')
+                ], (int)($result['code'] ?? 400));
                 return;
             }
 
-            $this->auditService->logSecurityEvent(
-                $currentUser['user_id'],
-                'password_changed',
-                []
-            );
+            $this->auditService->logSecurityEvent($userId, 'password_changed', []);
 
-            http_response_code(200);
-            echo json_encode([
+            JsonResponse::success([
                 'success' => true,
                 'message' => 'Mot de passe modifié avec succès'
             ]);
-
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log("AuthController::changePassword - Error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Erreur lors du changement de mot de passe'
-            ]);
+            JsonResponse::serverError(['success' => false, 'error' => 'Erreur lors du changement de mot de passe']);
         }
     }
 
