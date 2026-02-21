@@ -59,7 +59,11 @@ export const AuthProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            await apiService.verify2FA(userId, code);
+            const response = await apiService.verify2FA(userId, code);
+            if (response?.user) {
+                setUser(response.user);
+                setIsAuthenticated(true);
+            }
             await checkAuth();
             return { success: true };
         } catch (err) {
