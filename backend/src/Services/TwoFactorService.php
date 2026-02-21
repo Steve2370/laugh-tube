@@ -30,6 +30,8 @@ class TwoFactorService
         try {
             $user = $this->userModel->findById($userId);
 
+            // Si un secret existe déjà et que la 2FA n'est pas encore activée,
+            // réutiliser le secret existant pour ne pas invalider le QR déjà scanné
             if (!empty($user['two_fa_secret']) && empty($user['two_fa_enabled'])) {
                 $secret = $user['two_fa_secret'];
                 $backupCodes = [];
@@ -310,12 +312,10 @@ class TwoFactorService
             $this->db->execute("DELETE FROM two_fa_backup_codes WHERE user_id = $1", [$userId]);
 
             foreach ($codes as $code) {
-                $hashedCode = password_hash($code, PASSWORD_BCRYPT);
-
-                $sql = "INSERT INTO two_fa_backup_codes (user_id, code_hash, created_at)
+                $sql = "INSERT INTO two_fa_backup_codes (user_id, code, created_at)
                         VALUES ($1, $2, NOW())";
 
-                $this->db->execute($sql, [$userId, $hashedCode]);
+                $this->db->execute($sql, [$userId, $code]);
             }
 
         } catch (\Exception $e) {
@@ -326,15 +326,15 @@ class TwoFactorService
     private function verifyBackupCode(int $userId, string $code): bool
     {
         try {
-            $sql = "SELECT id, code_hash FROM two_fa_backup_codes 
-                    WHERE user_id = $1 AND used_at IS NULL";
+            $sql = "SELECT id, code FROM two_fa_backup_codes 
+                    WHERE user_id = $1 AND used = FALSE";
 
             $backupCodes = $this->db->fetchAll($sql, [$userId]);
 
             foreach ($backupCodes as $backup) {
-                if (password_verify($code, $backup['code_hash'])) {
+                if (hash_equals(strtoupper($backup['code']), strtoupper($code))) {
                     $this->db->execute(
-                        "UPDATE two_fa_backup_codes SET used_at = NOW() WHERE id = $1",
+                        "UPDATE two_fa_backup_codes SET used = TRUE, used_at = NOW() WHERE id = $1",
                         [$backup['id']]
                     );
 
@@ -537,7 +537,7 @@ class TwoFactorService
             if ($user['two_fa_enabled']) {
                 $result = $this->db->fetchOne(
                     "SELECT COUNT(*) as count FROM two_fa_backup_codes 
-                     WHERE user_id = $1 AND used_at IS NULL",
+                     WHERE user_id = $1 AND used = FALSE",
                     [$userId]
                 );
 

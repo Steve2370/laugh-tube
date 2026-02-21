@@ -700,3 +700,194 @@ BEGIN
     RETURN deleted_count;
 END;
 $$ LANGUAGE plpgsql;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS verification_token VARCHAR(64),
+    ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS two_fa_secret VARCHAR(64),
+    ADD COLUMN IF NOT EXISTS two_fa_enabled BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS deletion_scheduled_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS deletion_reason TEXT,
+    ADD COLUMN IF NOT EXISTS last_login TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS account_locked_until TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS ip_registration VARCHAR(45),
+    ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(64),
+    ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS user_agent_registration TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_users_email_verified ON users(email_verified);
+CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token);
+CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token);
+
+CREATE TABLE IF NOT EXISTS sessions
+(
+    id            SERIAL PRIMARY KEY,
+    user_id       INTEGER             NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    token         VARCHAR(128) UNIQUE NOT NULL,
+    ip_address    VARCHAR(45)         NOT NULL,
+    user_agent    TEXT,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at    TIMESTAMP           NOT NULL,
+    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active     BOOLEAN   DEFAULT TRUE
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+
+CREATE TABLE IF NOT EXISTS security_logs
+(
+    id              SERIAL PRIMARY KEY,
+    user_id         INTEGER     REFERENCES users (id) ON DELETE SET NULL,
+    event_type      VARCHAR(50) NOT NULL,
+    description     TEXT,
+    ip_address      VARCHAR(45),
+    user_agent      TEXT,
+    additional_data JSONB,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_logs_user_id ON security_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_logs_event_type ON security_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_security_logs_created_at ON security_logs(created_at);
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens
+(
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER            NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    token      VARCHAR(64) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP          NOT NULL,
+    used       BOOLEAN   DEFAULT FALSE,
+    ip_address VARCHAR(45)
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_token ON password_reset_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_password_reset_user_id ON password_reset_tokens(user_id);
+
+CREATE TABLE IF NOT EXISTS two_fa_backup_codes
+(
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    code       VARCHAR(10) NOT NULL,
+    used       BOOLEAN   DEFAULT FALSE,
+    used_at    TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_two_fa_backup_user_id ON two_fa_backup_codes(user_id);
+
+CREATE TABLE IF NOT EXISTS email_logs
+(
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER      REFERENCES users (id) ON DELETE SET NULL,
+    email_type VARCHAR(50)  NOT NULL,
+    recipient  VARCHAR(255) NOT NULL,
+    subject    VARCHAR(255) NOT NULL,
+    body       TEXT,
+    status     VARCHAR(20) DEFAULT 'pending',
+    error      TEXT,
+    created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+    sent_at    TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_logs_user_id ON email_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_logs_email_type ON email_logs(email_type);
+CREATE INDEX IF NOT EXISTS idx_email_logs_status ON email_logs(status);
+
+CREATE TABLE IF NOT EXISTS account_deletion_requests
+(
+    id           SERIAL PRIMARY KEY,
+    user_id      INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    reason       TEXT,
+    ip_address   VARCHAR(45),
+    requested_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP,
+    status       VARCHAR(20) DEFAULT 'pending'
+);
+
+CREATE INDEX IF NOT EXISTS idx_deletion_requests_user_id ON account_deletion_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_deletion_requests_status ON account_deletion_requests(status);
+
+CREATE TABLE IF NOT EXISTS login_attempts
+(
+    id           SERIAL PRIMARY KEY,
+    email        VARCHAR(255),
+    ip_address   VARCHAR(45) NOT NULL,
+    success      BOOLEAN     NOT NULL,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON login_attempts(email);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_attempted_at ON login_attempts(attempted_at);
+
+CREATE TABLE IF NOT EXISTS rate_limits
+(
+    id            SERIAL PRIMARY KEY,
+    key           VARCHAR(255) UNIQUE NOT NULL,
+    attempts      INTEGER   DEFAULT 1,
+    first_attempt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_attempt  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_rate_limits_key ON rate_limits(key);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_last_attempt ON rate_limits(last_attempt);
+
+ALTER TABLE videos
+    ADD COLUMN IF NOT EXISTS encoded_filename VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
+
+ALTER TABLE encoding_queue
+    ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0 NOT NULL,
+    ADD COLUMN IF NOT EXISTS started_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;
+
+CREATE INDEX IF NOT EXISTS idx_encoding_queue_priority
+    ON encoding_queue(priority DESC, created_at ASC)
+    WHERE status = 'pending';
+
+CREATE OR REPLACE FUNCTION cleanup_expired_sessions()
+    RETURNS INTEGER AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    DELETE FROM sessions
+    WHERE expires_at < CURRENT_TIMESTAMP
+       OR last_activity < CURRENT_TIMESTAMP - INTERVAL '30 days';
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION cleanup_expired_tokens()
+    RETURNS INTEGER AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    DELETE FROM password_reset_tokens
+    WHERE expires_at < CURRENT_TIMESTAMP
+       OR (used = TRUE AND created_at < CURRENT_TIMESTAMP - INTERVAL '7 days');
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION cleanup_old_login_attempts()
+    RETURNS INTEGER AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    DELETE FROM login_attempts
+    WHERE attempted_at < CURRENT_TIMESTAMP - INTERVAL '24 hours';
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql;
