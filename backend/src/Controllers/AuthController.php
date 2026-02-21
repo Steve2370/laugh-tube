@@ -252,14 +252,21 @@ class AuthController
     public function me(): void
     {
         try {
-            if (!$this->authMiddleware->handle()) {
+            $currentUser = $this->authMiddleware->handleOptional();
+            if (!is_array($currentUser)) {
                 http_response_code(401);
                 echo json_encode(['success' => false, 'error' => 'Non authentifié']);
                 return;
             }
 
-            $currentUser = $this->authMiddleware->getUser();
-            if (!$currentUser) {
+            $userId = (int)($currentUser['sub'] ?? 0);
+            $user = $this->db->fetchOne(
+                "SELECT id, username, email, role, avatar_url, cover_url, email_verified, two_fa_enabled, deleted_at
+             FROM users WHERE id = $1 AND deleted_at IS NULL",
+                [$userId]
+            );
+
+            if (!$user) {
                 http_response_code(401);
                 echo json_encode(['success' => false, 'error' => 'Non authentifié']);
                 return;
@@ -269,20 +276,20 @@ class AuthController
             echo json_encode([
                 'success' => true,
                 'user' => [
-                    'id' => $currentUser['user_id'],
-                    'username' => $currentUser['username'],
-                    'email' => $currentUser['email'],
-                    'role' => $currentUser['role'],
-                    'email_verified' => $currentUser['email_verified'],
-                    'two_fa_enabled' => $currentUser['two_fa_enabled'],
-                    'avatar_url' => $currentUser['avatar_url'] ?? null,
-                    'cover_url' => $currentUser['cover_url'] ?? null
+                    'id'             => $user['id'],
+                    'username'       => $user['username'],
+                    'email'          => $user['email'],
+                    'role'           => $user['role'],
+                    'email_verified' => $user['email_verified'],
+                    'two_fa_enabled' => $user['two_fa_enabled'],
+                    'avatar_url'     => $user['avatar_url'] ?? null,
+                    'cover_url'      => $user['cover_url'] ?? null,
                 ]
             ]);
         } catch (\Throwable $e) {
             error_log("AuthController::me - Error: " . $e->getMessage());
             http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Erreur lors de la récupération du profil']);
+            echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
         }
     }
 
