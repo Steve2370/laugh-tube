@@ -442,11 +442,12 @@ class AuthController
     public function check2FAStatus(): void
     {
         try {
-            if (!$this->authMiddleware->handle()) {
+            $currentUser = $this->authMiddleware->handleOptional();
+            if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
-            $userId = $this->authMiddleware->getUserId();
+            $userId = (int)($currentUser['sub'] ?? 0);
             $result = $this->twoFactorService->get2FAStatus($userId);
             JsonResponse::success($result);
         } catch (\Exception $e) {
@@ -458,11 +459,12 @@ class AuthController
     public function enable2FA(): void
     {
         try {
-            if (!$this->authMiddleware->handle()) {
+            $currentUser = $this->authMiddleware->handleOptional();
+            if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
-            $userId = $this->authMiddleware->getUserId();
+            $userId = (int)($currentUser['sub'] ?? 0);
             $result = $this->twoFactorService->enable2FA($userId);
 
             if (!$result['success']) {
@@ -486,15 +488,15 @@ class AuthController
     public function verify2FASetup(): void
     {
         try {
-            if (!$this->authMiddleware->handle()) {
+            $currentUser = $this->authMiddleware->handleOptional();
+            if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
+            $userId = (int)($currentUser['sub'] ?? 0);
 
             $input = InputSanitizerMiddleware::validateJsonInput();
             if (!$input) return;
-
-            $userId = $this->authMiddleware->getUserId();
             $code   = SecurityHelper::sanitizeInput($input['code'] ?? '');
 
             if (empty($code)) {
@@ -520,15 +522,17 @@ class AuthController
     public function disable2FA(): void
     {
         try {
-            if (!$this->authMiddleware->handle()) {
+            $currentUser = $this->authMiddleware->handleOptional();
+            if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
+            $userId = (int)($currentUser['sub'] ?? 0);
 
             $input = InputSanitizerMiddleware::validateJsonInput();
             if (!$input) return;
 
-            $userId   = $this->authMiddleware->getUserId();
+            $userId   = (int)($currentUser['sub'] ?? 0);
             $password = $input['password'] ?? '';
 
             if (empty($password)) {
@@ -637,12 +641,12 @@ class AuthController
     public function cancelAccountDeletion(): void
     {
         try {
-            if (!$this->authMiddleware->handle()) {
+            $currentUser = $this->authMiddleware->handleOptional();
+            if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
-
-            $userId = $this->authMiddleware->getUserId();
+            $userId = (int)($currentUser['sub'] ?? 0);
 
             $user = $this->db->fetchOne(
                 "SELECT id, deletion_scheduled_at FROM users WHERE id = $1",
@@ -671,15 +675,17 @@ class AuthController
     public function deleteAccount(): void
     {
         try {
-            if (!$this->authMiddleware->handle()) {
+            $currentUser = $this->authMiddleware->handleOptional();
+            if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['error' => 'Non authentifié']);
                 return;
             }
+            $userId = (int)($currentUser['sub'] ?? 0);
 
             $input = InputSanitizerMiddleware::validateJsonInput();
             if (!$input) return;
 
-            $userId   = $this->authMiddleware->getUserId();
+            $userId   = (int)($currentUser['sub'] ?? 0);
             $password = $input['password'] ?? '';
             $reason   = isset($input['reason']) ? SecurityHelper::sanitizeInput($input['reason']) : null;
 
