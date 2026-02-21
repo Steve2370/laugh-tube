@@ -110,7 +110,7 @@ class ApiService {
             if (refreshToken) {
                 localStorage.setItem('refresh_token', refreshToken);
             }
-        } else {
+        } else if (!response?.requires_2fa) {
             console.error('Aucun token dans la réponse:', response);
         }
 
