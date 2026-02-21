@@ -28,18 +28,25 @@ class TwoFactorService
     public function enable2FA(int $userId): array
     {
         try {
-            $secret = $this->generateSecret();
-            $backupCodes = $this->generateBackupCodes();
-
-            $sql = "UPDATE users 
-                    SET two_fa_secret = $1, 
-                        two_fa_enabled = FALSE,  
-                        updated_at = NOW()
-                    WHERE id = $2";
-
-            $this->db->execute($sql, [$secret, $userId]);
-            $this->saveBackupCodes($userId, $backupCodes);
             $user = $this->userModel->findById($userId);
+
+            if (!empty($user['two_fa_secret']) && empty($user['two_fa_enabled'])) {
+                $secret = $user['two_fa_secret'];
+                $backupCodes = [];
+            } else {
+                $secret = $this->generateSecret();
+                $backupCodes = $this->generateBackupCodes();
+
+                $sql = "UPDATE users 
+                        SET two_fa_secret = $1, 
+                            two_fa_enabled = FALSE,  
+                            updated_at = NOW()
+                        WHERE id = $2";
+
+                $this->db->execute($sql, [$secret, $userId]);
+                $this->saveBackupCodes($userId, $backupCodes);
+            }
+
             $qrCodeUrl = $this->generateQRCodeUrl($user['email'] ?? "user_{$userId}", $secret);
 
             $this->auditService->logSecurityEvent(
@@ -247,7 +254,7 @@ class TwoFactorService
         }
     }
 
-    private function verifyTOTP(string $secret, string $code, int $window = 1): bool
+    private function verifyTOTP(string $secret, string $code, int $window = 2): bool
     {
         $currentTime = time();
 
