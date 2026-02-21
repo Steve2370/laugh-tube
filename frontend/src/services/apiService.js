@@ -62,8 +62,6 @@ class ApiService {
 
                 return this.request(endpoint, options);
             } else {
-                this.clearAuth();
-                window.location.hash = '#/login';
                 throw new Error('Session expirée - veuillez vous reconnecter');
             }
         } finally {
