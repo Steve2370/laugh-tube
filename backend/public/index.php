@@ -274,7 +274,7 @@ try {
         return;
     }
 
-    if ($uri === '/verify2faLogin.php' && $method === 'POST') {
+    if ($uri === '/auth/2fa/login' && $method === 'POST') {
         $authController->verify2FALogin();
         return;
     }
