@@ -33,7 +33,7 @@ class User
     public function findById(int $id): ?array
     {
         $sql = "SELECT id, username, email, password_hash, role, avatar_url, cover_url, bio, 
-                       created_at, updated_at, email_verified, two_fa_enabled, deleted_at
+                       created_at, updated_at, email_verified, two_fa_enabled, two_fa_secret, deleted_at
                 FROM users 
                 WHERE id = $1 AND deleted_at IS NULL";
 
