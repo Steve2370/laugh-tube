@@ -81,6 +81,13 @@ class AuthService
                 'message' => 'Ce compte a été désactivé'
             ];
         }
+        if (!empty($user['two_fa_enabled'])) {
+            return [
+                'success' => true,
+                'requires_2fa' => true,
+                'user_id' => (int)$user['id'],
+            ];
+        }
 
         $accessToken = $this->tokenService->generateToken($user);
         $refreshToken = $this->tokenService->generateRefreshToken($user);

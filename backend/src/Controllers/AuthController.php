@@ -131,6 +131,16 @@ class AuthController
                 return;
             }
 
+            if (!empty($result['requires_2fa'])) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'requires_2fa' => true,
+                    'user_id' => $result['user_id'],
+                ]);
+                return;
+            }
+
             $this->auditService->logSecurityEvent(
                 $result['userId'],
                 'user_login',
