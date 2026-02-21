@@ -278,7 +278,7 @@ class ApiService {
     }
 
     async verify2FA(userId, code) {
-        const response = await this.request('/verify2faLogin.php', {
+        const response = await this.request('/auth/2fa/login', {
             method: 'POST',
             body: JSON.stringify({ user_id: userId, code }),
             skipAuth: true,
