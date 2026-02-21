@@ -131,7 +131,7 @@ class AuthMiddleware
             }
 
             if (isset($payload['session_id'])) {
-                $session = $this->sessionRepository->findById($payload['session_id']);
+                $session = $this->sessionRepository->findByToken($payload['session_id']);
                 if (!$session || empty($session['is_valid'])) {
                     error_log("AUTHMIDDLEWARE invalid_session session_id=" . $payload['session_id']);
                     return false;
