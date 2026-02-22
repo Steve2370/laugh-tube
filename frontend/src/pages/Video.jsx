@@ -25,9 +25,19 @@ import {
     Heart,
     Reply,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Flag,
 } from 'lucide-react';
 import videoService from "../services/videoService.js";
+
+const RAISONS_SIGNALEMENT = [
+    { value: 'spam',           label: 'Spam ou publicité' },
+    { value: 'inapproprie',    label: 'Contenu inapproprié' },
+    { value: 'haine',          label: 'Discours haineux' },
+    { value: 'desinformation', label: 'Désinformation' },
+    { value: 'droits',         label: "Violation de droits d'auteur" },
+    { value: 'autre',          label: 'Autre raison' },
+];
 
 
 const ReplyItem = ({ reply, isAuthenticated, userId, onUserClick, onReply }) => {
@@ -347,6 +357,12 @@ const Video = () => {
     const [auteurImage, setAuteurImage] = useState(null);
     const [auteurId, setAuteurId] = useState(null);
     const [viewsCount, setViewsCount] = useState(video?.views ?? 0);
+
+    const [showSignalModal, setShowSignalModal] = useState(false);
+    const [signalRaison, setSignalRaison] = useState('');
+    const [signalDescription, setSignalDescription] = useState('');
+    const [signalLoading, setSignalLoading] = useState(false);
+    const [signalDone, setSignalDone] = useState(false);
     const videoSrc = video?.filename
         ? `/uploads/videos/${video.filename}`
         : null;
@@ -453,6 +469,37 @@ const Video = () => {
             toast.error('Erreur lors de la publication');
         } finally {
             setCommentLoading(false);
+        }
+    };
+
+    const handleSignalOpen = () => {
+        if (!isAuthenticated) { setShowLoginModal(true); return; }
+        setSignalRaison('');
+        setSignalDescription('');
+        setSignalDone(false);
+        setShowSignalModal(true);
+    };
+
+    const handleSignalSubmit = async () => {
+        if (!signalRaison) { toast.error('Choisissez une raison'); return; }
+        setSignalLoading(true);
+        try {
+            await apiService.request(`/videos/${videoId}/signaler`, {
+                method: 'POST',
+                body: JSON.stringify({ raison: signalRaison, description: signalDescription }),
+            });
+            setSignalDone(true);
+            toast.success('Signalement envoyé, merci !');
+            setTimeout(() => setShowSignalModal(false), 1800);
+        } catch (err) {
+            if (err?.message?.includes('déjà') || err?.message?.includes('already')) {
+                toast.info('Vous avez déjà signalé cette vidéo');
+                setShowSignalModal(false);
+            } else {
+                toast.error('Erreur lors du signalement');
+            }
+        } finally {
+            setSignalLoading(false);
         }
     };
 
@@ -597,6 +644,14 @@ const Video = () => {
                                     <Share2 size={20} /> Partager
                                 </button>
                                 <BoutonAbonne targetUserId={auteurId} user={user} />
+                                <button
+                                    onClick={handleSignalOpen}
+                                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                    title="Signaler cette vidéo"
+                                >
+                                    <Flag size={16} />
+                                    Signaler
+                                </button>
                             </div>
 
                             {!isAuthenticated && (
@@ -711,6 +766,94 @@ const Video = () => {
                     </div>
                 </div>
             </div>
+
+            {showSignalModal && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                    onClick={(e) => { if (e.target === e.currentTarget && !signalLoading) setShowSignalModal(false); }}
+                >
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <Flag size={18} className="text-red-500" /> Signaler la vidéo
+                            </h2>
+                            <button onClick={() => !signalLoading && setShowSignalModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {signalDone ? (
+                            <div className="px-6 py-10 text-center">
+                                <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <p className="text-gray-700 font-medium">Signalement envoyé</p>
+                                <p className="text-sm text-gray-500 mt-1">Notre équipe va examiner ce contenu.</p>
+                            </div>
+                        ) : (
+                            <div className="px-6 py-5 space-y-4">
+                                <p className="text-sm text-gray-600">Pourquoi signalez-vous cette vidéo ?</p>
+
+                                <div className="space-y-2">
+                                    {RAISONS_SIGNALEMENT.map(({ value, label }) => (
+                                        <label
+                                            key={value}
+                                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                                signalRaison === value
+                                                    ? 'border-red-400 bg-red-50'
+                                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="raison"
+                                                value={value}
+                                                checked={signalRaison === value}
+                                                onChange={() => setSignalRaison(value)}
+                                                className="accent-red-500"
+                                            />
+                                            <span className="text-sm text-gray-700">{label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Détails <span className="text-gray-400 font-normal">(optionnel)</span>
+                                    </label>
+                                    <textarea
+                                        value={signalDescription}
+                                        onChange={(e) => setSignalDescription(e.target.value)}
+                                        placeholder="Décrivez le problème..."
+                                        rows={3}
+                                        maxLength={500}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-1">
+                                    <button
+                                        onClick={() => setShowSignalModal(false)}
+                                        disabled={signalLoading}
+                                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        onClick={handleSignalSubmit}
+                                        disabled={signalLoading || !signalRaison}
+                                        className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {signalLoading ? 'Envoi...' : 'Envoyer le signalement'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {showLoginModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
