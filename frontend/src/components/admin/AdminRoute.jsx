@@ -1,19 +1,17 @@
-import { useNavigation } from '../../contexts/NavigationContext.jsx';
 import apiService from '../../services/apiService.js';
 
 export default function AdminRoute({ children }) {
-    const { navigateTo } = useNavigation();
     const user = apiService.getCurrentUser();
 
     if (!user) {
-        navigateTo('login');
+        window.location.hash = '#/login';
         return null;
     }
 
     const isAdmin = user.role === 'admin' || user.is_admin === true;
 
     if (!isAdmin) {
-        navigateTo('home');
+        window.location.hash = '#/home';
         return null;
     }
 
