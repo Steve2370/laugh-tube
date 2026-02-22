@@ -287,7 +287,12 @@ class AuthController
     public function changePassword(): void
     {
         try {
-            $currentUser = $this->authMiddleware->handleOptional();
+            $ok = $this->authMiddleware->handle();
+            if (!$ok) {
+                JsonResponse::unauthorized(['success' => false, 'error' => 'Non autorisé']);
+                return;
+            }
+            $currentUser = $this->authMiddleware->getUser();
 
             if (!is_array($currentUser)) {
                 JsonResponse::unauthorized(['success' => false, 'error' => 'Non autorisé']);
@@ -330,6 +335,7 @@ class AuthController
                 JsonResponse::serverError(['success' => false, 'error' => 'Erreur serveur']);
                 return;
             }
+            error_log("changePassword userId={$userId} result=" . json_encode($result));
 
             if (($result['success'] ?? false) !== true) {
                 JsonResponse::json([

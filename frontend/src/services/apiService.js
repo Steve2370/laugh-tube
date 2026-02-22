@@ -15,7 +15,6 @@ class ApiService {
      * @returns {Promise<any>}
      */
     async request(endpoint, options = {}) {
-        console.log("API CALL", options?.method || "GET", endpoint);
         const url = `${this.baseURL}/api${endpoint}`;
         const token = localStorage.getItem('access_token');
 
