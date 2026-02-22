@@ -1,18 +1,17 @@
-export default function AdminRoute({ children }) {
-    const user = apiService.getCurrentUser();
-    console.log('AdminRoute user:', user);
+import React from 'react';
+import { useAuth } from '../../hooks/useAuth.js';
 
-    if (!user) {
-        console.log('AdminRoute: pas de user, redirect login');
+export default function AdminRoute({ children }) {
+    const { user, isAuthenticated } = useAuth();
+
+    if (!isAuthenticated || !user) {
         window.location.hash = '#/login';
         return null;
     }
 
     const isAdmin = user.role === 'admin' || user.is_admin === true;
-    console.log('AdminRoute isAdmin:', isAdmin);
 
     if (!isAdmin) {
-        console.log('AdminRoute: pas admin, redirect home');
         window.location.hash = '#/home';
         return null;
     }
