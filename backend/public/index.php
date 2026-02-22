@@ -166,7 +166,8 @@ try {
         $validationService,
         $sessionRepository,
         $emailService,
-        $auditService
+        $auditService,
+        $db
     );
 
     $twoFactorService = new TwoFactorService($userModel, $db, $auditService);
