@@ -17,14 +17,17 @@ if (is_file($dotenvPath)) {
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\AbonnementController;
+use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\CommentaireController;
 use App\Controllers\NotificationController;
 use App\Controllers\ReactionController;
+use App\Controllers\SignalementController;
 use App\Controllers\UserController;
 use App\Controllers\VideoController;
 use App\Interfaces\DatabaseInterface;
 use App\Interfaces\EmailProviderInterface;
+use App\Middleware\AdminMiddleware;
 use App\Middleware\AuthMiddleware;
 use App\Models\Abonnement;
 use App\Models\Commentaire;
@@ -194,6 +197,10 @@ try {
         $authMiddleware,
         $db
     );
+
+    $adminMiddleware      = new AdminMiddleware($db);
+    $adminController      = new AdminController($db);
+    $signalementController = new SignalementController($db);
 
     $videoController = new VideoController(
         $videoService,
@@ -597,6 +604,46 @@ try {
         ]);
         return;
     }
+
+    if ($method === 'POST' && preg_match('#^/videos/(\d+)/signaler$#', $path, $m)) {
+        $currentUser = $authMiddleware->handle();
+        $signalementController->signalerVideo((int)$m[1], $currentUser);
+        exit;
+    }
+
+    if (str_starts_with($path, '/admin')) {
+     $adminUser = $adminMiddleware->handle();
+
+     if ($method === 'GET' && $path === '/admin/users') {
+         $adminController->getUsers();
+     }
+
+     elseif ($method === 'DELETE' && preg_match('#^/admin/users/(\d+)$#', $path, $m)) {
+         $adminController->deleteUser((int)$m[1]);
+     }
+
+     elseif ($method === 'GET' && $path === '/admin/videos') {
+         $adminController->getVideos();
+     }
+
+     elseif ($method === 'DELETE' && preg_match('#^/admin/videos/(\d+)$#', $path, $m)) {
+         $adminController->deleteVideo((int)$m[1]);
+     }
+
+     elseif ($method === 'GET' && $path === '/admin/signalements') {
+         $adminController->getSignalements();
+     }
+
+     elseif ($method === 'PATCH' && preg_match('#^/admin/signalements/(\d+)$#', $path, $m)) {
+         $adminController->updateSignalement((int)$m[1], $adminUser);
+     }
+
+     else {
+         http_response_code(404);
+         echo json_encode(['error' => 'Route admin introuvable']);
+     }
+     exit;
+ }
 
     JsonResponse::notFound([
         'error' => 'Endpoint non trouvé',

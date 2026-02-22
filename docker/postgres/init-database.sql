@@ -797,9 +797,32 @@ CREATE TABLE IF NOT EXISTS email_logs
     sent_at    TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS signalements
+(
+    id          SERIAL PRIMARY KEY,
+    video_id    INTEGER      NOT NULL REFERENCES videos (id) ON DELETE CASCADE,
+    reporter_id INTEGER      REFERENCES users (id) ON DELETE SET NULL,
+    raison      VARCHAR(100) NOT NULL
+        CHECK (raison IN ('spam', 'inapproprie', 'haine', 'desinformation', 'droits', 'autre')),
+    description TEXT,
+    statut      VARCHAR(20)  NOT NULL DEFAULT 'pending'
+        CHECK (statut IN ('pending', 'reviewed', 'dismissed')),
+    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+    reviewed_at TIMESTAMP,
+    reviewed_by INTEGER      REFERENCES users (id) ON DELETE SET NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_email_logs_user_id ON email_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_email_logs_email_type ON email_logs(email_type);
 CREATE INDEX IF NOT EXISTS idx_email_logs_status ON email_logs(status);
+
+CREATE INDEX IF NOT EXISTS idx_signalements_video_id ON signalements(video_id);
+CREATE INDEX IF NOT EXISTS idx_signalements_statut   ON signalements(statut);
+CREATE INDEX IF NOT EXISTS idx_signalements_reporter ON signalements(reporter_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_signalements_unique_report
+    ON signalements(video_id, reporter_id)
+    WHERE reporter_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS account_deletion_requests
 (
@@ -843,6 +866,18 @@ CREATE INDEX IF NOT EXISTS idx_rate_limits_last_attempt ON rate_limits(last_atte
 ALTER TABLE videos
     ADD COLUMN IF NOT EXISTS encoded_filename VARCHAR(255),
     ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+
+UPDATE users
+SET is_admin = TRUE
+WHERE email = 'pougouebrice@gmail.com';
+
+SELECT id, username, email, is_admin
+FROM users
+WHERE email = 'pougouebrice@gmail.com';
 
 ALTER TABLE encoding_queue
     ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0 NOT NULL,

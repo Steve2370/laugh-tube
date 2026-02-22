@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { useNavigation } from '../NavigationContext.jsx';
 import LoadingSpinner from '../common/LoadingSpinner';
 import Chaine from "../../pages/Chaine.jsx";
+import Admin from "../../pages/Admin.jsx";
+import AdminRoute from "../../components/admin/AdminRoute.jsx";
 
 const Home = lazy(() => import('../../pages/Home'));
 const Search = lazy(() => import('../../pages/Search'));
@@ -35,6 +37,12 @@ const PageRouter = () => {
                 return <Chaine/>;
             case 'search':
                 return <Search/>;
+            case 'admin':
+                return (
+                    <AdminRoute>
+                        <Admin/>
+                    </AdminRoute>
+                );
             default:
                 return <Home/>;
         }
