@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Interfaces\DatabaseInterface;
 use App\Repositories\LogRepository;
 use App\Repositories\SessionRepository;
 use App\Repositories\UserRepository;
@@ -18,8 +17,7 @@ class AuthService
         private ValidationService $validationService,
         private SessionRepository $sessionRepository,
         private EmailService $emailService,
-        private AuditService $auditService,
-        private DatabaseInterface $db
+        private AuditService $auditService
     ) {}
 
     public function login(string $email, string $password): array
@@ -321,39 +319,72 @@ class AuthService
 
     public function changePassword(int $userId, string $currentPassword, string $newPassword): array
     {
+        $errors = $this->validationService->validatePassword($newPassword);
+        if (!empty($errors)) {
+            return [
+                'success' => false,
+                'code' => 400,
+                'errors' => $errors
+            ];
+        }
+
+        $user = $this->userModel->findById($userId);
+
+        if (!$user) {
+            return [
+                'success' => false,
+                'code' => 404,
+                'message' => 'Utilisateur introuvable'
+            ];
+        }
+
+        if (!password_verify($currentPassword, $user['password_hash'])) {
+            $this->auditService->log('password_change_failed', $userId, 'Mot de passe actuel invalide');
+
+            return [
+                'success' => false,
+                'code' => 400,
+                'message' => 'Mot de passe actuel incorrect'
+            ];
+        }
+
+        if ($currentPassword === $newPassword) {
+            return [
+                'success' => false,
+                'code' => 400,
+                'message' => 'Le nouveau mot de passe doit être différent de l\'ancien'
+            ];
+        }
+
         try {
-            $row = $this->db->fetchOne(
-                "SELECT password_hash FROM users WHERE id = $1 LIMIT 1",
-                [$userId]
-            );
-
-            if (!$row || !is_array($row)) {
-                return ['success' => false, 'message' => 'Utilisateur introuvable', 'code' => 404];
-            }
-
-            $hash = (string)($row['password_hash'] ?? '');
-            if ($hash === '') {
-                return ['success' => false, 'message' => 'Mot de passe introuvable', 'code' => 500];
-            }
-
-            if (!password_verify($currentPassword, $hash)) {
-                return ['success' => false, 'message' => 'Mot de passe actuel incorrect', 'code' => 400];
-            }
-
             $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
-            $updated = $this->db->execute(
-                "UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2",
-                [$newHash, $userId]
-            );
 
-            if ($updated === false) {
-                return ['success' => false, 'message' => 'Échec mise à jour mot de passe', 'code' => 500];
+            $ok = $this->userModel->updatePassword($userId, $newHash);
+            $check = $this->userModel->findById($userId);
+            error_log("Password hash after update=" . ($check['password_hash'] ?? 'NULL'));
+            if ($ok !== true) {
+                return [
+                    'success' => false,
+                    'code' => 500,
+                    'message' => 'Impossible de mettre à jour le mot de passe'
+                ];
             }
 
-            return ['success' => true, 'message' => 'Mot de passe modifié'];
-        } catch (\Throwable $e) {
-            error_log("AuthService::changePassword - " . $e->getMessage());
-            return ['success' => false, 'message' => 'Erreur serveur', 'code' => 500];
+            $this->auditService->logPasswordChanged($userId);
+
+            return [
+                'success' => true,
+                'message' => 'Mot de passe modifié avec succès'
+            ];
+
+        } catch (\Exception $e) {
+            error_log("AuthService::changePassword - Error: " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'code' => 500,
+                'message' => 'Erreur lors du changement de mot de passe'
+            ];
         }
     }
 
