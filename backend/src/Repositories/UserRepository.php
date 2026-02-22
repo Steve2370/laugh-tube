@@ -232,13 +232,22 @@ class UserRepository {
         return $this->db->execute($sql, [$userId]);
     }
 
-    public function updatePassword(int $userId, string $passwordHash): bool {
-        $sql = "UPDATE users 
-                SET password_hash = $1,
-                    password_changed_at = NOW(),
-                    updated_at = NOW()
+    public function updatePassword(int $userId, string $passwordHash): bool
+    {
+        try {
+            $sql = "UPDATE users
+                SET password_hash = $1, updated_at = NOW()
                 WHERE id = $2";
-        return $this->db->execute($sql, [$passwordHash, $userId]);
+            $res = $this->db->execute($sql, [$passwordHash, $userId]);
+
+            if ($res === false) return false;
+            if (is_int($res) && $res < 1) return false;
+
+            return true;
+        } catch (\Throwable $e) {
+            error_log("UserModel::updatePassword - " . $e->getMessage());
+            return false;
+        }
     }
 
     public function saveEmailVerificationToken(int $userId, string $verificationToken): bool
