@@ -120,8 +120,8 @@ class AuthService
                     'id' => $user['id'],
                     'username' => $user['username'],
                     'email' => $user['email'],
-                    'role' => $user['role'] ?? 'user',
-                    'is_admin' => (bool)($user['is_admin'] ?? false),
+                    'role' => $user['role'] ?? 'membre',
+                    'is_admin' => ($user['role'] ?? '') === 'admin',
                     'avatar_url' => $user['avatar_url'] ?? null,
                     'email_verified' => $user['email_verified'] ?? false,
                     'two_fa_enabled' => $user['two_fa_enabled'] ?? false
