@@ -316,6 +316,40 @@ class ApiService {
         });
     }
 
+    async signalerVideo(videoId, raison, description = '') {
+        return await this.request(`/videos/${videoId}/signaler`, {
+            method: 'POST',
+            body: JSON.stringify({ raison, description }),
+        });
+    }
+
+    async adminGetUsers() {
+        return await this.request('/admin/users');
+    }
+
+    async adminDeleteUser(userId) {
+        return await this.request(`/admin/users/${userId}`, { method: 'DELETE' });
+    }
+
+    async adminGetVideos() {
+        return await this.request('/admin/videos');
+    }
+
+    async adminDeleteVideo(videoId) {
+        return await this.request(`/admin/videos/${videoId}`, { method: 'DELETE' });
+    }
+
+    async adminGetSignalements() {
+        return await this.request('/admin/signalements');
+    }
+
+    async adminUpdateSignalement(reportId, statut) {
+        return await this.request(`/admin/signalements/${reportId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ statut }),
+        });
+    }
+
     async resendVerification(email) {
         return this.request('/resendVerification.php', {
             method: 'POST',
