@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use AllowDynamicProperties;
+use App\Models\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Exception;
 use Random\RandomException;
 
+#[AllowDynamicProperties]
 class TokenService
 {
     private string $secret;
@@ -18,11 +21,13 @@ class TokenService
         ?string $secret = null,
         int $expirationTime = 3600,
         int $refreshExpirationTime = 604800,
-        string $algorithm = 'HS256') {
+        string $algorithm = 'HS256',
+        ?User $userModel = null) {
         $this->secret = $secret ?? ($_ENV['JWT_SECRET'] ?? 'secret123');
         $this->expirationTime = $expirationTime;
         $this->refreshExpirationTime = $refreshExpirationTime;
         $this->algorithm = $algorithm;
+        $this->userModel = $userModel;
     }
 
     public function generateToken(array $userData): string
@@ -134,18 +139,25 @@ class TokenService
                 ];
             }
 
-            $userData = [
-                'id'       => $payload['sub'],
-                'username' => $payload['username'] ?? '',
-                'role'     => $payload['role']     ?? 'user',
-            ];
+            $user = $this->userModel->findById((int)$payload['sub']);
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'Utilisateur introuvable',
+                    'code'    => 401,
+                ];
+            }
 
-            $newToken = $this->generateToken($userData);
+            $newToken = $this->generateToken($user);
 
             return [
                 'success' => true,
                 'token'   => $newToken,
-                'user'    => $userData,
+                'user' => [
+                    'id'       => $user['id'],
+                    'username' => $user['username'],
+                    'role'     => $user['role'],
+                ],
             ];
 
         } catch (\Exception $e) {
