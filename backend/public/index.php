@@ -103,7 +103,7 @@ try {
     $sessionRepository = new SessionRepository($db);
     $logRepository = new LogRepository($db);
 
-    $tokenService = new TokenService();
+    $tokenService = new TokenService(null, 3600, 604800, 'HS256', $userModel);
     $validationService = new ValidationService();
     $uploadService = new UploadService();
     $auditService = new AuditService($logRepository, $db);
