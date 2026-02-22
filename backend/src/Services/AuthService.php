@@ -359,9 +359,17 @@ class AuthService
         try {
             $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
 
-            $ok = $this->userModel->updatePassword($userId, $newHash);
-            $check = $this->userModel->findById($userId);
-            error_log("Password hash after update=" . ($check['password_hash'] ?? 'NULL'));
+            $updated = $this->userModel->updatePassword($userId, $newHash);
+
+            if ($updated !== true && $updated !== 1) {
+                error_log("updatePassword failed userId={$userId} updated=" . var_export($updated, true));
+                return [
+                    'success' => false,
+                    'code' => 500,
+                    'message' => 'Impossible de mettre à jour le mot de passe'
+                ];
+            }
+
             if ($ok !== true) {
                 return [
                     'success' => false,
