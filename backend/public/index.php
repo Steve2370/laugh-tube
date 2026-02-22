@@ -70,7 +70,7 @@ function normalizeUri(string $rawPath): string
 {
     $path = $rawPath === '' ? '/' : $rawPath;
     if (str_starts_with($path, '/api/')) {
-        $path = substr($path, 4);
+        $path = substr($path, 5);
         if ($path === '') $path = '/';
     }
     if ($path !== '/' && str_ends_with($path, '/')) {
