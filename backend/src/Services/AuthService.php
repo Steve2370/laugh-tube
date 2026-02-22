@@ -361,12 +361,6 @@ class AuthService
             $this->userModel->updatePassword($userId, $newHash);
             $this->auditService->logPasswordChanged($userId);
 
-            try {
-                $this->sessionRepository->invalidateAllUserSessions($userId);
-            } catch (\Exception $e) {
-                error_log("AuthService::changePassword - Session invalidation error: " . $e->getMessage());
-            }
-
             return [
                 'success' => true,
                 'message' => 'Mot de passe modifié avec succès'

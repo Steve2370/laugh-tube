@@ -215,23 +215,14 @@ class AuthController
     public function logout(): void
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
-
-            if (!$currentUser) {
-                http_response_code(401);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Non authentifié'
-                ]);
+            $currentUser = $this->authMiddleware->handleOptional();
+            if (!is_array($currentUser)) {
+                JsonResponse::unauthorized(['success' => false, 'error' => 'Non authentifié']);
                 return;
             }
-
-            $this->authService->logout($currentUser['user_id']);
-            $this->auditService->logSecurityEvent(
-                $currentUser['user_id'],
-                'user_logout',
-                []
-            );
+            $userId = (int)($currentUser['sub'] ?? 0);
+            $this->authService->logout($userId);
+            $this->auditService->logSecurityEvent($userId, 'user_logout', []);
 
             http_response_code(200);
             echo json_encode([
