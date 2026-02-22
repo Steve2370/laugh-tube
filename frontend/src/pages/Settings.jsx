@@ -17,6 +17,8 @@ const Settings = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [savingProfile, setSavingProfile] = useState(false);
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState(null);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,6 +44,7 @@ const Settings = () => {
             setUsername(user.username || '');
             setEmail(user.email || '');
             setTwoFAEnabled(user.two_fa_enabled || false);
+            setAvatarPreview(null);
         }
     }, [user?.id]);
 
@@ -68,6 +71,33 @@ const Settings = () => {
             toast.success('Profil mis à jour !');
         } catch (err) { toast.error(err.message || 'Erreur'); }
         finally { setSavingProfile(false); }
+    };
+
+    const handleAvatarChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { toast.error('Fichier invalide'); return; }
+        if (file.size > 5 * 1024 * 1024) { toast.error('Image trop lourde (max 5 Mo)'); return; }
+
+        const localUrl = URL.createObjectURL(file);
+        setAvatarPreview(localUrl);
+        setAvatarUploading(true);
+
+        try {
+            const res = await apiService.uploadProfileImage(file);
+            const serverUrl = res?.avatar_url || res?.url
+                || `/api/users/${user.id}/profile-image?t=${Date.now()}`;
+            updateUser({ avatar_url: serverUrl });
+            localStorage.setItem(`profileImage_${user.id}`, serverUrl);
+            setAvatarPreview(null);
+            toast.success('Photo de profil mise à jour !');
+        } catch (err) {
+            setAvatarPreview(null);
+            toast.error(err.message || 'Erreur upload');
+        } finally {
+            setAvatarUploading(false);
+            URL.revokeObjectURL(localUrl);
+        }
     };
 
     const handlePasswordChange = async (e) => {
@@ -136,6 +166,8 @@ const Settings = () => {
         { id: 'privacy', label: 'Confidentialité', icon: Shield },
     ];
 
+    const currentAvatar = avatarPreview || user?.avatar_url || null;
+
     return (
         <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 via-white to-blue-50">
             <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -165,23 +197,45 @@ const Settings = () => {
                             <div>
                                 <h2 className="text-2xl font-bold mb-6 text-gray-900">Informations du profil</h2>
                                 <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-2xl">
+
                                     <div className="flex items-center gap-6 p-6 bg-gray-50 rounded-xl">
                                         <div className="relative">
-                                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                                                {username.charAt(0).toUpperCase() || '?'}
-                                            </div>
-                                            <button type="button" onClick={() => window.location.hash = '#/profile'}
-                                                    className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border-2 border-gray-200 hover:bg-gray-50">
+                                            {currentAvatar ? (
+                                                <img
+                                                    src={currentAvatar}
+                                                    alt="Avatar"
+                                                    className="w-24 h-24 rounded-full object-cover shadow-lg border-2 border-white"
+                                                />
+                                            ) : (
+                                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                                                    {username.charAt(0).toUpperCase() || '?'}
+                                                </div>
+                                            )}
+                                            {avatarUploading && (
+                                                <div className="absolute inset-0 rounded-full bg-black bg-opacity-40 flex items-center justify-center">
+                                                    <Loader size={24} className="text-white animate-spin" />
+                                                </div>
+                                            )}
+                                            <label className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border-2 border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
                                                 <Camera size={18} className="text-gray-600" />
-                                            </button>
+                                                <input
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                                    className="hidden"
+                                                    onChange={handleAvatarChange}
+                                                    disabled={avatarUploading}
+                                                />
+                                            </label>
                                         </div>
                                         <div>
                                             <h3 className="font-semibold text-gray-900 mb-1">Photo de profil</h3>
-                                            <p className="text-sm text-gray-500">Modifiez votre photo depuis la page Profil</p>
+                                            <p className="text-sm text-gray-500">Cliquez sur l'icône pour changer votre photo</p>
+                                            <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP — max 5 Mo</p>
                                         </div>
                                     </div>
+
                                     {[
-                                        { label: "Nom d\'utilisateur", value: username, setter: setUsername, type: 'text', icon: User, placeholder: "Votre nom d\'utilisateur" },
+                                        { label: "Nom d'utilisateur", value: username, setter: setUsername, type: 'text', icon: User, placeholder: "Votre nom d'utilisateur" },
                                         { label: 'Adresse email', value: email, setter: setEmail, type: 'email', icon: Mail, placeholder: 'votre@email.com' },
                                     ].map(({ label, value, setter, type, icon: Icon, placeholder }) => (
                                         <div key={label}>
@@ -240,11 +294,12 @@ const Settings = () => {
                         )}
 
                         {activeTab === 'twofa' && (
-                            <div className="max-w-2xl">
+                            <div>
                                 <h2 className="text-2xl font-bold mb-2 text-gray-900">Authentification à deux facteurs</h2>
-                                <p className="text-gray-500 mb-8">Ajoutez une couche de sécurité supplémentaire à votre compte.</p>
-                                <div className={`flex items-center gap-3 p-4 rounded-xl mb-8 ${twoFAEnabled ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
-                                    {twoFAEnabled ? <><CheckCircle size={24} className="text-green-600" /><span className="font-semibold text-green-800">2FA activée</span></> : <><XCircle size={24} className="text-gray-400" /><span className="font-semibold text-gray-600">2FA désactivée</span></>}
+                                <p className="text-gray-600 mb-8">Protégez votre compte avec une couche de sécurité supplémentaire.</p>
+
+                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-8 ${twoFAEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                    {twoFAEnabled ? <><CheckCircle size={16} /> 2FA activée</> : <><XCircle size={16} /> 2FA désactivée</>}
                                 </div>
 
                                 {twoFAStep === 'idle' && !twoFAEnabled && (
@@ -255,36 +310,23 @@ const Settings = () => {
                                 )}
 
                                 {twoFAStep === 'setup' && twoFASetupData && (
-                                    <div className="space-y-6">
-                                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                                            <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2"><QrCode size={20} /> Scannez le QR code</h3>
-                                            <p className="text-sm text-blue-700 mb-4">Ouvrez Google Authenticator ou Authy et scannez ce code.</p>
-                                            {twoFASetupData.secret && (
-                                                <div className="bg-white p-4 rounded-lg inline-block">
-                                                    <img
-                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`otpauth://totp/LaughTube:${encodeURIComponent(user?.email || '')}?secret=${twoFASetupData.secret}&issuer=LaughTube`)}`}
-                                                        alt="QR Code 2FA"
-                                                        className="w-48 h-48"
-                                                    />
+                                    <div className="space-y-6 max-w-md">
+                                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                            <p className="text-blue-900 text-sm font-medium mb-3">Scannez ce QR code avec votre application d'authentification (Google Authenticator, Authy...)</p>
+                                            {twoFASetupData.qr_code && (
+                                                <div className="flex justify-center mb-4">
+                                                    <img src={twoFASetupData.qr_code} alt="QR Code 2FA" className="w-40 h-40 border-4 border-white rounded-xl shadow-lg" />
                                                 </div>
                                             )}
                                             {twoFASetupData.secret && (
-                                                <div className="mt-4">
-                                                    <p className="text-xs text-blue-600 mb-1">Code manuel :</p>
-                                                    <code className="bg-blue-100 px-3 py-1 rounded text-sm font-mono text-blue-900 select-all">{twoFASetupData.secret}</code>
+                                                <div>
+                                                    <p className="text-xs text-blue-800 mb-1 font-medium">Ou entrez ce code manuellement :</p>
+                                                    <code className="block bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm font-mono text-center tracking-widest select-all">
+                                                        {twoFASetupData.secret}
+                                                    </code>
                                                 </div>
                                             )}
                                         </div>
-                                        {twoFASetupData.backup_codes?.length > 0 && (
-                                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                                                <h4 className="font-bold text-yellow-900 mb-2">Codes de secours — conservez-les !</h4>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {twoFASetupData.backup_codes.map((code, i) => (
-                                                        <code key={i} className="bg-white border border-yellow-200 px-2 py-1 rounded text-xs font-mono text-center">{code}</code>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">Code de vérification</label>
                                             <input type="text" value={twoFACode} onChange={e => setTwoFACode(e.target.value)} placeholder="123456" maxLength={6}
@@ -341,7 +383,7 @@ const Settings = () => {
                                 ) : subscribers.length === 0 ? (
                                     <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
                                         <Users size={48} className="mx-auto text-gray-300 mb-3" />
-                                        <p className="text-gray-500 font-medium">Aucun abonné pour l\'instant</p>
+                                        <p className="text-gray-500 font-medium">Aucun abonné pour l'instant</p>
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden">

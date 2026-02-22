@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
     ChevronDown,
+    LayoutDashboard,
     LogIn,
     LogOut,
     Search,
@@ -9,7 +10,7 @@ import {
     User,
     UserPlus,
 } from "lucide-react";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../AuthContext.jsx";
 import { useToast } from "../ToastContext.jsx";
 import NotificationDropdown from "./NotificationDropdown";
 
@@ -53,6 +54,8 @@ export default function Navbar() {
         toast.success('Déconnexion réussie');
         navigateTo('home');
     };
+
+    const isAdmin = user?.role === 'admin' || user?.is_admin === true;
 
     const profileImage = user?.id
         ? `/api/users/${user.id}/profile-image`
@@ -133,7 +136,7 @@ export default function Navbar() {
                                     </button>
 
                                     {isDropdownOpen && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-lg shadow-lg border border-gray-200 border-opacity-50 py-1 z-50">
+                                        <div className="absolute right-0 mt-2 w-52 bg-white bg-opacity-95 backdrop-blur-md rounded-lg shadow-lg border border-gray-200 border-opacity-50 py-1 z-50">
                                             <div className="px-4 py-3 border-b border-gray-200 border-opacity-50">
                                                 <div className="flex items-center gap-3">
                                                     {profileImage ? (
@@ -154,6 +157,11 @@ export default function Navbar() {
                                                         <p className="text-xs text-gray-500 truncate">
                                                             {user.email}
                                                         </p>
+                                                        {isAdmin && (
+                                                            <span className="inline-block mt-0.5 text-xs font-semibold text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded-full">
+                                                                Admin
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -188,6 +196,21 @@ export default function Navbar() {
                                                     <Settings size={16} />
                                                     Paramètres
                                                 </button>
+
+                                                {isAdmin && (
+                                                    <>
+                                                        <div className="my-1 border-t border-gray-100" />
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDropdownItemClick(() => navigateTo("admin"))
+                                                            }
+                                                            className="w-full text-left px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-50 flex items-center gap-3 transition-colors"
+                                                        >
+                                                            <LayoutDashboard size={16} />
+                                                            Dashboard Admin
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
 
                                             <div className="border-t border-gray-200 border-opacity-50 py-1">
