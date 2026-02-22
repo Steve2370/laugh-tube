@@ -198,7 +198,7 @@ try {
         $db
     );
 
-    $adminMiddleware      = new AdminMiddleware($db);
+    $adminMiddleware      = new AdminMiddleware($authMiddleware);
     $adminController      = new AdminController($db);
     $signalementController = new SignalementController($db);
 
