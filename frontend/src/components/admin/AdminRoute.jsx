@@ -1,6 +1,5 @@
-import React from 'react';
-import apiService from '../../services/apiService.js';
 import { useNavigation } from '../../contexts/NavigationContext.jsx';
+import apiService from '../../services/apiService.js';
 
 export default function AdminRoute({ children }) {
     const { navigateTo } = useNavigation();
@@ -11,7 +10,9 @@ export default function AdminRoute({ children }) {
         return null;
     }
 
-    if (!user.is_admin && !user.isAdmin) {
+    const isAdmin = user.role === 'admin' || user.is_admin === true;
+
+    if (!isAdmin) {
         navigateTo('home');
         return null;
     }
