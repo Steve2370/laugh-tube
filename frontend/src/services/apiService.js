@@ -91,6 +91,7 @@ class ApiService {
      * @param {string} password
      * @returns {Promise<object>}
      */
+
     async login(email, password) {
         const response = await this.request('/login', {
             method: 'POST',
@@ -98,18 +99,24 @@ class ApiService {
             skipAuth: true,
         });
 
-
         const accessToken = response.token || response.data?.token ||
             response.access_token || response.data?.access_token;
         const refreshToken = response.refresh_token || response.data?.refresh_token;
+        const user = response.user || response.data?.user;
 
         if (accessToken) {
             localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('authToken', accessToken);
+            localStorage.setItem('token', accessToken);
             if (refreshToken) {
                 localStorage.setItem('refresh_token', refreshToken);
             }
         } else if (!response?.requires_2fa) {
             console.error('Aucun token dans la réponse:', response);
+        }
+
+        if (user) {
+            localStorage.setItem('user', JSON.stringify(user));
         }
 
         return response;
