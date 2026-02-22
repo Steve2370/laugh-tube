@@ -232,13 +232,11 @@ class UserRepository {
         return $this->db->execute($sql, [$userId]);
     }
 
-    public function updatePassword(int $userId, string $passwordHash): bool
+    public function updatePassword(int $userId, string $hash): bool
     {
         try {
-            $sql = "UPDATE users
-                SET password_hash = $1, updated_at = NOW()
-                WHERE id = $2";
-            $res = $this->db->execute($sql, [$passwordHash, $userId]);
+            $sql = "UPDATE users SET password_hash = $1 WHERE id = $2";
+            $res = $this->db->execute($sql, [$hash, $userId]);
 
             if ($res === false) return false;
             if (is_int($res) && $res < 1) return false;
