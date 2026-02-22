@@ -72,15 +72,36 @@ const Settings = () => {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-        if (newPassword !== confirmPassword) { toast.error('Les mots de passe ne correspondent pas'); return; }
-        if (newPassword.length < 8) { toast.error('Minimum 8 caractères'); return; }
-        setSavingPassword(true);
+        if (newPassword !== confirmPassword) {
+            error("Les mots de passe ne correspondent pas");
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            error("Le mot de passe doit contenir au moins 6 caractères");
+            return;
+        }
+
         try {
-            await apiService.changePassword(currentPassword, newPassword);
-            toast.success('Mot de passe changé avec succès !');
-            setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
-        } catch (err) { toast.error(err.message || 'Erreur lors du changement'); }
-        finally { setSavingPassword(false); }
+            const res = await apiService.request("/auth/change-password", {
+                method: "POST",
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                }),
+            });
+
+            if (res?.success !== true) {
+                error(res?.error || res?.message || "Impossible de changer le mot de passe");
+                return;
+            }
+            success(res?.message || "Mot de passe changé avec succès !");
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+        } catch (err) {
+            error(err?.message || "Erreur lors du changement de mot de passe");
+        }
     };
 
     const handleEnable2FA = async () => {
