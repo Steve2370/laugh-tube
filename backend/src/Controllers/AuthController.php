@@ -296,10 +296,10 @@ class AuthController
     public function changePassword(): void
     {
         try {
-            $currentUser = $this->authMiddleware->handle();
+            $currentUser = $this->authMiddleware->handleOptional();
 
-            if (!$currentUser || !is_array($currentUser)) {
-                JsonResponse::json(['success' => false, 'error' => 'Non autorisé'], 401);
+            if (!is_array($currentUser)) {
+                JsonResponse::unauthorized(['success' => false, 'error' => 'Non autorisé']);
                 return;
             }
 
