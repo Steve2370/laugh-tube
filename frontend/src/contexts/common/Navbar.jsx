@@ -10,7 +10,7 @@ import {
     User,
     UserPlus,
 } from "lucide-react";
-import { useAuth } from "../AuthContext.jsx";
+import { useAuth } from "../../hooks/useAuth.js";
 import { useToast } from "../ToastContext.jsx";
 import NotificationDropdown from "./NotificationDropdown";
 
