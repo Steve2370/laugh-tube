@@ -6,9 +6,9 @@ import ReportsTable from '../components/admin/ReportsTable.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 
 const TABS = [
-    { key: 'reports', label: 'Signalements', icon: '🚨' },
-    { key: 'users',   label: 'Utilisateurs', icon: '👥' },
-    { key: 'videos',  label: 'Vidéos',       icon: '🎬' },
+    { key: 'reports', label: 'Signalements', icon: '' },
+    { key: 'users',   label: 'Utilisateurs', icon: '' },
+    { key: 'videos',  label: 'Vidéos',       icon: '' },
 ];
 
 function StatCard({ label, value, sub, color = 'blue' }) {

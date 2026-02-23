@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Interfaces\DatabaseInterface;
+use PDO;
 
 class AdminController
 {
@@ -20,21 +21,22 @@ class AdminController
                 u.id,
                 u.username,
                 u.email,
-                u.is_admin,
+                u.role,
                 u.created_at,
-                COUNT(DISTINCT v.id)  AS video_count,
-                COUNT(DISTINCT s.id)  AS subscriber_count
+                COUNT(DISTINCT v.id) AS video_count,
+                COUNT(DISTINCT a.id) AS subscriber_count
              FROM users u
-             LEFT JOIN videos       v ON v.user_id = u.id
-             LEFT JOIN abonnements  s ON s.channel_id = u.id
-             GROUP BY u.id, u.username, u.email, u.is_admin, u.created_at
+             LEFT JOIN videos      v ON v.user_id = u.id
+             LEFT JOIN abonnements a ON a.channel_id = u.id
+             WHERE u.deleted_at IS NULL
+             GROUP BY u.id, u.username, u.email, u.role, u.created_at
              ORDER BY u.created_at DESC"
         );
 
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($users as &$user) {
-            $user['is_admin']         = (bool)$user['is_admin'];
+            $user['is_admin']         = ($user['role'] === 'admin');
             $user['video_count']      = (int)$user['video_count'];
             $user['subscriber_count'] = (int)$user['subscriber_count'];
         }
@@ -44,7 +46,7 @@ class AdminController
 
     public function deleteUser(int $userId): void
     {
-        $stmt = $this->db->prepare('SELECT is_admin FROM users WHERE id = :id LIMIT 1');
+        $stmt = $this->db->prepare('SELECT role FROM users WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $userId]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -53,7 +55,7 @@ class AdminController
             return;
         }
 
-        if ($user['is_admin']) {
+        if ($user['role'] === 'admin') {
             $this->json(['error' => 'Impossible de supprimer un compte admin'], 403);
             return;
         }
@@ -66,7 +68,6 @@ class AdminController
         $this->json(['success' => true, 'message' => 'Compte supprimé']);
     }
 
-
     public function getVideos(): void
     {
         $stmt = $this->db->query(
@@ -76,41 +77,43 @@ class AdminController
                 v.user_id,
                 u.username,
                 v.created_at,
-                v.file_path,
-                COALESCE(stats.views,    0) AS views,
-                COALESCE(stats.likes,    0) AS likes,
-                COALESCE(stats.dislikes, 0) AS dislikes,
-                COUNT(DISTINCT sig.id)       AS report_count
+                v.filename,
+                COALESCE(vv.views,    0) AS views,
+                COALESCE(lk.likes,    0) AS likes,
+                COALESCE(dk.dislikes, 0) AS dislikes,
+                COUNT(DISTINCT sig.id)   AS report_count
              FROM videos v
              JOIN users u ON u.id = v.user_id
              LEFT JOIN (
-                 SELECT
-                     video_id,
-                     COUNT(*)                                          AS views,
-                     SUM(CASE WHEN type = 'like'    THEN 1 ELSE 0 END) AS likes,
-                     SUM(CASE WHEN type = 'dislike' THEN 1 ELSE 0 END) AS dislikes
-                 FROM (
-                     SELECT video_id, NULL AS type FROM vues
-                     UNION ALL
-                     SELECT video_id, type FROM reactions
-                 ) sub
+                 SELECT video_id, COUNT(*) AS views
+                 FROM video_views
                  GROUP BY video_id
-             ) stats ON stats.video_id = v.id
+             ) vv ON vv.video_id = v.id
+             LEFT JOIN (
+                 SELECT video_id, COUNT(*) AS likes
+                 FROM likes
+                 GROUP BY video_id
+             ) lk ON lk.video_id = v.id
+             LEFT JOIN (
+                 SELECT video_id, COUNT(*) AS dislikes
+                 FROM dislikes
+                 GROUP BY video_id
+             ) dk ON dk.video_id = v.id
              LEFT JOIN signalements sig ON sig.video_id = v.id
-             GROUP BY v.id, v.title, v.user_id, u.username, v.created_at, v.file_path,
-                      stats.views, stats.likes, stats.dislikes
+             GROUP BY v.id, v.title, v.user_id, u.username, v.created_at, v.filename,
+                      vv.views, lk.likes, dk.dislikes
              ORDER BY v.created_at DESC"
         );
 
         $videos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($videos as &$video) {
-            $video['views']        = (int)$video['views'];
-            $video['likes']        = (int)$video['likes'];
-            $video['dislikes']     = (int)$video['dislikes'];
-            $video['report_count'] = (int)$video['report_count'];
+            $video['views']         = (int)$video['views'];
+            $video['likes']         = (int)$video['likes'];
+            $video['dislikes']      = (int)$video['dislikes'];
+            $video['report_count']  = (int)$video['report_count'];
             $video['thumbnail_url'] = "/api/videos/{$video['id']}/thumbnail";
-            unset($video['file_path']);
+            unset($video['filename']);
         }
 
         $this->json(['videos' => $videos]);
@@ -119,7 +122,7 @@ class AdminController
     public function deleteVideo(int $videoId): void
     {
         $stmt = $this->db->prepare(
-            'SELECT id, file_path, user_id FROM videos WHERE id = :id LIMIT 1'
+            'SELECT id, filename, user_id FROM videos WHERE id = :id LIMIT 1'
         );
         $stmt->execute([':id' => $videoId]);
         $video = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -129,7 +132,7 @@ class AdminController
             return;
         }
 
-        $this->deleteVideoFiles($video['file_path'], $videoId);
+        $this->deleteVideoFiles($video['filename'], $videoId);
 
         $stmt = $this->db->prepare('DELETE FROM videos WHERE id = :id');
         $stmt->execute([':id' => $videoId]);
@@ -148,12 +151,12 @@ class AdminController
                 sig.statut,
                 sig.created_at,
                 sig.reviewed_at,
-                v.title          AS video_title,
-                author.username  AS video_author,
+                v.title           AS video_title,
+                author.username   AS video_author,
                 reporter.username AS reporter_username
              FROM signalements sig
-             JOIN  videos v        ON v.id = sig.video_id
-             JOIN  users  author   ON author.id = v.user_id
+             JOIN  videos v          ON v.id   = sig.video_id
+             JOIN  users  author     ON author.id = v.user_id
              LEFT JOIN users reporter ON reporter.id = sig.reporter_id
              ORDER BY
                 CASE sig.statut WHEN 'pending' THEN 0 ELSE 1 END,
@@ -184,7 +187,7 @@ class AdminController
 
         $stmt = $this->db->prepare(
             "UPDATE signalements
-             SET statut = :statut,
+             SET statut      = :statut,
                  reviewed_at = CASE WHEN :statut2 != 'pending' THEN NOW() ELSE NULL END,
                  reviewed_by = CASE WHEN :statut3 != 'pending' THEN :admin_id ELSE NULL END
              WHERE id = :id"
@@ -200,7 +203,29 @@ class AdminController
         $this->json(['success' => true, 'statut' => $statut]);
     }
 
-    private function deleteVideoFiles(?string $filePath, int $videoId): void
+    public function getStats(): void
+    {
+        $stats = [];
+
+        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM users WHERE deleted_at IS NULL");
+        $stats['total_users'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM videos");
+        $stats['total_videos'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM video_views");
+        $stats['total_views'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM signalements WHERE statut = 'pending'");
+        $stats['pending_reports'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM abonnements");
+        $stats['total_subscriptions'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+        $this->json(['stats' => $stats]);
+    }
+
+    private function deleteVideoFiles(?string $filename, int $videoId): void
     {
         $baseDirs = [
             '/var/www/html/uploads/videos/',
@@ -208,11 +233,10 @@ class AdminController
             '/var/www/html/uploads/encoded/',
         ];
 
-        if ($filePath && file_exists($filePath)) {
-            @unlink($filePath);
-        }
-
         foreach ($baseDirs as $dir) {
+            if ($filename && file_exists($dir . $filename)) {
+                @unlink($dir . $filename);
+            }
             foreach (glob("{$dir}{$videoId}.*") ?: [] as $file) {
                 @unlink($file);
             }
@@ -221,12 +245,12 @@ class AdminController
 
     private function deleteUserVideoFiles(int $userId): void
     {
-        $stmt = $this->db->prepare('SELECT id, file_path FROM videos WHERE user_id = :uid');
+        $stmt = $this->db->prepare('SELECT id, filename FROM videos WHERE user_id = :uid');
         $stmt->execute([':uid' => $userId]);
         $videos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($videos as $video) {
-            $this->deleteVideoFiles($video['file_path'], $video['id']);
+            $this->deleteVideoFiles($video['filename'], $video['id']);
         }
     }
 
