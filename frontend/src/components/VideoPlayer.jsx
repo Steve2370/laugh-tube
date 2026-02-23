@@ -127,8 +127,6 @@ const VideoPlayer = ({
 
 
     const sendViewStartOnce = async () => {
-        console.log("sendViewStartOnce called", { videoId });
-
         if (!videoId) {
             console.warn("sendViewStartOnce STOP: missing videoId");
             return;
@@ -137,8 +135,6 @@ const VideoPlayer = ({
         const tokenPayload = apiService.decodeToken(localStorage.getItem('access_token'));
         const userId = tokenPayload?.sub ?? tokenPayload?.user_id ?? null;
         const sessionId = apiService.getOrCreateSessionId();
-        console.log("sendViewStartOnce data", { userId, sessionId });
-
         if (viewedRef.current) {
             console.warn("sendViewStartOnce STOP: viewedRef already true");
             return;
@@ -148,7 +144,6 @@ const VideoPlayer = ({
             console.warn("sendViewStartOnce STOP: hasViewedVideo true");
             return;
         }
-        console.log("sendViewStartOnce -> calling recordView");
 
         viewedRef.current = true;
         apiService.markVideoAsViewed(videoId, userId);
@@ -312,7 +307,6 @@ const VideoPlayer = ({
                             })
                             .catch(() => {});
 
-                        console.log("recordView response:", res);
                     }
 
                     onEnded?.();

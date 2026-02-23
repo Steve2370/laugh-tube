@@ -37,12 +37,9 @@ export const VideoProvider = ({ children }) => {
     const loadVideos = useCallback(async (filters = {}) => {
         try {
             setLoading(true);
-            console.log('VideoContext.loadVideos - Début');
-
             const response = await videoService.getVideos(filters);
             const videosList = normalizeVideosResponse(response);
 
-            console.log('VideoContext.loadVideos - Succès:', videosList.length, 'vidéos');
             setVideos(videosList);
 
             return {
@@ -71,12 +68,8 @@ export const VideoProvider = ({ children }) => {
     const loadVideo = useCallback(async (id) => {
         try {
             setLoading(true);
-            console.log('VideoContext.loadVideo - ID:', id);
-
             const response = await videoService.getVideo(id);
             const video = normalizeVideoResponse(response);
-
-            console.log('VideoContext.loadVideo - Succès:', video);
             setCurrentVideo(video);
 
             return {
@@ -147,8 +140,6 @@ export const VideoProvider = ({ children }) => {
 
     const deleteVideo = useCallback(async (id) => {
         try {
-            console.log('VideoContext.deleteVideo - ID:', id);
-
             await videoService.deleteVideo(id);
 
             setVideos(prev => prev.filter(v => v.id !== id));

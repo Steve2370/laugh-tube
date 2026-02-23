@@ -22,6 +22,7 @@ use App\Controllers\AuthController;
 use App\Controllers\CommentaireController;
 use App\Controllers\NotificationController;
 use App\Controllers\ReactionController;
+use App\Controllers\SearchController;
 use App\Controllers\SignalementController;
 use App\Controllers\UserController;
 use App\Controllers\VideoController;
@@ -236,6 +237,8 @@ try {
         $authMiddleware
     );
 
+    $searchController = new SearchController($db);
+
 } catch (Throwable $e) {
     error_log('Initialization error: ' . $e->getMessage());
     if (isDev()) error_log($e->getTraceAsString());
@@ -283,6 +286,11 @@ try {
 
     if (preg_match('#^/(login|register|forgot-password|reset-password)$#', $uri)) {
         RateLimitMiddleware::checkRequestLimit('auth_' . SecurityHelper::getClientIp(), 10, 1);
+    }
+
+    if ($method === 'GET' && $uri === '/search') {
+        $searchController->search();
+        exit;
     }
 
     foreach ($_GET as $key => $value) {
