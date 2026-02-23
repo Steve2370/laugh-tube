@@ -14,9 +14,9 @@ class AdminMiddleware
 
     public function handle(): array
     {
-        $user = $this->authMiddleware->handleOptional();
+        $user = AuthMiddleware::optionalAuth();
 
-        if (!is_array($user)) {
+        if (empty($user)) {
             $this->abort(401, 'Non authentifié');
         }
 
