@@ -130,8 +130,8 @@ export default function Admin() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <StatCard label="Utilisateurs"              value={users.length}       color="blue"/>
-                    <StatCard label="Vidéos"                    value={videos.length}      color="purple"/>
+                    <StatCard label="Utilisateurs"              value={users.length}       color="green"/>
+                    <StatCard label="Vidéos"                    value={videos.length}      color="green"/>
                     <StatCard label="Vues totales"              value={formatNum(totalViews)} color="green"/>
                     <StatCard
                         label="Signalements en attente"
