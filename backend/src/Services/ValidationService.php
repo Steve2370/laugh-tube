@@ -46,9 +46,9 @@ class ValidationService
         $errors = [];
 
         if (empty(trim($email))) {
-            $errors['email'] = "L'email est requis";
-        } elseif (!$this->validateEmail($email)) {
-            $errors['email'] = $this->getEmailError() ?? "Email invalide";
+            $errors['email'] = "L'email ou le nom d'utilisateur est requis";
+        } elseif (filter_var($email, FILTER_VALIDATE_EMAIL) === false && strlen(trim($email)) < 3) {
+            $errors['email'] = "Email ou nom d'utilisateur invalide";
         }
 
         if (empty($password)) {
