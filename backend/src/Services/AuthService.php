@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-use App\Repositories\LogRepository;
 use App\Repositories\SessionRepository;
 use App\Repositories\UserRepository;
-use PDOException;
 
 class AuthService
 {

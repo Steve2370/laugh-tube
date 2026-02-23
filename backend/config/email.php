@@ -5,5 +5,5 @@ return [
     'from_email' => 'noreply@laughtube.ca',
     'from_name' => 'Laugh Tube',
 
-    'base_url' => 'http://laughtube.ca'
+    'base_url' => 'https://www.laughtube.ca'
 ];

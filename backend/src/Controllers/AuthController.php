@@ -16,6 +16,7 @@ use App\Utils\SecurityHelper;
 
 class AuthController
 {
+
     public function __construct(
         private AuthService $authService,
         private ValidationService $validationService,
@@ -25,6 +26,7 @@ class AuthController
         private SessionRepository $sessionRepository,
         private TwoFactorService $twoFactorService,
         private TokenService $tokenService,
+        private EmailService $emailService
     ) {}
 
     public function register(): void
@@ -346,6 +348,17 @@ class AuthController
             }
 
             $this->auditService->logSecurityEvent($userId, 'password_changed', []);
+            $userInfo = $this->db->fetchOne(
+                'SELECT email, username FROM users WHERE id = $1',
+                [$userId]
+            );
+            if ($userInfo) {
+                $this->emailService->sendPasswordChangedEmail(
+                    $userId,
+                    $userInfo['email'],
+                    $userInfo['username']
+                );
+            }
 
             JsonResponse::success([
                 'success' => true,
@@ -487,6 +500,11 @@ class AuthController
                 return;
             }
 
+            $user = $this->db->fetchOne('SELECT email, username FROM users WHERE id = $1', [$userId]);
+            if ($user) {
+                $this->emailService->send2FAEnabledEmail($userId, $user['email'], $user['username']);
+            }
+
             JsonResponse::success([
                 'secret'       => $result['secret'],
                 'qr_code'      => $result['qr_code_url'],
@@ -526,6 +544,11 @@ class AuthController
                 return;
             }
 
+            $user = $this->db->fetchOne('SELECT email, username FROM users WHERE id = $1', [$userId]);
+            if ($user) {
+                $this->emailService->send2FAEnabledEmail($userId, $user['email'], $user['username']);
+            }
+
             JsonResponse::success(['message' => $result['message']]);
         } catch (\Exception $e) {
             error_log("AuthController::verify2FASetup - " . $e->getMessage());
@@ -560,6 +583,11 @@ class AuthController
                 http_response_code($result['code'] ?? 400);
                 echo json_encode(['error' => $result['message']]);
                 return;
+            }
+
+            $user = $this->db->fetchOne('SELECT email, username FROM users WHERE id = $1', [$userId]);
+            if ($user) {
+                $this->emailService->send2FADisabledEmail($userId, $user['email'], $user['username']);
             }
 
             JsonResponse::success(['message' => $result['message']]);
@@ -610,6 +638,14 @@ class AuthController
                 http_response_code($result['code'] ?? 400);
                 echo json_encode(['error' => $result['message']]);
                 return;
+            }
+
+            if (!empty($result['userId']) && !empty($result['email'])) {
+                $this->emailService->sendPasswordChangedEmail(
+                    $result['userId'],
+                    $result['email'],
+                    $result['username'] ?? ''
+                );
             }
 
             JsonResponse::success(['message' => 'Mot de passe réinitialisé avec succès']);

@@ -217,7 +217,7 @@ $container->set(AnalyticsService::class, function($c) {
 $container->set(AuthService::class, function($c) use ($config) {
     return new AuthService(
         $c->get(UserRepository::class),
-        $c->get(LogRepository::class),
+        $c->get(UserRepository::class),
         $c->get(TokenService::class),
         $c->get(ValidationService::class),
         $c->get(SessionRepository::class),
@@ -248,7 +248,8 @@ $container->set(AuthController::class, function($c) {
         $c->get(AuthService::class),
         $c->get(ValidationService::class),
         $c->get(AuditService::class),
-        $c->get(AuthMiddleware::class)
+        $c->get(AuthMiddleware::class),
+        $c->get(EmailService::class)
     );
 });
 
