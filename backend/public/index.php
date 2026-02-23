@@ -269,6 +269,16 @@ foreach ($dangerousPatterns as $pattern) {
     }
 }
 
+if (preg_match('#^/(login|register|forgot-password|reset-password)$#', $uri)) {
+    RateLimitMiddleware::check('auth');
+} elseif (preg_match('#^/videos/\d+/signaler$#', $uri)) {
+    RateLimitMiddleware::check('signal');
+} elseif (preg_match('#^/videos/\d+/comments$#', $uri)) {
+    RateLimitMiddleware::check('comment');
+} elseif (preg_match('#^/videos/upload$#', $uri)) {
+    RateLimitMiddleware::check('upload');
+}
+
 try {
 
     if (preg_match('#^/(login|register|forgot-password|reset-password)$#', $uri)) {
