@@ -36,9 +36,11 @@ class SignalementController
             return;
         }
 
+        $reporterId = $currentUser['id'] ?? $currentUser['sub'] ?? null;
+
         $existing = $this->db->fetchOne(
             'SELECT id FROM signalements WHERE video_id = $1 AND reporter_id = $2 LIMIT 1',
-            [$videoId, $currentUser['id']]
+            [$videoId, $reporterId]
         );
         if ($existing) {
             $this->json(['error' => 'Vous avez déjà signalé cette vidéo'], 409);
@@ -49,7 +51,7 @@ class SignalementController
             'INSERT INTO signalements (video_id, reporter_id, raison, description)
              VALUES ($1, $2, $3, $4)
              RETURNING id',
-            [$videoId, $currentUser['id'], $raison, $desc ?: null]
+            [$videoId, $reporterId, $raison, $desc ?: null]
         );
 
         $this->json(['success' => true, 'message' => 'Signalement enregistré'], 201);
