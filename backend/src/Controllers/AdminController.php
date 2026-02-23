@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use App\Interfaces\DatabaseInterface;
-use PDO;
 
 class AdminController
 {
@@ -16,7 +15,7 @@ class AdminController
 
     public function getUsers(): void
     {
-        $stmt = $this->db->query(
+        $users = $this->db->fetchAll(
             "SELECT
                 u.id,
                 u.username,
@@ -33,8 +32,6 @@ class AdminController
              ORDER BY u.created_at DESC"
         );
 
-        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
         foreach ($users as &$user) {
             $user['is_admin']         = ($user['role'] === 'admin');
             $user['video_count']      = (int)$user['video_count'];
@@ -46,9 +43,10 @@ class AdminController
 
     public function deleteUser(int $userId): void
     {
-        $stmt = $this->db->prepare('SELECT role FROM users WHERE id = :id LIMIT 1');
-        $stmt->execute([':id' => $userId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $user = $this->db->fetchOne(
+            'SELECT role FROM users WHERE id = $1 LIMIT 1',
+            [$userId]
+        );
 
         if (!$user) {
             $this->json(['error' => 'Utilisateur introuvable'], 404);
@@ -62,15 +60,14 @@ class AdminController
 
         $this->deleteUserVideoFiles($userId);
 
-        $stmt = $this->db->prepare('DELETE FROM users WHERE id = :id');
-        $stmt->execute([':id' => $userId]);
+        $this->db->fetchOne('DELETE FROM users WHERE id = $1', [$userId]);
 
         $this->json(['success' => true, 'message' => 'Compte supprimé']);
     }
 
     public function getVideos(): void
     {
-        $stmt = $this->db->query(
+        $videos = $this->db->fetchAll(
             "SELECT
                 v.id,
                 v.title,
@@ -105,8 +102,6 @@ class AdminController
              ORDER BY v.created_at DESC"
         );
 
-        $videos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
         foreach ($videos as &$video) {
             $video['views']         = (int)$video['views'];
             $video['likes']         = (int)$video['likes'];
@@ -121,11 +116,10 @@ class AdminController
 
     public function deleteVideo(int $videoId): void
     {
-        $stmt = $this->db->prepare(
-            'SELECT id, filename, user_id FROM videos WHERE id = :id LIMIT 1'
+        $video = $this->db->fetchOne(
+            'SELECT id, filename, user_id FROM videos WHERE id = $1 LIMIT 1',
+            [$videoId]
         );
-        $stmt->execute([':id' => $videoId]);
-        $video = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$video) {
             $this->json(['error' => 'Vidéo introuvable'], 404);
@@ -134,15 +128,14 @@ class AdminController
 
         $this->deleteVideoFiles($video['filename'], $videoId);
 
-        $stmt = $this->db->prepare('DELETE FROM videos WHERE id = :id');
-        $stmt->execute([':id' => $videoId]);
+        $this->db->fetchOne('DELETE FROM videos WHERE id = $1', [$videoId]);
 
         $this->json(['success' => true, 'message' => 'Vidéo supprimée']);
     }
 
     public function getSignalements(): void
     {
-        $stmt = $this->db->query(
+        $reports = $this->db->fetchAll(
             "SELECT
                 sig.id,
                 sig.video_id,
@@ -163,8 +156,6 @@ class AdminController
                 sig.created_at DESC"
         );
 
-        $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
         $this->json(['signalements' => $reports]);
     }
 
@@ -178,51 +169,50 @@ class AdminController
             return;
         }
 
-        $stmt = $this->db->prepare('SELECT id FROM signalements WHERE id = :id LIMIT 1');
-        $stmt->execute([':id' => $reportId]);
-        if (!$stmt->fetch()) {
+        $existing = $this->db->fetchOne(
+            'SELECT id FROM signalements WHERE id = $1 LIMIT 1',
+            [$reportId]
+        );
+        if (!$existing) {
             $this->json(['error' => 'Signalement introuvable'], 404);
             return;
         }
 
-        $stmt = $this->db->prepare(
+        $adminId = $adminUser['id'] ?? $adminUser['sub'] ?? null;
+
+        $this->db->fetchOne(
             "UPDATE signalements
-             SET statut      = :statut,
-                 reviewed_at = CASE WHEN :statut2 != 'pending' THEN NOW() ELSE NULL END,
-                 reviewed_by = CASE WHEN :statut3 != 'pending' THEN :admin_id ELSE NULL END
-             WHERE id = :id"
+             SET statut      = $1,
+                 reviewed_at = CASE WHEN $2 != 'pending' THEN NOW() ELSE NULL END,
+                 reviewed_by = CASE WHEN $3 != 'pending' THEN $4 ELSE NULL END
+             WHERE id = $5",
+            [$statut, $statut, $statut, $adminId, $reportId]
         );
-        $stmt->execute([
-            ':statut'   => $statut,
-            ':statut2'  => $statut,
-            ':statut3'  => $statut,
-            ':admin_id' => $adminUser['id'],
-            ':id'       => $reportId,
-        ]);
 
         $this->json(['success' => true, 'statut' => $statut]);
     }
 
     public function getStats(): void
     {
-        $stats = [];
+        $totalUsers = $this->db->fetchOne(
+            "SELECT COUNT(*) AS total FROM users WHERE deleted_at IS NULL"
+        );
+        $totalVideos = $this->db->fetchOne(
+            "SELECT COUNT(*) AS total FROM videos"
+        );
+        $totalViews = $this->db->fetchOne(
+            "SELECT COUNT(*) AS total FROM video_views"
+        );
+        $pendingReports = $this->db->fetchOne(
+            "SELECT COUNT(*) AS total FROM signalements WHERE statut = 'pending'"
+        );
 
-        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM users WHERE deleted_at IS NULL");
-        $stats['total_users'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM videos");
-        $stats['total_videos'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM video_views");
-        $stats['total_views'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM signalements WHERE statut = 'pending'");
-        $stats['pending_reports'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-        $stmt = $this->db->query("SELECT COUNT(*) AS total FROM abonnements");
-        $stats['total_subscriptions'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-        $this->json(['stats' => $stats]);
+        $this->json(['stats' => [
+            'total_users'     => (int)($totalUsers['total'] ?? 0),
+            'total_videos'    => (int)($totalVideos['total'] ?? 0),
+            'total_views'     => (int)($totalViews['total'] ?? 0),
+            'pending_reports' => (int)($pendingReports['total'] ?? 0),
+        ]]);
     }
 
     private function deleteVideoFiles(?string $filename, int $videoId): void
@@ -245,9 +235,10 @@ class AdminController
 
     private function deleteUserVideoFiles(int $userId): void
     {
-        $stmt = $this->db->prepare('SELECT id, filename FROM videos WHERE user_id = :uid');
-        $stmt->execute([':uid' => $userId]);
-        $videos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $videos = $this->db->fetchAll(
+            'SELECT id, filename FROM videos WHERE user_id = $1',
+            [$userId]
+        );
 
         foreach ($videos as $video) {
             $this->deleteVideoFiles($video['filename'], $video['id']);
