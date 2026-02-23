@@ -16,7 +16,11 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         pdo_pgsql \
         pgsql \
         gd \
-        exif
+        exif \
+    && pecl install apcu \
+    && docker-php-ext-enable apcu \
+    && echo "apc.enabled=1" >> /usr/local/etc/php/conf.d/apcu.ini \
+    && echo "apc.shm_size=32M" >> /usr/local/etc/php/conf.d/apcu.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -25,8 +29,8 @@ WORKDIR /var/www/html
 COPY . .
 
 RUN if [ -f composer.json ]; then \
-        composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-pgsql || \
-        composer install --no-dev --optimize-autoloader; \
+        composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-pgsql --ignore-platform-req=ext-apcu || \
+        composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-apcu; \
     fi
 
 RUN mkdir -p \
