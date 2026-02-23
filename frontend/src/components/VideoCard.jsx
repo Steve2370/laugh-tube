@@ -5,6 +5,7 @@ import apiService from "../services/apiService.js";
 const VideoCard = ({ video, onClick }) => {
     const [authorData, setAuthorData] = useState(null);
     const [loadingAuthor, setLoadingAuthor] = useState(true);
+    const [subscribers, setSubscribers] = useState([]);
     const [imageError, setImageError] = useState({ thumbnail: false, avatar: false });
 
     const authorId = useMemo(() => {
@@ -243,7 +244,7 @@ const VideoCard = ({ video, onClick }) => {
                                 <p className="text-sm font-semibold text-gray-900 truncate">{authorData.username}</p>
                                 <div className="flex items-center gap-1 text-xs text-gray-500">
                                     <Users size={12} />
-                                    <span>{formatSubscribers(authorData.subscribersCount)}</span>
+                                    <span>{formatSubscribers(subscribers.length)}</span>
                                 </div>
                             </div>
                         </div>
