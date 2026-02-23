@@ -22,9 +22,8 @@ class SearchController
             return;
         }
 
-        $limit  = min((int)($_GET['limit'] ?? 20), 50);
-        $offset = max((int)($_GET['offset'] ?? 0), 0);
-
+        $limit      = min((int)($_GET['limit'] ?? 20), 50);
+        $offset     = max((int)($_GET['offset'] ?? 0), 0);
         $searchTerm = '%' . $query . '%';
 
         $videos = $this->db->fetchAll(
@@ -38,18 +37,13 @@ class SearchController
                 v.views,
                 v.created_at,
                 v.visibility,
-                u.id       AS user_id,
+                u.id                       AS user_id,
                 u.username,
                 u.avatar_url,
-                COALESCE(vv.view_count, v.views, 0) AS view_count,
-                COALESCE(lk.like_count, 0)          AS likes
+                v.views                    AS view_count,
+                COALESCE(lk.like_count, 0) AS likes
              FROM videos v
              JOIN users u ON u.id = v.user_id
-             LEFT JOIN (
-                 SELECT video_id, COUNT(*) AS view_count
-                 FROM video_views
-                 GROUP BY video_id
-             ) vv ON vv.video_id = v.id
              LEFT JOIN (
                  SELECT video_id, COUNT(*) AS like_count
                  FROM likes
@@ -65,7 +59,7 @@ class SearchController
                )
              ORDER BY
                 CASE WHEN v.title ILIKE $1 THEN 0 ELSE 1 END,
-                vv.view_count DESC NULLS LAST,
+                v.views DESC NULLS LAST,
                 v.created_at DESC
              LIMIT $2 OFFSET $3",
             [$searchTerm, $limit, $offset]
