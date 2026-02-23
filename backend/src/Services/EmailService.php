@@ -128,7 +128,7 @@ class EmailService
 <style>
   body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
   .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#111;padding:24px;text-align:center;}
+  .header{background:#ffffff;padding:24px;text-align:center;}
   .content{padding:32px;}
   .btn{display:inline-block;padding:13px 32px;background:#111;color:#fff !important;text-decoration:none;border-radius:6px;font-weight:bold;margin:20px 0;}
   .link-box{word-break:break-all;background:#f5f5f5;padding:12px;border-radius:4px;font-size:13px;}
@@ -163,7 +163,7 @@ HTML;
 <style>
   body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
   .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#111;padding:24px;text-align:center;}
+  .header{background:#ffffff;padding:24px;text-align:center;}
   .content{padding:32px;}
   .feature{background:#f9f9f9;padding:14px;margin:10px 0;border-radius:6px;border-left:4px solid #111;}
   .btn{display:inline-block;padding:13px 32px;background:#111;color:#fff !important;text-decoration:none;border-radius:6px;font-weight:bold;margin:20px 0;}
@@ -199,7 +199,7 @@ HTML;
 <style>
   body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
   .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#111;padding:24px;text-align:center;}
+  .header{background:#ffffff;padding:24px;text-align:center;}
   .content{padding:32px;}
   .warning{background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;}
   .success{background:#d4edda;border-left:4px solid #28a745;padding:15px;margin:20px 0;border-radius:4px;}
@@ -235,7 +235,7 @@ HTML;
 <style>
   body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
   .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#111;padding:24px;text-align:center;}
+  .header{background:#ffffff;padding:24px;text-align:center;}
   .content{padding:32px;}
   .warning{background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;}
   .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
@@ -269,7 +269,7 @@ HTML;
 <style>
   body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
   .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#111;padding:24px;text-align:center;}
+  .header{background:#ffffff;padding:24px;text-align:center;}
   .content{padding:32px;}
   .btn{display:inline-block;padding:13px 32px;background:#dc3545;color:#fff !important;text-decoration:none;border-radius:6px;font-weight:bold;margin:20px 0;}
   .link-box{word-break:break-all;background:#f5f5f5;padding:12px;border-radius:4px;font-size:13px;}
@@ -305,7 +305,7 @@ HTML;
 <style>
   body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
   .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#111;padding:24px;text-align:center;}
+  .header{background:#ffffff;padding:24px;text-align:center;}
   .content{padding:32px;}
   .success{background:#d4edda;border-left:4px solid #28a745;padding:15px;margin:20px 0;border-radius:4px;}
   .warning{background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;}
@@ -339,7 +339,7 @@ HTML;
 <style>
   body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
   .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#111;padding:24px;text-align:center;}
+  .header{background:#ffffff;padding:24px;text-align:center;}
   .content{padding:32px;}
   .btn{display:inline-block;padding:13px 32px;background:#28a745;color:#fff !important;text-decoration:none;border-radius:6px;font-weight:bold;margin:20px 0;}
   .danger{background:#f8d7da;border-left:4px solid #dc3545;padding:15px;margin:20px 0;border-radius:4px;}
