@@ -56,15 +56,24 @@ export const useVideo = (videoId) => {
         }
     }, [videoId, loadVideo]);
 
+    const loadComments = useCallback(async () => {
+        try {
+            const commentsData = await videoService.getComments(videoId);
+            setComments(commentsData.comments || []);
+        } catch (err) {
+            console.error('Erreur chargement commentaires:', err);
+        }
+    }, [videoId]);
+
     const postComment = useCallback(async (content) => {
         try {
             await videoService.postComment(videoId, content);
-            await loadVideo();
+            await loadComments();
             return { success: true };
         } catch (err) {
             return { success: false, error: err.message };
         }
-    }, [videoId, loadVideo]);
+    }, [videoId, loadComments]);
 
     const recordView = useCallback(async (watchData) => {
         try {
@@ -117,6 +126,7 @@ export const useVideo = (videoId) => {
         recordView,
         updateMetadata,
         deleteVideo,
-        reload: loadVideo
+        reload: loadVideo,
+        reloadComments: loadComments
     };
 };

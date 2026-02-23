@@ -336,7 +336,7 @@ const Video = () => {
     const toast = useToast();
 
     const [videoId, setVideoId] = useState(null);
-    const { video, comments, loading, error: videoError, likeVideo, dislikeVideo, postComment, reload } = useVideo(videoId);
+    const { video, comments, loading, error: videoError, likeVideo, dislikeVideo, postComment, reload, reloadComments } = useVideo(videoId);
     const { videoRef, recordView: _recordView } = useVideoPlayer(videoId);
 
     const recordView = useCallback(async () => {
@@ -757,7 +757,7 @@ const Video = () => {
                                             isAuthenticated={isAuthenticated}
                                             userId={user?.id}
                                             onUserClick={handleUserClick}
-                                            onReplyPosted={reload}
+                                            onReplyPosted={reloadComments}
                                         />
                                     ))
                                 )}
