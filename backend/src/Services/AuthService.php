@@ -29,7 +29,9 @@ class AuthService
             ];
         }
 
-        $user = $this->userModel->findByEmail($email);
+        $user = filter_var($email, FILTER_VALIDATE_EMAIL)
+            ? $this->userModel->findByEmail($email)
+            : $this->userModel->findByUsername($email);
 
         if ($user && !empty($user['account_locked_until']) && strtotime($user['account_locked_until']) > time()) {
             $this->auditService->logSuspiciousActivity(

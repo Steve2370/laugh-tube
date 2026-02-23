@@ -71,21 +71,12 @@ class UserRepository {
     public function findByEmail(string $email): ?array
     {
         $sql = "SELECT id, username, email, password_hash, role, avatar_url, email_verified, deleted_at, two_fa_enabled,
-                       failed_login_attempts, account_locked_until
+                   failed_login_attempts, account_locked_until
             FROM users
-            WHERE email = :email
+            WHERE email = $1
             LIMIT 1";
 
-        try {
-            $pdo = $this->db->getConnection();
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':email' => $email]);
-            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-            return $row ?: null;
-        } catch (\Throwable $e) {
-            error_log("findByEmail error: " . $e->getMessage());
-            return null;
-        }
+        return $this->db->fetchOne($sql, [$email]);
     }
 
     public function findByUsername(string $username): ?array {
