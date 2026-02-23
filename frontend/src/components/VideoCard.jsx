@@ -244,7 +244,7 @@ const VideoCard = ({ video, onClick }) => {
                                 <p className="text-sm font-semibold text-gray-900 truncate">{authorData.username}</p>
                                 <div className="flex items-center gap-1 text-xs text-gray-500">
                                     <Users size={12} />
-                                    <span>{formatSubscribers(subscribers.length)}</span>
+                                    <span>{formatSubscribers(authorData.subscribersCount)}</span>
                                 </div>
                             </div>
                         </div>
