@@ -11,7 +11,8 @@
       "ext-pgsql": "*",
       "ext-ctype": "*",
       "ext-curl": "*",
-      "ext-gd": "*"
+      "ext-gd": "*",
+      "ext-apcu": "*"
     },
     "autoload": {
         "psr-4": {

@@ -58,6 +58,8 @@ use App\Services\ValidationService;
 use App\Services\VideoService;
 use App\Services\VideoStreamService;
 use App\Utils\JsonResponse;
+use App\Utils\SecurityHelper;
+use App\Middleware\RateLimitMiddleware;
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -243,6 +245,15 @@ try {
     ]);
     exit;
 }
+$dangerousPatterns = [
+    '/union\s+select/i',
+    '/;\s*(drop|delete|insert|update)\s/i',
+    '/<script/i',
+    '/javascript:/i',
+    '/\.\.\//i',
+    '/etc\/passwd/i',
+    '/proc\/self/i',
+];
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $rawUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
@@ -250,7 +261,23 @@ $uri = normalizeUri($rawUri);
 
 error_log("API Call: $method $rawUri => normalized: $uri");
 
+foreach ($dangerousPatterns as $pattern) {
+    if (preg_match($pattern, $uri) || preg_match($pattern, $_SERVER['QUERY_STRING'] ?? '')) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Requête bloquée']);
+        exit;
+    }
+}
+
 try {
+
+    if (preg_match('#^/(login|register|forgot-password|reset-password)$#', $uri)) {
+        RateLimitMiddleware::checkRequestLimit('auth_' . SecurityHelper::getClientIp(), 10, 1);
+    }
+
+    foreach ($_GET as $key => $value) {
+        $_GET[$key] = SecurityHelper::sanitizeInput($value);
+    }
 
     if ($uri === '/login' && $method === 'POST') {
         $authController->login();
