@@ -54,15 +54,15 @@ class SearchController
                AND u.deleted_at IS NULL
                AND (
                    v.title       ILIKE $1
-                   OR v.description ILIKE $1
-                   OR u.username    ILIKE $1
+                   OR v.description ILIKE $2
+                   OR u.username    ILIKE $3
                )
              ORDER BY
-                CASE WHEN v.title ILIKE $1 THEN 0 ELSE 1 END,
+                CASE WHEN v.title ILIKE $4 THEN 0 ELSE 1 END,
                 v.views DESC NULLS LAST,
                 v.created_at DESC
-             LIMIT $2 OFFSET $3",
-            [$searchTerm, $limit, $offset]
+             LIMIT $5 OFFSET $6",
+            [$searchTerm, $searchTerm, $searchTerm, $searchTerm, $limit, $offset]
         );
 
         $total = $this->db->fetchOne(
@@ -74,10 +74,10 @@ class SearchController
                AND u.deleted_at IS NULL
                AND (
                    v.title       ILIKE $1
-                   OR v.description ILIKE $1
-                   OR u.username    ILIKE $1
+                   OR v.description ILIKE $2
+                   OR u.username    ILIKE $3
                )",
-            [$searchTerm]
+            [$searchTerm, $searchTerm, $searchTerm]
         );
 
         foreach ($videos as &$video) {
