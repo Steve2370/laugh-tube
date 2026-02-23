@@ -5,7 +5,6 @@ class ApiService {
         this.baseURL = API_URL;
         this.isRefreshing = false;
         this.failedQueue = [];
-        console.log('API Service initialisé:', this.baseURL);
     }
 
     /**
