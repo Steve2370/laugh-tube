@@ -165,8 +165,8 @@ const Login = () => {
                                     <Mail size={20} className="text-gray-400" />
                                 </div>
                                 <input
-                                    type="email"
-                                    placeholder="laughtale@email.com"
+                                    type="text"
+                                    placeholder="Email ou nom d'utilisateur"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
