@@ -27,7 +27,7 @@ class AdminController
                 COUNT(DISTINCT a.id) AS subscriber_count
              FROM users u
              LEFT JOIN videos      v ON v.user_id = u.id
-             LEFT JOIN abonnements a ON a.channel_id = u.id
+             LEFT JOIN abonnements a ON a.subscribed_to_id = u.id
              WHERE u.deleted_at IS NULL
              GROUP BY u.id, u.username, u.email, u.role, u.created_at
              ORDER BY u.created_at DESC"
