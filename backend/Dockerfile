@@ -8,7 +8,10 @@ RUN apk add --no-cache \
     zip \
     unzip \
     git \
-    curl
+    curl \
+    autoconf \
+    g++ \
+    make
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
@@ -20,7 +23,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && pecl install apcu \
     && docker-php-ext-enable apcu \
     && echo "apc.enabled=1" >> /usr/local/etc/php/conf.d/apcu.ini \
-    && echo "apc.shm_size=32M" >> /usr/local/etc/php/conf.d/apcu.ini
+    && echo "apc.shm_size=32M" >> /usr/local/etc/php/conf.d/apcu.ini \
+    && apk del autoconf g++ make
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
