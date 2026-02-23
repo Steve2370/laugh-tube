@@ -605,45 +605,33 @@ try {
         return;
     }
 
-    if ($method === 'POST' && preg_match('#^/videos/(\d+)/signaler$#', $path, $m)) {
-        $currentUser = $authMiddleware->handle();
+    if ($method === 'POST' && preg_match('#^/videos/(\d+)/signaler$#', $uri, $m)) {
+        $currentUser = AuthMiddleware::requireAuth();
         $signalementController->signalerVideo((int)$m[1], $currentUser);
         exit;
     }
 
-    if (str_starts_with($path, '/admin')) {
-     $adminUser = $adminMiddleware->handle();
+    if (str_starts_with($uri, '/admin')) {
+        $adminUser = $adminMiddleware->handle();
 
-     if ($method === 'GET' && $path === '/admin/users') {
-         $adminController->getUsers();
-     }
-
-     elseif ($method === 'DELETE' && preg_match('#^/admin/users/(\d+)$#', $path, $m)) {
-         $adminController->deleteUser((int)$m[1]);
-     }
-
-     elseif ($method === 'GET' && $path === '/admin/videos') {
-         $adminController->getVideos();
-     }
-
-     elseif ($method === 'DELETE' && preg_match('#^/admin/videos/(\d+)$#', $path, $m)) {
-         $adminController->deleteVideo((int)$m[1]);
-     }
-
-     elseif ($method === 'GET' && $path === '/admin/signalements') {
-         $adminController->getSignalements();
-     }
-
-     elseif ($method === 'PATCH' && preg_match('#^/admin/signalements/(\d+)$#', $path, $m)) {
-         $adminController->updateSignalement((int)$m[1], $adminUser);
-     }
-
-     else {
-         http_response_code(404);
-         echo json_encode(['error' => 'Route admin introuvable']);
-     }
-     exit;
- }
+        if ($method === 'GET' && $uri === '/admin/users') {
+            $adminController->getUsers();
+        } elseif ($method === 'DELETE' && preg_match('#^/admin/users/(\d+)$#', $uri, $m)) {
+            $adminController->deleteUser((int)$m[1]);
+        } elseif ($method === 'GET' && $uri === '/admin/videos') {
+            $adminController->getVideos();
+        } elseif ($method === 'DELETE' && preg_match('#^/admin/videos/(\d+)$#', $uri, $m)) {
+            $adminController->deleteVideo((int)$m[1]);
+        } elseif ($method === 'GET' && $uri === '/admin/signalements') {
+            $adminController->getSignalements();
+        } elseif ($method === 'PATCH' && preg_match('#^/admin/signalements/(\d+)$#', $uri, $m)) {
+            $adminController->updateSignalement((int)$m[1], $adminUser);
+        } else {
+            http_response_code(404);
+            echo json_encode(['error' => 'Route admin introuvable']);
+        }
+        exit;
+    }
 
     JsonResponse::notFound([
         'error' => 'Endpoint non trouvé',
