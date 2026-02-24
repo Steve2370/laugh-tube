@@ -935,45 +935,26 @@ class UserController
     private function servePlaceholderImage(string $type = 'profile'): void
     {
         $placeholders = [
-            'profile' => '/var/www/html/public/images/default-avatar.png',
-            'cover' => '/var/www/html/public/images/default-cover.png',
+            'profile' => '/var/www/html/public/images/default-avatar.svg',
+            'cover'   => '/var/www/html/public/images/default-cover.svg',
         ];
-
         $placeholderPath = $placeholders[$type] ?? $placeholders['profile'];
 
         if (!file_exists($placeholderPath)) {
             header('Content-Type: image/png');
-            header('Cache-Control: public, max-age=3600');
-
-            $size = $type === 'cover' ? 800 : 200;
+            $size   = $type === 'cover' ? 800 : 200;
             $height = $type === 'cover' ? 300 : 200;
-
-            $image = imagecreatetruecolor($size, $height);
-
-            if ($type === 'cover') {
-                $blue = imagecolorallocate($image, 59, 130, 246);
-                imagefill($image, 0, 0, $blue);
-            } else {
-                $gray = imagecolorallocate($image, 229, 231, 235);
-                imagefill($image, 0, 0, $gray);
-
-                $iconColor = imagecolorallocate($image, 156, 163, 175);
-                imagefilledellipse($image, $size / 2, $size / 3, $size / 3, $size / 3, $iconColor);
-            }
-
+            $image  = imagecreatetruecolor($size, $height);
+            $gray   = imagecolorallocate($image, 229, 231, 235);
+            imagefill($image, 0, 0, $gray);
             imagepng($image);
             imagedestroy($image);
             exit;
         }
 
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mimeType = finfo_file($finfo, $placeholderPath);
-        finfo_close($finfo);
-
-        header('Content-Type: ' . $mimeType);
-        header('Content-Length: ' . filesize($placeholderPath));
+        header('Content-Type: image/svg+xml');
         header('Cache-Control: public, max-age=3600');
-
+        header('Content-Length: ' . filesize($placeholderPath));
         readfile($placeholderPath);
         exit;
     }
