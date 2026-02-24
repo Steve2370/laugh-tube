@@ -14,6 +14,7 @@ const Settings = lazy(() => import('../../pages/Settings'));
 const Video = lazy(() => import('../../pages/Video'));
 const Profile = lazy(() => import('../../pages/Profile'));
 const CGU = lazy(() => import('../../pages/CGU'));
+const Contact = lazy(() => import('../../pages/Contact'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -40,6 +41,8 @@ const PageRouter = () => {
                 return <Chaine/>;
             case 'search':
                 return <Search/>;
+            case 'contact':
+                return <Contact />;
             case 'admin':
                 return (
                     <AdminRoute>

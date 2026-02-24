@@ -12,8 +12,8 @@ class AdminMessagesController
 {
     public function __construct(
         private DatabaseInterface $db,
-        private AdminMiddleware   $adminMiddleware,
-        private EmailService      $emailService
+        private AdminMiddleware $adminMiddleware,
+        private EmailService $emailService
     ) {}
 
     public function getMessages(): void
@@ -101,5 +101,31 @@ class AdminMessagesController
         }
 
         JsonResponse::success(['message' => 'Message envoyé avec succès']);
+    }
+
+    public function getInbox(): void
+    {
+        $adminUser = $this->adminMiddleware->handle();
+        if (!$adminUser) return;
+        $inbox = $this->db->fetchAll(
+            "SELECT cm.*, u.username
+         FROM contact_messages cm
+         LEFT JOIN users u ON u.id = cm.user_id
+         ORDER BY cm.sent_at DESC LIMIT 200", []
+        );
+        JsonResponse::success(['inbox' => $inbox ?? []]);
+    }
+
+    public function updateInbox(int $msgId): void
+    {
+        $adminUser = $this->adminMiddleware->handle();
+        if (!$adminUser) return;
+        $input  = json_decode(file_get_contents('php://input'), true);
+        $statut = $input['statut'] ?? 'read';
+        $this->db->fetchOne(
+            "UPDATE contact_messages SET statut = $1 WHERE id = $2 RETURNING id",
+            [$statut, $msgId]
+        );
+        JsonResponse::success(['message' => 'Statut mis à jour']);
     }
 }

@@ -21,6 +21,7 @@ use App\Controllers\AdminController;
 use App\Controllers\AdminMessagesController;
 use App\Controllers\AuthController;
 use App\Controllers\CommentaireController;
+use App\Controllers\ContactController;
 use App\Controllers\NotificationController;
 use App\Controllers\ReactionController;
 use App\Controllers\SearchController;
@@ -241,6 +242,8 @@ try {
     $searchController = new SearchController($db);
 
     $adminMessagesController = new AdminMessagesController($db, $adminMiddleware, $emailService);
+
+    $contactController = new ContactController($db, $emailService);
 
 
 } catch (Throwable $e) {
@@ -663,8 +666,21 @@ try {
     if ($uri === '/admin/messages' && $method === 'GET') {
         $adminMessagesController->getMessages(); exit;
     }
+
     if ($uri === '/admin/messages' && $method === 'POST') {
         $adminMessagesController->sendMessage(); exit;
+    }
+
+    if ($uri === '/contact' && $method === 'POST') {
+        $contactController->send(); exit;
+    }
+
+    if ($uri === '/admin/contact' && $method === 'GET') {
+        $adminMessagesController->getInbox(); exit;
+    }
+
+    if (preg_match('#^/admin/contact/(\d+)$#', $uri, $m) && $method === 'PATCH') {
+        $adminMessagesController->updateInbox((int)$m[1]); exit;
     }
 
     if (str_starts_with($uri, '/admin')) {
