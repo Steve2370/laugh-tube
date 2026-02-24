@@ -170,7 +170,7 @@ export default function Admin() {
                                     : 'text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-gray-700'
                                 }`}
                             >
-                                <span>{tab.icon}</span>
+                                <tab.icon size={16} />
                                 <span>{tab.label}</span>
                                 {tab.key === 'reports' && pendingReports > 0 && (
                                     <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full leading-none">
