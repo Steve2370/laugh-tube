@@ -359,7 +359,6 @@ class AuthService
 
         try {
             $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
-
             $updated = $this->userModel->updatePassword($userId, $newHash);
 
             if ($updated !== true && $updated !== 1) {
@@ -370,21 +369,6 @@ class AuthService
                     'message' => 'Impossible de mettre à jour le mot de passe'
                 ];
             }
-
-            if ($ok !== true) {
-                return [
-                    'success' => false,
-                    'code' => 500,
-                    'message' => 'Impossible de mettre à jour le mot de passe'
-                ];
-            }
-
-            $this->auditService->logPasswordChanged($userId);
-
-            return [
-                'success' => true,
-                'message' => 'Mot de passe modifié avec succès'
-            ];
 
         } catch (\Exception $e) {
             error_log("AuthService::changePassword - Error: " . $e->getMessage());
