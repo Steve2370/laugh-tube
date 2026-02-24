@@ -1,129 +1,322 @@
 import React, { useState } from 'react';
+import { Shield, ShieldOff, Trash2, RotateCcw, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import apiService from '../../services/apiService.js';
+import { useToast } from '../../contexts/ToastContext.jsx';
 
-export default function UsersTable({ users, onDeleteUser }) {
-    const [search, setSearch]           = useState('');
-    const [confirmDelete, setConfirm]   = useState(null);
+const SUSPEND_OPTIONS = [
+    { label: '1 heure', hours: 1 },
+    { label: '24 heures', hours: 24 },
+    { label: '7 jours', hours: 168 },
+    { label: '30 jours', hours: 720 },
+    { label: '1 an', hours: 8760 },
+];
 
-    const filtered = users.filter(u =>
-        u.username?.toLowerCase().includes(search.toLowerCase()) ||
-        u.email?.toLowerCase().includes(search.toLowerCase())
-    );
+const SUSPEND_REASONS = [
+    'Violation des règles de la communauté',
+    'Contenu inapproprié répété',
+    'Spam ou comportement abusif',
+    'Usurpation d\'identité',
+    'Autre',
+];
 
-    const handleDelete = (userId) => {
-        setConfirm(userId);
+function UserRow({ user, onRefresh }) {
+    const toast = useToast();
+    const [expanded, setExpanded] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [suspendHours, setSuspendHours] = useState(24);
+    const [suspendReason, setSuspendReason] = useState(SUSPEND_REASONS[0]);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    const isDeleted    = !!user.deleted_at;
+    const isSuspended  = user.account_locked_until && new Date(user.account_locked_until) > new Date();
+    const isLocked     = user.failed_login_attempts >= 5 && !isSuspended;
+
+    const getStatus = () => {
+        if (isDeleted)   return { label: 'Supprimé', bg: 'bg-gray-100 text-gray-600' };
+        if (isSuspended) return { label: 'Suspendu', bg: 'bg-red-100 text-red-700' };
+        if (isLocked)    return { label: 'Verrouillé', bg: 'bg-orange-100 text-orange-700' };
+        return { label: 'Actif', bg: 'bg-green-100 text-green-700' };
     };
 
-    const confirmAndDelete = async () => {
-        if (confirmDelete) {
-            await onDeleteUser(confirmDelete);
-            setConfirm(null);
+    const status = getStatus();
+
+    const handleSuspend = async () => {
+        setLoading(true);
+        try {
+            await apiService.request(`/admin/users/${user.id}/suspend`, {
+                method: 'PATCH',
+                body: JSON.stringify({ hours: suspendHours, reason: suspendReason }),
+            });
+            toast.success(`${user.username} suspendu`);
+            setExpanded(false);
+            onRefresh();
+        } catch (err) {
+            toast.error(err.message || 'Erreur');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-CA') : '—';
+    const handleUnsuspend = async () => {
+        setLoading(true);
+        try {
+            await apiService.request(`/admin/users/${user.id}/unsuspend`, { method: 'PATCH' });
+            toast.success('Suspension levée');
+            onRefresh();
+        } catch (err) {
+            toast.error(err.message || 'Erreur');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRestore = async () => {
+        setLoading(true);
+        try {
+            await apiService.request(`/admin/users/${user.id}/restore`, { method: 'PATCH' });
+            toast.success(`Compte de ${user.username} restauré`);
+            onRefresh();
+        } catch (err) {
+            toast.error(err.message || 'Erreur');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : '—';
 
     return (
-        <div>
-            <div className="mb-4">
-                <input
-                    type="text"
-                    placeholder="Rechercher par nom ou email..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full max-w-sm px-4 py-2 border border-gray-200 rounded-xl text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
+        <div className={`border-b border-gray-100 ${isDeleted ? 'opacity-60' : ''}`}>
+            <div
+                className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => setExpanded(!expanded)}
+            >
+                <div className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-sm font-bold">
+                        {user.username?.charAt(0).toUpperCase()}
+                    </span>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-sm text-gray-900">{user.username}</span>
+                        {user.role === 'admin' && (
+                            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">Admin</span>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.bg}`}>
+                            {status.label}
+                        </span>
+                    </div>
+                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                    {isSuspended && (
+                        <p className="text-xs text-red-500">Jusqu'au {formatDate(user.account_locked_until)}</p>
+                    )}
+                </div>
+
+                <div className="hidden sm:flex items-center gap-4 text-xs text-gray-400 flex-shrink-0">
+                    <span>{user.video_count ?? 0} vidéos</span>
+                    <span>{user.failed_login_attempts ?? 0} échecs</span>
+                </div>
+
+                {expanded ? <ChevronUp size={16} className="text-gray-400 flex-shrink-0" />
+                    : <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />}
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-gray-100">
-                <table className="w-full text-sm">
-                    <thead>
-                    <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        <th className="px-4 py-3">ID</th>
-                        <th className="px-4 py-3">Utilisateur</th>
-                        <th className="px-4 py-3">Email</th>
-                        <th className="px-4 py-3">Vidéos</th>
-                        <th className="px-4 py-3">Abonnés</th>
-                        <th className="px-4 py-3">Inscrit le</th>
-                        <th className="px-4 py-3">Admin</th>
-                        <th className="px-4 py-3">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 bg-white">
-                    {filtered.length === 0 ? (
-                        <tr>
-                            <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
-                                Aucun utilisateur trouvé
-                            </td>
-                        </tr>
-                    ) : filtered.map(user => (
-                        <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-4 py-3 text-gray-400 font-mono">#{user.id}</td>
-                            <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center
-                                                        text-blue-700 font-semibold text-xs overflow-hidden">
-                                        {user.avatar_url
-                                            ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover"/>
-                                            : (user.username?.[0] || '?').toUpperCase()
-                                        }
-                                    </div>
-                                    <span className="font-medium text-gray-800">{user.username}</span>
-                                </div>
-                            </td>
-                            <td className="px-4 py-3 text-gray-600">{user.email}</td>
-                            <td className="px-4 py-3 text-gray-600">{user.video_count ?? 0}</td>
-                            <td className="px-4 py-3 text-gray-600">{user.subscriber_count ?? 0}</td>
-                            <td className="px-4 py-3 text-gray-500">{formatDate(user.created_at)}</td>
-                            <td className="px-4 py-3">
-                                {user.is_admin
-                                    ? <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">Admin</span>
-                                    : <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs">User</span>
-                                }
-                            </td>
-                            <td className="px-4 py-3">
-                                {!user.is_admin && (
+            {expanded && (
+                <div className="bg-gray-50 border-t border-gray-100 px-4 py-4 space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-gray-500">
+                        <div><span className="font-semibold block">Inscrit le</span>{formatDate(user.created_at)}</div>
+                        <div><span className="font-semibold block">Dernière connexion</span>{formatDate(user.last_login)}</div>
+                        <div><span className="font-semibold block">Tentatives échouées</span>{user.failed_login_attempts ?? 0}</div>
+                        <div><span className="font-semibold block">Email vérifié</span>{user.email_verified ? '✅' : '❌'}</div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        {isDeleted && (
+                            <button
+                                onClick={handleRestore}
+                                disabled={loading}
+                                className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                            >
+                                <RotateCcw size={14} />
+                                Restaurer le compte
+                            </button>
+                        )}
+
+                        {(isSuspended || isLocked) && !isDeleted && (
+                            <button
+                                onClick={handleUnsuspend}
+                                disabled={loading}
+                                className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                            >
+                                <ShieldOff size={14} />
+                                Lever la sanction
+                            </button>
+                        )}
+
+                        {!isDeleted && !isSuspended && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <select
+                                    value={suspendHours}
+                                    onChange={e => setSuspendHours(Number(e.target.value))}
+                                    className="border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-gray-900"
+                                >
+                                    {SUSPEND_OPTIONS.map(o => (
+                                        <option key={o.hours} value={o.hours}>{o.label}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={suspendReason}
+                                    onChange={e => setSuspendReason(e.target.value)}
+                                    className="border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-gray-900"
+                                >
+                                    {SUSPEND_REASONS.map(r => (
+                                        <option key={r}>{r}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={handleSuspend}
+                                    disabled={loading}
+                                    className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                                >
+                                    <Shield size={14} />
+                                    Suspendre
+                                </button>
+                            </div>
+                        )}
+
+                        {!isDeleted && (
+                            <>
+                                {!confirmDelete ? (
                                     <button
-                                        onClick={() => handleDelete(user.id)}
-                                        className="px-3 py-1 text-xs font-medium text-red-600 border border-red-200
-                                                       rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setConfirmDelete(true)}
+                                        className="flex items-center gap-1.5 border border-red-200 text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors ml-auto"
                                     >
+                                        <Trash2 size={14} />
                                         Supprimer
                                     </button>
+                                ) : (
+                                    <div className="flex items-center gap-2 ml-auto">
+                                        <span className="text-xs text-red-600 flex items-center gap-1">
+                                            <AlertTriangle size={12} /> Confirmer ?
+                                        </span>
+                                        <button
+                                            onClick={() => { setConfirmDelete(false); }}
+                                            className="text-xs px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                                        >
+                                            Annuler
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                setLoading(true);
+                                                try {
+                                                    await apiService.request(`/admin/users/${user.id}`, { method: 'DELETE' });
+                                                    toast.success('Compte supprimé');
+                                                    onRefresh();
+                                                } catch (err) {
+                                                    toast.error('Erreur suppression');
+                                                } finally {
+                                                    setLoading(false);
+                                                    setConfirmDelete(false);
+                                                }
+                                            }}
+                                            disabled={loading}
+                                            className="text-xs px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                                        >
+                                            Supprimer
+                                        </button>
+                                    </div>
                                 )}
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
-
-            <p className="mt-2 text-xs text-gray-400">{filtered.length} utilisateur(s)</p>
-
-            {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Supprimer le compte ?</h3>
-                        <p className="text-sm text-gray-500 mb-5">
-                            Cette action supprimera le compte et toutes ses vidéos. Irréversible.
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setConfirm(null)}
-                                className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50"
-                            >
-                                Annuler
-                            </button>
-                            <button
-                                onClick={confirmAndDelete}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700"
-                            >
-                                Supprimer
-                            </button>
-                        </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
         </div>
     );
 }
+
+const UsersTable = ({ users, onDeleteUser, onRefresh }) => {
+    const [filter, setFilter] = useState('all');
+    const [search, setSearch] = useState('');
+
+    const now = new Date();
+    const filtered = users.filter(u => {
+        const matchSearch = !search ||
+            u.username?.toLowerCase().includes(search.toLowerCase()) ||
+            u.email?.toLowerCase().includes(search.toLowerCase());
+
+        const isDeleted   = !!u.deleted_at;
+        const isSuspended = u.account_locked_until && new Date(u.account_locked_until) > now;
+        const isLocked    = u.failed_login_attempts >= 5 && !isSuspended;
+
+        if (filter === 'active')    return matchSearch && !isDeleted && !isSuspended && !isLocked;
+        if (filter === 'suspended') return matchSearch && isSuspended;
+        if (filter === 'locked')    return matchSearch && isLocked;
+        if (filter === 'deleted')   return matchSearch && isDeleted;
+        return matchSearch;
+    });
+
+    const counts = {
+        all:       users.length,
+        active:    users.filter(u => !u.deleted_at && !(u.account_locked_until && new Date(u.account_locked_until) > now) && u.failed_login_attempts < 5).length,
+        suspended: users.filter(u => u.account_locked_until && new Date(u.account_locked_until) > now).length,
+        locked:    users.filter(u => u.failed_login_attempts >= 5 && !(u.account_locked_until && new Date(u.account_locked_until) > now)).length,
+        deleted:   users.filter(u => !!u.deleted_at).length,
+    };
+
+    const FILTERS = [
+        { key: 'all', label: 'Tous' },
+        { key: 'active', label: 'Actifs' },
+        { key: 'suspended', label: 'Suspendus', alert: counts.suspended > 0 },
+        { key: 'locked', label: 'Verrouillés', alert: counts.locked > 0 },
+        { key: 'deleted', label: 'Supprimés' },
+    ];
+
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                    {FILTERS.map(f => (
+                        <button
+                            key={f.key}
+                            onClick={() => setFilter(f.key)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
+                                ${filter === f.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            {f.label}
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full ${filter === f.key ? 'bg-white text-gray-900' : f.alert ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                {counts[f.key]}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+                <input
+                    type="text"
+                    placeholder="Rechercher..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-gray-900 w-48"
+                />
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                {filtered.length === 0 ? (
+                    <p className="text-center py-10 text-gray-400 text-sm">Aucun utilisateur</p>
+                ) : (
+                    filtered.map(user => (
+                        <UserRow
+                            key={user.id}
+                            user={user}
+                            onRefresh={onRefresh}
+                        />
+                    ))
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default UsersTable;

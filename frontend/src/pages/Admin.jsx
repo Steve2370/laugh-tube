@@ -6,12 +6,13 @@ import ReportsTable from '../components/admin/ReportsTable.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import MessagesTable from '../components/admin/MessagesTable.jsx';
 import AdminInboxTable from '../components/admin/AdminInboxTable.jsx';
+import {Flag, MessageCircle, Users, Video} from "lucide-react";
 
 const TABS = [
-    { key: 'reports', label: 'Signalements', icon: '' },
-    { key: 'users',   label: 'Utilisateurs', icon: '' },
-    { key: 'videos',  label: 'Vidéos',       icon: '' },
-    { key: 'messages', label: 'Messagerie', icon: '' },
+    { key: 'reports', label: 'Signalements', icon: Flag },
+    { key: 'users',   label: 'Utilisateurs', icon: Users },
+    { key: 'videos',  label: 'Vidéos',       icon: Video },
+    { key: 'messages', label: 'Messagerie', icon: MessageCircle },
 ];
 
 function StatCard({ label, value, sub, color = 'blue' }) {
@@ -140,9 +141,9 @@ export default function Admin() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <StatCard label="Utilisateurs"              value={users.length}       color="green"/>
-                    <StatCard label="Vidéos"                    value={videos.length}      color="green"/>
-                    <StatCard label="Vues totales"              value={formatNum(totalViews)} color="green"/>
+                    <StatCard label="Utilisateurs" value={users.length} color="green"/>
+                    <StatCard label="Vidéos" value={videos.length} color="green"/>
+                    <StatCard label="Vues totales" value={formatNum(totalViews)} color="green"/>
                     <StatCard
                         label="Signalements en attente"
                         value={pendingReports}
@@ -201,6 +202,7 @@ export default function Admin() {
                                     <UsersTable
                                         users={users}
                                         onDeleteUser={handleDeleteUser}
+                                        onRefresh={loadAll}
                                     />
                                 )}
                                 {activeTab === 'videos' && (

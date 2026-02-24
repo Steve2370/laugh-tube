@@ -3,14 +3,19 @@
 namespace App\Controllers;
 
 use App\Interfaces\DatabaseInterface;
+use App\Middleware\AdminMiddleware;
+use App\Utils\JsonResponse;
+use App\Utils\SecurityHelper;
 
 class AdminController
 {
     private DatabaseInterface $db;
+    private AdminMiddleware $adminMiddleware;
 
-    public function __construct($db)
+    public function __construct($db, $adminMiddleware)
     {
         $this->db = $db;
+        $this->adminMiddleware = $adminMiddleware;
     }
 
     public function getUsers(): void
@@ -250,5 +255,73 @@ class AdminController
         http_response_code($status);
         header('Content-Type: application/json');
         echo json_encode($data);
+    }
+
+    public function suspendUser(int $userId): void
+    {
+        $adminUser = $this->adminMiddleware->handle();
+        if (!$adminUser) return;
+
+        $input   = json_decode(file_get_contents('php://input'), true);
+        $hours   = max(1, min(8760, (int)($input['hours'] ?? 24))); // 1h à 1 an
+        $until   = date('Y-m-d H:i:s', time() + ($hours * 3600));
+        $reason  = SecurityHelper::sanitizeInput($input['reason'] ?? 'Violation des règles');
+
+        $user = $this->db->fetchOne(
+            "UPDATE users SET account_locked_until = $1 WHERE id = $2 AND deleted_at IS NULL RETURNING id, username, email",
+            [$until, $userId]
+        );
+
+        if (!$user) {
+            JsonResponse::notFound(['error' => 'Utilisateur introuvable']);
+            return;
+        }
+
+        JsonResponse::success([
+            'message' => "Compte suspendu jusqu'au " . date('d/m/Y H:i', strtotime($until)),
+            'until'   => $until,
+        ]);
+    }
+
+    public function unsuspendUser(int $userId): void
+    {
+        $adminUser = $this->adminMiddleware->handle();
+        if (!$adminUser) return;
+
+        $user = $this->db->fetchOne(
+            "UPDATE users 
+         SET account_locked_until = NULL, failed_login_attempts = 0 
+         WHERE id = $1 
+         RETURNING id, username, email",
+            [$userId]
+        );
+
+        if (!$user) {
+            JsonResponse::notFound(['error' => 'Utilisateur introuvable']);
+            return;
+        }
+
+        JsonResponse::success(['message' => 'Suspension levée']);
+    }
+
+    public function restoreUser(int $userId): void
+    {
+        $adminUser = $this->adminMiddleware->handle();
+        if (!$adminUser) return;
+
+        $user = $this->db->fetchOne(
+            "UPDATE users 
+         SET deleted_at = NULL, failed_login_attempts = 0, account_locked_until = NULL
+         WHERE id = $1 
+         RETURNING id, username, email",
+            [$userId]
+        );
+
+        if (!$user) {
+            JsonResponse::notFound(['error' => 'Utilisateur introuvable']);
+            return;
+        }
+
+        JsonResponse::success(['message' => 'Compte restauré']);
     }
 }
