@@ -784,13 +784,13 @@ class UserController
 
     public function deleteAvatar(int $userId): void
     {
-        $authUser = $this->authMiddleware->handle();
-        if (!$authUser || !is_array($authUser)) {
+        $authenticated = $this->authMiddleware->handle();
+        if (!$authenticated) {
             JsonResponse::unauthorized(['error' => 'Non authentifié']);
             return;
         }
-
-        $currentUserId = (int)($authUser['sub'] ?? $authUser['id'] ?? 0);
+        $authUser = $this->authMiddleware->getUser();
+        $currentUserId = (int)($authUser['sub'] ?? $authUser['user_id'] ?? 0);
         if ($currentUserId !== $userId) {
             JsonResponse::forbidden(['error' => 'Non autorisé']);
             return;
@@ -823,13 +823,13 @@ class UserController
 
     public function deleteCover(int $userId): void
     {
-        $authUser = $this->authMiddleware->handle();
-        if (!$authUser || !is_array($authUser)) {
+        $authenticated = $this->authMiddleware->handle();
+        if (!$authenticated) {
             JsonResponse::unauthorized(['error' => 'Non authentifié']);
             return;
         }
-
-        $currentUserId = (int)($authUser['sub'] ?? $authUser['id'] ?? 0);
+        $authUser = $this->authMiddleware->getUser();
+        $currentUserId = (int)($authUser['sub'] ?? $authUser['user_id'] ?? 0);
         if ($currentUserId !== $userId) {
             JsonResponse::forbidden(['error' => 'Non autorisé']);
             return;
