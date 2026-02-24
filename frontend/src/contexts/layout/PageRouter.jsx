@@ -15,6 +15,8 @@ const Video = lazy(() => import('../../pages/Video'));
 const Profile = lazy(() => import('../../pages/Profile'));
 const CGU = lazy(() => import('../../pages/CGU'));
 const Contact = lazy(() => import('../../pages/Contact'));
+const ForgotPassword = lazy(() => import('../../pages/ForgotPassword'));
+const ResetPassword  = lazy(() => import('../../pages/ResetPassword'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -43,6 +45,10 @@ const PageRouter = () => {
                 return <Search/>;
             case 'contact':
                 return <Contact />;
+            case 'forgot-password':
+                return <ForgotPassword />;
+            case 'reset-password':
+                return <ResetPassword />;
             case 'admin':
                 return (
                     <AdminRoute>

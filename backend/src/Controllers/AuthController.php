@@ -759,4 +759,24 @@ class AuthController
             JsonResponse::serverError(['error' => 'Erreur serveur']);
         }
     }
+
+    public function forgotPassword(): void
+    {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $email = SecurityHelper::sanitizeInput($input['email'] ?? '');
+
+            if (empty($email)) {
+                JsonResponse::badRequest(['error' => 'Email requis']);
+                return;
+            }
+
+            $this->authService->requestPasswordReset($email);
+            JsonResponse::success(['message' => 'Si ce compte existe, un email a été envoyé']);
+
+        } catch (\Exception $e) {
+            error_log("AuthController::forgotPassword - " . $e->getMessage());
+            JsonResponse::success(['message' => 'Si ce compte existe, un email a été envoyé']);
+        }
+    }
 }

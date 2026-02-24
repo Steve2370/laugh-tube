@@ -377,9 +377,9 @@ try {
         return;
     }
 
-    if ($uri === '/resetPassword.php' && $method === 'POST') {
+    if ($uri === '/auth/reset-password' && $method === 'POST') {
         $authController->resetPassword();
-        return;
+        exit;
     }
 
     if ($uri === '/resendVerification.php' && $method === 'POST') {
@@ -688,6 +688,11 @@ try {
 
     if ($uri === '/webhooks/resend-inbound' && $method === 'POST') {
         $resendWebhook->handle(); exit;
+    }
+
+    if ($uri === '/auth/forgot-password' && $method === 'POST') {
+        $authController->forgotPassword();
+        exit;
     }
 
     if (str_starts_with($uri, '/admin')) {
