@@ -30,8 +30,8 @@ class ApiService {
         try {
             const response = await fetch(url, { ...options, headers });
 
-            if (response.status === 401 && token && !options.skipAuth) {
-                return this.handleTokenExpired(endpoint, options);
+            if (response.status === 401 && token && !options.skipAuth && !options._retry) {
+                return this.handleTokenExpired(endpoint, { ...options, _retry: true });
             }
 
             return this.handleResponse(response);
@@ -47,22 +47,29 @@ class ApiService {
                 this.failedQueue.push({ resolve, reject, endpoint, options });
             });
         }
-
         this.isRefreshing = true;
-
         try {
             const refreshed = await this.refreshToken();
-
             if (refreshed) {
                 this.failedQueue.forEach(({ resolve, endpoint, options }) => {
                     resolve(this.request(endpoint, options));
                 });
                 this.failedQueue = [];
-
                 return this.request(endpoint, options);
             } else {
+                this.failedQueue.forEach(({ reject }) => {
+                    reject(new Error('Session expirée'));
+                });
+                this.failedQueue = [];
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                window.location.hash = '#/login';
                 throw new Error('Session expirée - veuillez vous reconnecter');
             }
+        } catch (err) {
+            this.failedQueue.forEach(({ reject }) => reject(err));
+            this.failedQueue = [];
+            throw err;
         } finally {
             this.isRefreshing = false;
         }
