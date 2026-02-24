@@ -85,7 +85,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex justify-center">
-                        <div className="w-full max-w-md -ml-6">
+                        <div className="w-full max-w-md -ml-12">
                             <form onSubmit={handleSearch} className="relative w-full">
                                 <div className="relative">
                                     <input
