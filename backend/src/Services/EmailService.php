@@ -22,8 +22,10 @@ class EmailService
     }
 
 
-    public function sendVerificationEmail(int $userId, string $email, string $username, string $subject, string $verificationUrl): bool
+    public function sendVerificationEmail(int $userId, string $email, string $username, string $token): bool
     {
+        $verificationUrl = $this->baseUrl . '/verify-email.php?token=' . urlencode($token);
+        $subject = 'Vérifiez votre adresse email - Laugh Tube';
         $body = $this->getVerificationEmailTemplate($username, $verificationUrl);
         return $this->send($userId, $email, $subject, $body, 'verification');
     }
