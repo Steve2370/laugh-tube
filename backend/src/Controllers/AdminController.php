@@ -22,25 +22,31 @@ class AdminController
     {
         $users = $this->db->fetchAll(
             "SELECT
-                u.id,
-                u.username,
-                u.email,
-                u.role,
-                u.created_at,
-                COUNT(DISTINCT v.id) AS video_count,
-                COUNT(DISTINCT a.id) AS subscriber_count
-             FROM users u
-             LEFT JOIN videos      v ON v.user_id = u.id
-             LEFT JOIN abonnements a ON a.subscribed_to_id = u.id
-             WHERE u.deleted_at IS NULL
-             GROUP BY u.id, u.username, u.email, u.role, u.created_at
-             ORDER BY u.created_at DESC"
-        );
+            u.id,
+            u.username,
+            u.email,
+            u.role,
+            u.created_at,
+            u.deleted_at,
+            u.account_locked_until,
+            u.failed_login_attempts,
+            u.email_verified,
+            COUNT(DISTINCT v.id) AS video_count,
+            COUNT(DISTINCT a.id) AS subscriber_count
+         FROM users u
+         LEFT JOIN videos v ON v.user_id = u.id
+         LEFT JOIN abonnements a ON a.subscribed_to_id = u.id
+         GROUP BY u.id, u.username, u.email, u.role, u.created_at,
+                  u.deleted_at, u.account_locked_until, u.failed_login_attempts,
+                  u.email_verified
+         ORDER BY u.created_at DESC");
 
         foreach ($users as &$user) {
-            $user['is_admin']         = ($user['role'] === 'admin');
-            $user['video_count']      = (int)$user['video_count'];
+            $user['is_admin'] = ($user['role'] === 'admin');
+            $user['video_count'] = (int)$user['video_count'];
             $user['subscriber_count'] = (int)$user['subscriber_count'];
+            $user['failed_login_attempts'] = (int)$user['failed_login_attempts'];
+            $user['email_verified'] = (bool)$user['email_verified'];
         }
 
         $this->json(['users' => $users]);
@@ -80,8 +86,8 @@ class AdminController
                 u.username,
                 v.created_at,
                 v.filename,
-                COALESCE(vv.views,    0) AS views,
-                COALESCE(lk.likes,    0) AS likes,
+                COALESCE(vv.views, 0) AS views,
+                COALESCE(lk.likes, 0) AS likes,
                 COALESCE(dk.dislikes, 0) AS dislikes,
                 COUNT(DISTINCT sig.id)   AS report_count
              FROM videos v
@@ -108,10 +114,10 @@ class AdminController
         );
 
         foreach ($videos as &$video) {
-            $video['views']         = (int)$video['views'];
-            $video['likes']         = (int)$video['likes'];
-            $video['dislikes']      = (int)$video['dislikes'];
-            $video['report_count']  = (int)$video['report_count'];
+            $video['views'] = (int)$video['views'];
+            $video['likes'] = (int)$video['likes'];
+            $video['dislikes'] = (int)$video['dislikes'];
+            $video['report_count'] = (int)$video['report_count'];
             $video['thumbnail_url'] = "/api/videos/{$video['id']}/thumbnail";
             unset($video['filename']);
         }
@@ -149,12 +155,12 @@ class AdminController
                 sig.statut,
                 sig.created_at,
                 sig.reviewed_at,
-                v.title           AS video_title,
-                author.username   AS video_author,
+                v.title AS video_title,
+                author.username AS video_author,
                 reporter.username AS reporter_username
              FROM signalements sig
-             JOIN  videos v          ON v.id   = sig.video_id
-             JOIN  users  author     ON author.id = v.user_id
+             JOIN  videos v ON v.id = sig.video_id
+             JOIN  users  author ON author.id = v.user_id
              LEFT JOIN users reporter ON reporter.id = sig.reporter_id
              ORDER BY
                 CASE sig.statut WHEN 'pending' THEN 0 ELSE 1 END,
@@ -213,9 +219,9 @@ class AdminController
         );
 
         $this->json(['stats' => [
-            'total_users'     => (int)($totalUsers['total'] ?? 0),
-            'total_videos'    => (int)($totalVideos['total'] ?? 0),
-            'total_views'     => (int)($totalViews['total'] ?? 0),
+            'total_users' => (int)($totalUsers['total'] ?? 0),
+            'total_videos' => (int)($totalVideos['total'] ?? 0),
+            'total_views' => (int)($totalViews['total'] ?? 0),
             'pending_reports' => (int)($pendingReports['total'] ?? 0),
         ]]);
     }
@@ -262,10 +268,10 @@ class AdminController
         $adminUser = $this->adminMiddleware->handle();
         if (!$adminUser) return;
 
-        $input   = json_decode(file_get_contents('php://input'), true);
-        $hours   = max(1, min(8760, (int)($input['hours'] ?? 24))); // 1h à 1 an
-        $until   = date('Y-m-d H:i:s', time() + ($hours * 3600));
-        $reason  = SecurityHelper::sanitizeInput($input['reason'] ?? 'Violation des règles');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $hours = max(1, min(8760, (int)($input['hours'] ?? 24))); // 1h à 1 an
+        $until = date('Y-m-d H:i:s', time() + ($hours * 3600));
+        $reason = SecurityHelper::sanitizeInput($input['reason'] ?? 'Violation des règles');
 
         $user = $this->db->fetchOne(
             "UPDATE users SET account_locked_until = $1 WHERE id = $2 AND deleted_at IS NULL RETURNING id, username, email",
@@ -279,7 +285,7 @@ class AdminController
 
         JsonResponse::success([
             'message' => "Compte suspendu jusqu'au " . date('d/m/Y H:i', strtotime($until)),
-            'until'   => $until,
+            'until' => $until,
         ]);
     }
 
