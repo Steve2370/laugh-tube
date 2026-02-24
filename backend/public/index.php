@@ -720,6 +720,18 @@ try {
         exit;
     }
 
+    if (preg_match('#^/admin/users/(\d+)/suspend$#', $uri, $m) && $method === 'PATCH') {
+        $adminController->suspendUser((int)$m[1]); exit;
+    }
+
+    if (preg_match('#^/admin/users/(\d+)/unsuspend$#', $uri, $m) && $method === 'PATCH') {
+        $adminController->unsuspendUser((int)$m[1]); exit;
+    }
+
+    if (preg_match('#^/admin/users/(\d+)/restore$#', $uri, $m) && $method === 'PATCH') {
+        $adminController->restoreUser((int)$m[1]); exit;
+    }
+
     JsonResponse::notFound([
         'error' => 'Endpoint non trouvé',
         'method' => $method,
