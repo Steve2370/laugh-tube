@@ -11,6 +11,7 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [acceptCGU, setAcceptCGU] = useState(false);
 
     const { register } = useAuth();
     const toast = useToast();
@@ -36,6 +37,11 @@ const Register = () => {
 
         if (username.length > 30) {
             toast.error("Le nom d'utilisateur ne peut pas dépasser 30 caractères");
+            return;
+        }
+
+        if (!acceptCGU) {
+            toast.error("Vous devez accepter les conditions d'utilisation");
             return;
         }
 
@@ -220,6 +226,44 @@ const Register = () => {
                                     Les mots de passe correspondent
                                 </p>
                             )}
+                        </div>
+
+                        <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <input
+                                type="checkbox"
+                                id="acceptCGU"
+                                checked={acceptCGU}
+                                onChange={(e) => setAcceptCGU(e.target.checked)}
+                                className="mt-0.5 w-4 h-4 accent-gray-900 cursor-pointer flex-shrink-0"
+                                required
+                            />
+                            <label htmlFor="acceptCGU" className="text-sm text-gray-600 leading-relaxed cursor-pointer">
+                                J'accepte les{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => { window.location.hash = '#/cgu'; }}
+                                    className="text-gray-900 font-semibold underline underline-offset-2 hover:text-gray-700 transition-colors"
+                                >
+                                    Conditions Générales d'Utilisation
+                                </button>
+                                ,{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => { window.location.hash = '#/cgu'; }}
+                                    className="text-gray-900 font-semibold underline underline-offset-2 hover:text-gray-700 transition-colors"
+                                >
+                                    la Politique de Confidentialité
+                                </button>
+                                {' '}et les{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => { window.location.hash = '#/cgu'; }}
+                                    className="text-gray-900 font-semibold underline underline-offset-2 hover:text-gray-700 transition-colors"
+                                >
+                                    Règles de la communauté
+                                </button>
+                                {' '}de LaughTube.
+                            </label>
                         </div>
 
                         <button
