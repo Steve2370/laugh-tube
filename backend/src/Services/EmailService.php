@@ -85,7 +85,7 @@ class EmailService
     }
 
 
-    private function send(int $userId, string $to, string $subject, string $body, string $emailType): bool
+    private function send(int $userId, string $to, string $subject, string $body, string $emailType, ?string $replyTo = null): bool
     {
         $emailId = $this->logRepo->logEmail([
             'user_id'    => $userId,
@@ -96,7 +96,7 @@ class EmailService
             'status'     => 'pending',
         ]);
 
-        $success = $this->provider->sendEmail($to, $subject, $body, true);
+        $success = $this->provider->sendEmail($to, $subject, $body, true, $replyTo);
 
         if ($success) {
             if ($emailId) $this->logRepo->updateEmailStatus($emailId, 'sent');
@@ -374,7 +374,7 @@ HTML;
     ): bool {
         $fullSubject = '[LaughTube] ' . $subject;
         $body        = $this->getAdminMessageTemplate($username, $subject, $message);
-        return $this->send($userId, $email, $fullSubject, $body, 'admin_message');
+        return $this->send($userId, $email, $fullSubject, $body, 'admin_message', 'legal@laughtube.ca');
     }
 
     private function getAdminMessageTemplate(
