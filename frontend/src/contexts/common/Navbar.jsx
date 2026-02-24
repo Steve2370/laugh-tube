@@ -4,6 +4,7 @@ import {
     LayoutDashboard,
     LogIn,
     LogOut,
+    MessageSquare,
     Search,
     Settings,
     Upload,
@@ -213,6 +214,16 @@ export default function Navbar() {
                                                 )}
                                             </div>
 
+                                            <button
+                                                onClick={() =>
+                                                    handleDropdownItemClick(() => navigateTo("contact"))
+                                                }
+                                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:bg-opacity-50 flex items-center gap-3 transition-colors"
+                                            >
+                                                <MessageSquare size={16} />
+                                                Nous contacter
+                                            </button>
+
                                             <div className="border-t border-gray-200 border-opacity-50 py-1">
                                                 <button
                                                     onClick={() => handleDropdownItemClick(handleLogout)}
@@ -228,6 +239,14 @@ export default function Navbar() {
                             </>
                         ) : (
                             <>
+                                <button
+                                    onClick={() => navigateTo("contact")}
+                                    className="flex items-center gap-2 text-black hover:text-gray-600 hover:bg-gray-200 hover:bg-opacity-50 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium"
+                                >
+                                    <MessageSquare size={16} />
+                                    <span className="hidden lg:inline">Contact</span>
+                                </button>
+
                                 <button
                                     onClick={() => navigateTo("login")}
                                     className="flex items-center gap-2 text-black hover:text-gray-600 hover:bg-gray-200 hover:bg-opacity-50 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium"

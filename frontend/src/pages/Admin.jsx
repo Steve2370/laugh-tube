@@ -46,7 +46,7 @@ export default function Admin() {
         setLoading(true);
         setError(null);
         try {
-            const [usersRes, videosRes, reportsRes, messagesRes] = await Promise.all([
+            const [usersRes, videosRes, reportsRes, messagesRes, inboxRes] = await Promise.all([
                 apiService.request('/admin/users'),
                 apiService.request('/admin/videos'),
                 apiService.request('/admin/signalements'),
