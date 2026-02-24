@@ -195,6 +195,19 @@ CREATE TABLE audit_logs
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS contact_messages
+(
+    id      SERIAL PRIMARY KEY,
+    user_id INTEGER      REFERENCES users (id) ON DELETE SET NULL,
+    name    VARCHAR(100) NOT NULL,
+    email   VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT         NOT NULL,
+    statut  VARCHAR(20) DEFAULT 'unread' CHECK (statut IN ('unread', 'read', 'replied')),
+    sent_at TIMESTAMP   DEFAULT NOW()
+);
+
+
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -221,6 +234,10 @@ CREATE INDEX IF NOT EXISTS idx_video_views_session_id ON video_views(session_id)
 CREATE INDEX IF NOT EXISTS idx_video_views_viewed_at ON video_views(viewed_at);
 CREATE INDEX IF NOT EXISTS idx_video_views_completed ON video_views(completed);
 CREATE INDEX IF NOT EXISTS idx_video_views_ip_address ON video_views(ip_address);
+
+CREATE INDEX idx_contact_messages_statut  ON contact_messages(statut);
+CREATE INDEX idx_contact_messages_sent_at ON contact_messages(sent_at DESC);
+CREATE INDEX idx_contact_messages_user_id ON contact_messages(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);

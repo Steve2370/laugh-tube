@@ -394,7 +394,7 @@ HTML;
 <style>
   body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
   .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#111;padding:24px;text-align:center;}
+  .header{background:#ffffff;padding:24px;text-align:center;}
   .badge{display:inline-block;background:#fff;color:#111;font-size:11px;font-weight:bold;padding:4px 12px;border-radius:20px;margin-top:12px;letter-spacing:1px;text-transform:uppercase;}
   .content{padding:32px;}
   .subject{font-size:20px;font-weight:bold;color:#111;margin-bottom:16px;padding-bottom:16px;border-bottom:2px solid #f0f0f0;}
@@ -424,5 +424,54 @@ HTML;
 </div>
 </body></html>
 HTML;
+    }
+
+    public function sendContactNotificationEmail(
+        string $senderName,
+        string $senderEmail,
+        string $subject,
+        string $message
+    ): bool {
+        $adminEmail  = 'legal@laughtube.ca';
+        $fullSubject = '[LaughTube Contact] ' . $subject;
+        $messageHtml = nl2br(htmlspecialchars($message));
+        $logo        = $this->logoHtml();
+        $baseUrl     = $this->baseUrl;
+
+        $body = <<<HTML
+<!DOCTYPE html><html lang="fr">
+<head><meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;background:#f0f0f0;margin:0;padding:0;}
+  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+  .header{background:#ffffff;padding:24px;text-align:center;}
+  .badge{display:inline-block;background:#fff;color:#111;font-size:11px;font-weight:bold;padding:4px 12px;border-radius:20px;margin-top:12px;letter-spacing:1px;text-transform:uppercase;}
+  .content{padding:32px;}
+  .meta{background:#f9f9f9;border-radius:8px;padding:16px;margin-bottom:20px;font-size:13px;}
+  .meta strong{display:inline-block;width:80px;color:#555;}
+  .subject{font-size:18px;font-weight:bold;color:#111;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #f0f0f0;}
+  .message-box{background:#f9f9f9;border-left:4px solid #111;padding:20px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.7;}
+  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">{$logo}<div class="badge">Nouveau message de contact</div></div>
+  <div class="content">
+    <div class="meta">
+      <div><strong>De :</strong> {$senderName} &lt;{$senderEmail}&gt;</div>
+    </div>
+    <div class="subject">{$subject}</div>
+    <div class="message-box">{$messageHtml}</div>
+    <p style="margin-top:20px;font-size:13px;color:#666;">
+      Pour répondre, répondez directement à cet email ou écrivez à <strong>{$senderEmail}</strong>
+    </p>
+  </div>
+  <div class="footer">© 2026 LaughTube · <a href="{$baseUrl}" style="color:#999;">laughtube.ca</a></div>
+</div>
+</body></html>
+HTML;
+
+        return $this->provider->sendEmail($adminEmail, $fullSubject, $body, true, $senderEmail);
     }
 }

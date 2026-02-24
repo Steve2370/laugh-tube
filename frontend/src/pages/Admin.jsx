@@ -5,6 +5,7 @@ import VideosTable  from '../components/admin/VideosTable.jsx';
 import ReportsTable from '../components/admin/ReportsTable.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import MessagesTable from '../components/admin/MessagesTable.jsx';
+import AdminInboxTable from '../components/admin/AdminInboxTable.jsx';
 
 const TABS = [
     { key: 'reports', label: 'Signalements', icon: '' },
@@ -39,6 +40,7 @@ export default function Admin() {
     const [loading, setLoading] = useState(true);
     const [error,   setError]   = useState(null);
     const [messages, setMessages] = useState([]);
+    const [inbox, setInbox] = useState([]);
 
     const loadAll = useCallback(async () => {
         setLoading(true);
@@ -49,11 +51,13 @@ export default function Admin() {
                 apiService.request('/admin/videos'),
                 apiService.request('/admin/signalements'),
                 apiService.request('/admin/messages'),
+                apiService.request('/admin/contact'),
             ]);
-            setUsers(usersRes.users               ?? []);
-            setVideos(videosRes.videos            ?? []);
-            setReports(reportsRes.signalements    ?? []);
+            setUsers(usersRes.users ?? []);
+            setVideos(videosRes.videos ?? []);
+            setReports(reportsRes.signalements ?? []);
             setMessages(messagesRes.messages ?? []);
+            setInbox(inboxRes.inbox ?? []);
 
         } catch (err) {
             console.error('Erreur chargement admin:', err);
@@ -206,11 +210,10 @@ export default function Admin() {
                                     />
                                 )}
                                 {activeTab === 'messages' && (
-                                    <MessagesTable
-                                        users={users}
-                                        messages={messages}
-                                        onMessageSent={loadAll}
-                                    />
+                                    <div className="space-y-6">
+                                        <AdminInboxTable inbox={inbox} onRefresh={loadAll} />
+                                        <MessagesTable users={users} messages={messages} onMessageSent={loadAll} />
+                                    </div>
                                 )}
                             </>
                         )}
