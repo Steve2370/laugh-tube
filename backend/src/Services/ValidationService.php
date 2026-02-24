@@ -367,8 +367,7 @@ class ValidationService
             return $errors;
         }
 
-        // Taille
-        $maxSize = ($type === 'video') ? 524288000 : 5242880; // 500MB ou 5MB
+        $maxSize = ($type === 'video') ? 524288000 : 5242880;
 
         if ($file['size'] > $maxSize) {
             $maxMB = round($maxSize / 1048576);

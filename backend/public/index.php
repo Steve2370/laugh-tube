@@ -181,6 +181,7 @@ try {
 
     $twoFactorService = new TwoFactorService($userModel, $db, $auditService);
     $videoStreamService = new VideoStreamService($db);
+    $rateLimitMiddleware = new RateLimitMiddleware($logRepository);
 
     $authMiddleware = new AuthMiddleware($tokenService, $sessionRepository, $db, $auditService);
 
@@ -193,7 +194,9 @@ try {
         $sessionRepository,
         $twoFactorService,
         $tokenService,
-        $emailService);
+        $emailService,
+        $rateLimitMiddleware
+    );
 
     $userController = new UserController(
         $userService,

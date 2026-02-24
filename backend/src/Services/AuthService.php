@@ -569,8 +569,9 @@ class AuthService
                 ];
             }
 
-            $errors = $this->validationService->validatePassword($newPassword);
-            if (!empty($errors)) {
+            $isValid = $this->validationService->validatePassword($newPassword);
+            if (!$isValid) {
+                $errors = $this->validationService->validatePasswordWithErrors($newPassword);
                 return [
                     'success' => false,
                     'message' => implode(', ', $errors),
