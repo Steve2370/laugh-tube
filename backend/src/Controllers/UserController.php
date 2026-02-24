@@ -720,21 +720,10 @@ class UserController
                 return;
             }
 
-            $basePath = '/var/www/html/public/uploads/covers/';
-            $possiblePaths = [
-                $basePath . $userId . '.jpg',
-                $basePath . $userId . '.jpeg',
-                $basePath . $userId . '.png',
-                $basePath . $userId . '.webp',
-            ];
-
+            $possiblePaths = [];
             if (!empty($user['cover_url'])) {
-                $coverFilename = basename($user['cover_url']);
-                $customPath = $basePath . $coverFilename;
-
-                if (file_exists($customPath) && is_readable($customPath)) {
-                    array_unshift($possiblePaths, $customPath);
-                }
+                $possiblePaths[] = '/var/www/html/uploads/covers/' . basename($user['cover_url']);
+                $possiblePaths[] = '/var/www/html/public/uploads/covers/' . basename($user['cover_url']);
             }
 
             $coverPath = null;
@@ -870,21 +859,10 @@ class UserController
                 return;
             }
 
-            $basePath = '/var/www/html/public/uploads/profiles/';
-            $possiblePaths = [
-                $basePath . $userId . '.jpg',
-                $basePath . $userId . '.jpeg',
-                $basePath . $userId . '.png',
-                $basePath . $userId . '.webp',
-            ];
-
+            $possiblePaths = [];
             if (!empty($user['avatar_url'])) {
-                $avatarFilename = basename($user['avatar_url']);
-                $customPath = $basePath . $avatarFilename;
-
-                if (file_exists($customPath) && is_readable($customPath)) {
-                    array_unshift($possiblePaths, $customPath);
-                }
+                $possiblePaths[] = '/var/www/html/uploads/avatars/' . basename($user['avatar_url']);
+                $possiblePaths[] = '/var/www/html/public/uploads/profiles/' . basename($user['avatar_url']);
             }
 
             $profilePath = null;
@@ -942,10 +920,10 @@ class UserController
 
         if (!file_exists($placeholderPath)) {
             header('Content-Type: image/png');
-            $size   = $type === 'cover' ? 800 : 200;
+            $size = $type === 'cover' ? 800 : 200;
             $height = $type === 'cover' ? 300 : 200;
-            $image  = imagecreatetruecolor($size, $height);
-            $gray   = imagecolorallocate($image, 229, 231, 235);
+            $image = imagecreatetruecolor($size, $height);
+            $gray = imagecolorallocate($image, 229, 231, 235);
             imagefill($image, 0, 0, $gray);
             imagepng($image);
             imagedestroy($image);
