@@ -782,6 +782,84 @@ class UserController
         }
     }
 
+    public function deleteAvatar(int $userId): void
+    {
+        $authUser = $this->authMiddleware->handle();
+        if (!$authUser || !is_array($authUser)) {
+            JsonResponse::unauthorized(['error' => 'Non authentifié']);
+            return;
+        }
+
+        $currentUserId = (int)($authUser['sub'] ?? $authUser['id'] ?? 0);
+        if ($currentUserId !== $userId) {
+            JsonResponse::forbidden(['error' => 'Non autorisé']);
+            return;
+        }
+
+        $user = $this->db->fetchOne(
+            "SELECT avatar_url FROM users WHERE id = $1",
+            [$userId]
+        );
+
+        if (!$user) {
+            JsonResponse::notFound(['error' => 'Utilisateur introuvable']);
+            return;
+        }
+
+        if (!empty($user['avatar_url'])) {
+            $filePath = __DIR__ . '/../../uploads/avatars/' . basename($user['avatar_url']);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        $this->db->fetchOne(
+            "UPDATE users SET avatar_url = NULL WHERE id = $1 RETURNING id",
+            [$userId]
+        );
+
+        JsonResponse::success(['message' => 'Avatar supprimé', 'avatar_url' => null]);
+    }
+
+    public function deleteCover(int $userId): void
+    {
+        $authUser = $this->authMiddleware->handle();
+        if (!$authUser || !is_array($authUser)) {
+            JsonResponse::unauthorized(['error' => 'Non authentifié']);
+            return;
+        }
+
+        $currentUserId = (int)($authUser['sub'] ?? $authUser['id'] ?? 0);
+        if ($currentUserId !== $userId) {
+            JsonResponse::forbidden(['error' => 'Non autorisé']);
+            return;
+        }
+
+        $user = $this->db->fetchOne(
+            "SELECT cover_url FROM users WHERE id = $1",
+            [$userId]
+        );
+
+        if (!$user) {
+            JsonResponse::notFound(['error' => 'Utilisateur introuvable']);
+            return;
+        }
+
+        if (!empty($user['cover_url'])) {
+            $filePath = __DIR__ . '/../../uploads/covers/' . basename($user['cover_url']);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        $this->db->fetchOne(
+            "UPDATE users SET cover_url = NULL WHERE id = $1 RETURNING id",
+            [$userId]
+        );
+
+        JsonResponse::success(['message' => 'Cover supprimée', 'cover_url' => null]);
+    }
+
     public function getProfileImage(int $userId): void
     {
         try {
