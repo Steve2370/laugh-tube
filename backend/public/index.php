@@ -24,6 +24,7 @@ use App\Controllers\CommentaireController;
 use App\Controllers\ContactController;
 use App\Controllers\NotificationController;
 use App\Controllers\ReactionController;
+use App\Controllers\ResendInboundWebhook;
 use App\Controllers\SearchController;
 use App\Controllers\SignalementController;
 use App\Controllers\UserController;
@@ -244,6 +245,8 @@ try {
     $adminMessagesController = new AdminMessagesController($db, $adminMiddleware, $emailService);
 
     $contactController = new ContactController($db, $emailService);
+
+    $resendWebhook = new ResendInboundWebhook($db);
 
 
 } catch (Throwable $e) {
@@ -681,6 +684,10 @@ try {
 
     if (preg_match('#^/admin/contact/(\d+)$#', $uri, $m) && $method === 'PATCH') {
         $adminMessagesController->updateInbox((int)$m[1]); exit;
+    }
+
+    if ($uri === '/webhooks/resend-inbound' && $method === 'POST') {
+        $resendWebhook->handle(); exit;
     }
 
     if (str_starts_with($uri, '/admin')) {
