@@ -591,9 +591,6 @@ class UserService
         }
     }
 
-    /**
-     * ✅ BONUS - Rechercher des utilisateurs
-     */
     public function searchUsers(string $query, int $limit = 20, int $offset = 0): array
     {
         try {

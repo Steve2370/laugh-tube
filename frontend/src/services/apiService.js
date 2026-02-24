@@ -303,19 +303,19 @@ class ApiService {
     }
 
     async requestPasswordReset(email) {
-        return this.request('/resetPasswordRequest.php', {
+        return this.request('/auth/reset-password', {
             method: 'POST',
             body: JSON.stringify({ email }),
             skipAuth: true,
         });
     }
 
-    async resetPassword(token, password, confirmPassword) {
-        return this.request('/resetPassword.php', {
+    async resetPassword(token, new_password, confirmPassword) {
+        return this.request('/auth/reset-password', {
             method: 'POST',
             body: JSON.stringify({
                 token,
-                password,
+                new_password,
                 confirm_password: confirmPassword
             }),
             skipAuth: true,
