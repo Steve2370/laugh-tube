@@ -18,6 +18,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\AbonnementController;
 use App\Controllers\AdminController;
+use App\Controllers\AdminMessagesController;
 use App\Controllers\AuthController;
 use App\Controllers\CommentaireController;
 use App\Controllers\NotificationController;
@@ -238,6 +239,9 @@ try {
     );
 
     $searchController = new SearchController($db);
+
+    $adminMessagesController = new AdminMessagesController($db, $adminMiddleware, $emailService);
+
 
 } catch (Throwable $e) {
     error_log('Initialization error: ' . $e->getMessage());
@@ -654,6 +658,13 @@ try {
         $currentUser = AuthMiddleware::requireAuth();
         $signalementController->signalerVideo((int)$m[1], $currentUser);
         exit;
+    }
+
+    if ($uri === '/admin/messages' && $method === 'GET') {
+        $adminMessagesController->getMessages(); exit;
+    }
+    if ($uri === '/admin/messages' && $method === 'POST') {
+        $adminMessagesController->sendMessage(); exit;
     }
 
     if (str_starts_with($uri, '/admin')) {

@@ -85,6 +85,16 @@ CREATE TABLE IF NOT EXISTS encoding_queue
     updated_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS admin_messages
+(
+    id       SERIAL PRIMARY KEY,
+    admin_id INTEGER      NOT NULL REFERENCES users (id) ON DELETE SET NULL,
+    user_id  INTEGER      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    subject  VARCHAR(255) NOT NULL,
+    message  TEXT         NOT NULL,
+    sent_at  TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS commentaires
 (
     id         SERIAL PRIMARY KEY,
@@ -221,6 +231,10 @@ CREATE INDEX IF NOT EXISTS idx_notifications_video_id ON notifications(video_id)
 CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reply_likes_reply_id ON reply_likes(reply_id);
 CREATE INDEX IF NOT EXISTS idx_reply_likes_user_id ON reply_likes(user_id);
+
+CREATE INDEX idx_admin_messages_user_id  ON admin_messages(user_id);
+CREATE INDEX idx_admin_messages_admin_id ON admin_messages(admin_id);
+CREATE INDEX idx_admin_messages_sent_at  ON admin_messages(sent_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_likes_video_id ON likes(video_id);
 CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id);

@@ -4,11 +4,13 @@ import UsersTable   from '../components/admin/UsersTable.jsx';
 import VideosTable  from '../components/admin/VideosTable.jsx';
 import ReportsTable from '../components/admin/ReportsTable.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
+import MessagesTable from '../components/admin/MessagesTable.jsx';
 
 const TABS = [
     { key: 'reports', label: 'Signalements', icon: '' },
     { key: 'users',   label: 'Utilisateurs', icon: '' },
     { key: 'videos',  label: 'Vidéos',       icon: '' },
+    { key: 'messages', label: 'Messagerie', icon: '' },
 ];
 
 function StatCard({ label, value, sub, color = 'blue' }) {
@@ -36,19 +38,23 @@ export default function Admin() {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error,   setError]   = useState(null);
+    const [messages, setMessages] = useState([]);
 
     const loadAll = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const [usersRes, videosRes, reportsRes] = await Promise.all([
+            const [usersRes, videosRes, reportsRes, messagesRes] = await Promise.all([
                 apiService.request('/admin/users'),
                 apiService.request('/admin/videos'),
                 apiService.request('/admin/signalements'),
+                apiService.request('/admin/messages'),
             ]);
             setUsers(usersRes.users               ?? []);
             setVideos(videosRes.videos            ?? []);
             setReports(reportsRes.signalements    ?? []);
+            setMessages(messagesRes.messages ?? []);
+
         } catch (err) {
             console.error('Erreur chargement admin:', err);
             setError('Impossible de charger les données admin.');
@@ -197,6 +203,13 @@ export default function Admin() {
                                     <VideosTable
                                         videos={videos}
                                         onDeleteVideo={handleDeleteVideo}
+                                    />
+                                )}
+                                {activeTab === 'messages' && (
+                                    <MessagesTable
+                                        users={users}
+                                        messages={messages}
+                                        onMessageSent={loadAll}
                                     />
                                 )}
                             </>
