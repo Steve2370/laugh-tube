@@ -27,20 +27,12 @@ class SearchController
         $searchTerm = '%' . $query . '%';
 
         $videos = $this->db->fetchAll(
-            "SELECT
-                v.id,
-                v.title,
-                v.description,
-                v.filename,
-                v.thumbnail,
-                v.duration,
-                v.views,
-                v.created_at,
+            "SELECT v.id, v.title, v.description, v.filename, v.thumbnail, v.duration, v.views, v.created_at,
                 v.visibility,
-                u.id                       AS user_id,
+                u.id AS user_id,
                 u.username,
                 u.avatar_url,
-                v.views                    AS view_count,
+                v.views AS view_count,
                 COALESCE(lk.like_count, 0) AS likes
              FROM videos v
              JOIN users u ON u.id = v.user_id
@@ -53,9 +45,9 @@ class SearchController
                AND v.encoded = true
                AND u.deleted_at IS NULL
                AND (
-                   v.title       ILIKE $1
+                   v.title ILIKE $1
                    OR v.description ILIKE $2
-                   OR u.username    ILIKE $3
+                   OR u.username ILIKE $3
                )
              ORDER BY
                 CASE WHEN v.title ILIKE $4 THEN 0 ELSE 1 END,
@@ -73,25 +65,25 @@ class SearchController
                AND v.encoded = true
                AND u.deleted_at IS NULL
                AND (
-                   v.title       ILIKE $1
+                   v.title ILIKE $1
                    OR v.description ILIKE $2
-                   OR u.username    ILIKE $3
+                   OR u.username ILIKE $3
                )",
             [$searchTerm, $searchTerm, $searchTerm]
         );
 
         foreach ($videos as &$video) {
-            $video['view_count']    = (int)$video['view_count'];
-            $video['likes']         = (int)$video['likes'];
-            $video['duration']      = (int)$video['duration'];
+            $video['view_count'] = (int)$video['view_count'];
+            $video['likes'] = (int)$video['likes'];
+            $video['duration'] = (int)$video['duration'];
             $video['thumbnail_url'] = "/api/videos/{$video['id']}/thumbnail";
         }
 
         $this->json([
             'videos' => $videos,
-            'total'  => (int)($total['total'] ?? 0),
-            'query'  => $query,
-            'limit'  => $limit,
+            'total' => (int)($total['total'] ?? 0),
+            'query' => $query,
+            'limit' => $limit,
             'offset' => $offset,
         ]);
     }
