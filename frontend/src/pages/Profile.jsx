@@ -48,19 +48,15 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     useEffect(() => {
         if (!authUser?.id) return;
         setBioDraft(authUser.bio || '');
-
-        if (authUser.avatar_url) {
-            setAvatarPreview(`/api/users/${authUser.id}/profile-image`);
-        } else {
-            setAvatarPreview('/images/default-avatar.png');
-        }
-
-        if (authUser.cover_url) {
-            setCoverPreview(`/api/users/${authUser.id}/cover-image`);
-        } else {
-            setCoverPreview('/images/default-cover.png');
-        }
-    }, [authUser?.id, authUser?.avatar_url, authUser?.cover_url, authUser?.bio]);
+        setAvatarPreview(authUser.avatar_url
+            ? `/api/users/${authUser.id}/profile-image`
+            : '/images/default-avatar.svg'
+        );
+        setCoverPreview(authUser.cover_url
+            ? `/api/users/${authUser.id}/cover-image`
+            : '/images/default-cover.svg'
+        );
+    }, [authUser?.id, authUser?.bio]);
 
 
     const handleAvatarChange = async (e) => {
@@ -112,7 +108,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                     : `${window.location.origin}${authUser.avatar_url}`;
                 setAvatarPreview(avatarUrl);
             } else {
-                setAvatarPreview('/images/default-avatar.png');
+                setAvatarPreview('/images/default-avatar.svg');
             }
         } finally {
             setUploadingAvatar(false);
@@ -171,11 +167,33 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                     : `${window.location.origin}${authUser.cover_url}`;
                 setCoverPreview(coverUrl);
             } else {
-                setCoverPreview('/images/default-cover.png');
+                setCoverPreview('/images/default-cover.svg');
             }
         } finally {
             setUploadingCover(false);
             e.target.value = "";
+        }
+    };
+
+    const handleDeleteAvatar = async () => {
+        try {
+            await apiService.request(`/users/${authUser.id}/avatar`, { method: 'DELETE' });
+            setAvatarPreview('/images/default-avatar.svg');
+            updateUser({ avatar_url: null });
+            toast.success('Avatar supprimé');
+        } catch (err) {
+            toast.error('Erreur suppression avatar');
+        }
+    };
+
+    const handleDeleteCover = async () => {
+        try {
+            await apiService.request(`/users/${authUser.id}/cover`, { method: 'DELETE' });
+            setCoverPreview('/images/default-cover.svg');
+            updateUser({ cover_url: null });
+            toast.success('Cover supprimée');
+        } catch (err) {
+            toast.error('Erreur suppression cover');
         }
     };
 
@@ -215,7 +233,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="relative h-56 group">
                 {coverPreview ? (
-                    <img src={coverPreview} alt="Couverture" className="w-full h-full object-cover" />
+                    <img src={coverPreview || '/images/default-cover.svg'} alt="Couverture" className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"></div>
                 )}
@@ -234,6 +252,16 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                             onChange={handleCoverChange}
                             disabled={uploadingCover}
                         />
+
+                        {authUser.cover_url && (
+                            <button
+                                onClick={handleDeleteCover}
+                                className="bg-red-500 bg-opacity-90 text-white px-4 py-2 rounded-lg hover:bg-opacity-100 transition-all flex items-center gap-2"
+                            >
+                                <Trash2 size={18} />
+                                Supprimer
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
@@ -243,11 +271,10 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                     <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 relative group/avatar">
                         {avatarPreview ? (
                             <img
-                                src={avatarPreview}
+                                src={avatarPreview || '/images/default-avatar.svg'}
                                 alt="Avatar"
                                 className="w-full h-full object-cover"
-                            />
-                        ) : (
+                            /> ) : (
                             <div className="w-full h-full flex items-center justify-center text-white text-5xl font-bold">
                                 {user?.username?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
@@ -271,6 +298,16 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                                     onChange={handleAvatarChange}
                                     disabled={uploadingAvatar}
                                 />
+
+                                {authUser.avatar_url && (
+                                    <button
+                                        onClick={handleDeleteAvatar}
+                                        className="text-red-400 hover:text-red-300 flex items-center gap-1 text-xs"
+                                    >
+                                        <Trash2 size={14} />
+                                        Supprimer
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

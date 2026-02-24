@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300">
+    <rect width="1200" height="300" fill="#111111"/>
+    <text x="600" y="140" font-family="Arial, sans-serif" font-size="64" font-weight="bold"
+          fill="#333333" text-anchor="middle">LaughTube</text>
+    <text x="600" y="195" font-family="Arial, sans-serif" font-size="22"
+          fill="#2a2a2a" text-anchor="middle">Partagez vos punchlines</text>
+</svg>

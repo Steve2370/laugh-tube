@@ -400,6 +400,14 @@ try {
         return;
     }
 
+    if (preg_match('#^/users/(\d+)/avatar$#', $uri, $m) && $method === 'DELETE') {
+        $userController->deleteAvatar((int)$m[1]); exit;
+    }
+
+    if (preg_match('#^/users/(\d+)/cover$#', $uri, $m) && $method === 'DELETE') {
+        $userController->deleteCover((int)$m[1]); exit;
+    }
+
     if (($uri === '/profile' || $uri === '/users/profile/update') && $method === 'PUT') {
         $userController->updateProfile();
         return;
