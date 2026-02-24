@@ -417,6 +417,7 @@ class AuthService
 
             $this->userModel->updateEmailVerified($user['id']);
             $this->auditService->logEmailVerified((int)$user['id']);
+            $this->emailService->sendWelcomeEmail((int)$user['id'], $user['email'], $user['username']);
 
             return [
                 'success' => true,
