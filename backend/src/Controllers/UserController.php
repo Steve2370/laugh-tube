@@ -796,7 +796,7 @@ class UserController
         }
 
         if (!empty($user['avatar_url'])) {
-            $filePath = __DIR__ . '/../../uploads/avatars/' . basename($user['avatar_url']);
+            $filePath = '/var/www/html/public/uploads/profiles/' . basename($user['avatar_url']);
             if (file_exists($filePath)) {
                 unlink($filePath);
             }
@@ -835,7 +835,7 @@ class UserController
         }
 
         if (!empty($user['cover_url'])) {
-            $filePath = __DIR__ . '/../../uploads/covers/' . basename($user['cover_url']);
+            $filePath = '/var/www/html/public/uploads/covers/' . basename($user['cover_url']);
             if (file_exists($filePath)) {
                 unlink($filePath);
             }
@@ -861,7 +861,6 @@ class UserController
 
             $possiblePaths = [];
             if (!empty($user['avatar_url'])) {
-                $possiblePaths[] = '/var/www/html/uploads/avatars/' . basename($user['avatar_url']);
                 $possiblePaths[] = '/var/www/html/public/uploads/profiles/' . basename($user['avatar_url']);
             }
 
