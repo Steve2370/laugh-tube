@@ -13,6 +13,7 @@ const Upload = lazy(() => import('../../pages/Upload'));
 const Settings = lazy(() => import('../../pages/Settings'));
 const Video = lazy(() => import('../../pages/Video'));
 const Profile = lazy(() => import('../../pages/Profile'));
+const CGU = lazy(() => import('../../pages/CGU'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -25,6 +26,8 @@ const PageRouter = () => {
                 return <Login/>;
             case 'register':
                 return <Register/>;
+            case 'cgu':
+                return <CGU />;
             case 'upload':
                 return <Upload/>;
             case 'settings':
