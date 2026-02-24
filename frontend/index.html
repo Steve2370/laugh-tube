@@ -4,7 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/src/assets/Animation1.png">
-    <title>Laugh Tube</title>
+    <title>LaughTube - Partagez vos punchlines</title>
+    <meta name="description" content="LaughTube - Partagez et découvrez les meilleures vidéos humoristiques. La plateforme québécoise de partage de vidéos.">
+    <meta name="keywords" content="vidéos, humour, partage, québec, laughtube, comédie">
+    <meta name="author" content="LaughTube">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.laughtube.ca">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.laughtube.ca">
+    <meta property="og:title" content="LaughTube - Partagez vos punchlines">
+    <meta property="og:description" content="La plateforme québécoise de partage de vidéos humoristiques.">
+    <meta property="og:image" content="https://www.laughtube.ca/images/default-cover.svg">
+    <meta property="og:locale" content="fr_CA">
+    <meta property="og:site_name" content="LaughTube">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LaughTube - Partagez vos punchlines">
+    <meta name="twitter:description" content="La plateforme québécoise de partage de vidéos humoristiques.">
+    <meta name="twitter:image" content="https://www.laughtube.ca/images/default-cover.svg">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -115,5 +131,14 @@
 <body>
 <div id="root"></div>
 <script type="module" src="/src/main.jsx"></script>
+<script>
+    console.log('%cSTOP!', 'color: red; font-size: 48px; font-weight: bold;');
+    console.log('%cCette console est réservée aux développeurs.\nSi quelqu\'un vous a demandé de coller quelque chose ici, c\'est une tentative de piratage de votre compte.', 'color: #333; font-size: 14px; line-height: 1.6;');
+    document.addEventListener('paste', function(e) {
+        if (document.activeElement === document.body || document.activeElement === document.documentElement) {
+            e.preventDefault();
+        }
+    });
+</script>
 </body>
 </html>

@@ -4,9 +4,9 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
 import {
     Settings as SettingsIcon,
-    User, Lock, Bell, Shield, Camera, Mail,
+    User, Bell, Shield, Camera, Mail,
     Eye, EyeOff, Save, Loader, Smartphone, QrCode,
-    CheckCircle, XCircle, Trash2, AlertTriangle, Users, ExternalLink,
+    CheckCircle, XCircle, Trash2, AlertTriangle, Users, ExternalLink, RefreshCw,
 } from 'lucide-react';
 
 const Settings = () => {
@@ -100,6 +100,17 @@ const Settings = () => {
         }
     };
 
+    const handleDeleteAvatar = async () => {
+        try {
+            await apiService.request(`/users/${user.id}/avatar`, { method: 'DELETE' });
+            updateUser({ avatar_url: null });
+            setAvatarPreview(null);
+            toast.success('Avatar supprimé');
+        } catch (err) {
+            toast.error(err.message || 'Erreur suppression avatar');
+        }
+    };
+
     const handlePasswordChange = async (e) => {
         e.preventDefault();
         if (newPassword !== confirmPassword) { toast.error('Les mots de passe ne correspondent pas'); return; }
@@ -160,7 +171,6 @@ const Settings = () => {
 
     const tabs = [
         { id: 'profile', label: 'Profil', icon: User },
-        { id: 'security', label: 'Sécurité', icon: Lock },
         { id: 'twofa', label: '2FA', icon: Smartphone },
         { id: 'notifications', label: 'Notifications', icon: Bell },
         { id: 'privacy', label: 'Confidentialité', icon: Shield },
@@ -199,33 +209,46 @@ const Settings = () => {
                                 <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-2xl">
 
                                     <div className="flex items-center gap-6 p-6 bg-gray-50 rounded-xl">
-                                        <div className="relative">
-                                            {currentAvatar ? (
+                                        <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 relative group/avatar">
+                                            {avatarPreview || user?.avatar_url ? (
                                                 <img
-                                                    src={currentAvatar}
+                                                    src={avatarPreview || `/api/users/${user.id}/profile-image`}
                                                     alt="Avatar"
-                                                    className="w-24 h-24 rounded-full object-cover shadow-lg border-2 border-white"
+                                                    className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                                                    {username.charAt(0).toUpperCase() || '?'}
+                                                <div className="w-full h-full flex items-center justify-center text-white text-5xl font-bold">
+                                                    {user?.username?.charAt(0)?.toUpperCase() || 'U'}
                                                 </div>
                                             )}
-                                            {avatarUploading && (
-                                                <div className="absolute inset-0 rounded-full bg-black bg-opacity-40 flex items-center justify-center">
-                                                    <Loader size={24} className="text-white animate-spin" />
-                                                </div>
-                                            )}
-                                            <label className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border-2 border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                                                <Camera size={18} className="text-gray-600" />
+
+                                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center">
+                                                <label htmlFor="avatar-upload-settings" className="cursor-pointer text-white flex flex-col items-center gap-1">
+                                                    {avatarUploading ? (
+                                                        <RefreshCw size={24} className="animate-spin" />
+                                                    ) : (
+                                                        <Camera size={24} />
+                                                    )}
+                                                    <span className="text-xs">{avatarUploading ? 'Upload...' : 'Modifier'}</span>
+                                                </label>
                                                 <input
+                                                    id="avatar-upload-settings"
                                                     type="file"
-                                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                                    accept="image/*"
                                                     className="hidden"
                                                     onChange={handleAvatarChange}
                                                     disabled={avatarUploading}
                                                 />
-                                            </label>
+                                                {user?.avatar_url && (
+                                                    <button
+                                                        onClick={handleDeleteAvatar}
+                                                        className="text-red-400 hover:text-red-300 flex items-center gap-1 text-xs"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                        Supprimer
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                         <div>
                                             <h3 className="font-semibold text-gray-900 mb-1">Photo de profil</h3>
@@ -261,35 +284,6 @@ const Settings = () => {
                                         <Trash2 size={18} /> Supprimer mon compte
                                     </button>
                                 </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'security' && (
-                            <div>
-                                <h2 className="text-2xl font-bold mb-6 text-gray-900">Sécurité et mot de passe</h2>
-                                <form onSubmit={handlePasswordChange} className="space-y-6 max-w-2xl">
-                                    {[
-                                        { label: 'Mot de passe actuel', value: currentPassword, setter: setCurrentPassword, show: showCurrentPassword, toggleShow: () => setShowCurrentPassword(p => !p) },
-                                        { label: 'Nouveau mot de passe', value: newPassword, setter: setNewPassword, show: showNewPassword, toggleShow: () => setShowNewPassword(p => !p) },
-                                        { label: 'Confirmer le nouveau mot de passe', value: confirmPassword, setter: setConfirmPassword, show: showConfirmPassword, toggleShow: () => setShowConfirmPassword(p => !p) },
-                                    ].map(({ label, value, setter, show, toggleShow }) => (
-                                        <div key={label}>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Lock size={20} className="text-gray-400" /></div>
-                                                <input type={show ? 'text' : 'password'} value={value} onChange={e => setter(e.target.value)} placeholder="••••••••"
-                                                       className="w-full pl-12 pr-12 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-                                                <button type="button" onClick={toggleShow} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600">
-                                                    {show ? <EyeOff size={20} /> : <Eye size={20} />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button type="submit" disabled={savingPassword}
-                                            className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
-                                        {savingPassword ? <><Loader size={18} className="animate-spin" /> Changement...</> : <><Save size={18} /> Changer le mot de passe</>}
-                                    </button>
-                                </form>
                             </div>
                         )}
 
