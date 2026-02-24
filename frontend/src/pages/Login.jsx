@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { LogIn, Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react';
@@ -8,10 +8,12 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-
     const [show2FA, setShow2FA] = useState(false);
     const [twoFactorCode, setTwoFactorCode] = useState('');
     const [userId2FA, setUserId2FA] = useState(null);
+    const [loginDelay, setLoginDelay] = useState(0);
+    const [failedAttempts, setFailedAttempts] = useState(0);
+    const [countdown, setCountdown] = useState(0);
 
     const { login, verify2FA } = useAuth();
     const toast = useToast();
@@ -36,6 +38,9 @@ const Login = () => {
                 toast.error(result.error || 'Email ou mot de passe incorrect');
             }
         } catch (err) {
+            const delay = Math.min(2 * (failedAttempts + 1), 30);
+            setFailedAttempts(prev => prev + 1);
+            setCountdown(delay);
             toast.error('Une erreur est survenue');
         } finally {
             setLoading(false);
@@ -61,6 +66,16 @@ const Login = () => {
             setLoading(false);
         }
     };
+
+    const delay = Math.min(2 * (loginDelay + 1), 30);
+    setLoginDelay(prev => prev + 1);
+    setCountdown(delay);
+
+    useEffect(() => {
+        if (countdown <= 0) return;
+        const timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [countdown]);
 
     const navigateTo = (page) => {
         window.location.hash = `#/${page}`;
@@ -212,15 +227,20 @@ const Login = () => {
 
                         <button
                             type="submit"
-                            disabled={loading}
-                            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3.5 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                            disabled={loading || countdown > 0}
+                            className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-semibold hover:bg-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                         >
                             {loading ? (
                                 <span className="flex items-center justify-center gap-2">
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                                     Connexion...
                                 </span>
-                            ) : (
+                            ) : countdown > 0 ? (
+                                <span className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>
+                                Réessayez dans {countdown}s
+                                </span>
+                                ) : (
                                 'Se connecter'
                             )}
                         </button>
