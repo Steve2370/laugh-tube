@@ -67,10 +67,6 @@ const Login = () => {
         }
     };
 
-    const delay = Math.min(2 * (loginDelay + 1), 30);
-    setLoginDelay(prev => prev + 1);
-    setCountdown(delay);
-
     useEffect(() => {
         if (countdown <= 0) return;
         const timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
