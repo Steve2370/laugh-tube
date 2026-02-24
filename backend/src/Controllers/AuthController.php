@@ -186,12 +186,8 @@ class AuthController
             $result = $this->authService->verifyEmail($token);
 
             if (!$result['success']) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => $result['message']
-                ]);
-                return;
+                header('Location: ' . $_ENV['APP_URL'] . '/#/verify-error');
+                exit;
             }
 
             $this->auditService->logSecurityEvent(
@@ -200,11 +196,13 @@ class AuthController
                 []
             );
 
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'message' => 'Email vérifié avec succès'
-            ]);
+            $user = $this->authService->getUserById($result['userId']);
+            if ($user) {
+                $this->emailService->sendWelcomeEmail((int)$result['userId'], $user['email'], $user['username']);
+            }
+
+            header('Location: ' . $_ENV['APP_URL'] . '/#/home?verified=1');
+            exit;
 
         } catch (\Exception $e) {
             error_log("AuthController::verifyEmail - Error: " . $e->getMessage());

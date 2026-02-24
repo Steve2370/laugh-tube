@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Interfaces\DatabaseInterface;
 use App\Middleware\AdminMiddleware;
+use App\Services\EmailService;
 use App\Utils\JsonResponse;
 use App\Utils\SecurityHelper;
 
@@ -11,11 +12,13 @@ class AdminController
 {
     private DatabaseInterface $db;
     private AdminMiddleware $adminMiddleware;
+    private EmailService $emailService;
 
-    public function __construct($db, $adminMiddleware)
+    public function __construct($db, $adminMiddleware, $emailService)
     {
         $this->db = $db;
         $this->adminMiddleware = $adminMiddleware;
+        $this->emailService = $emailService;
     }
 
     public function getUsers(): void
@@ -277,6 +280,8 @@ class AdminController
             "UPDATE users SET account_locked_until = $1 WHERE id = $2 AND deleted_at IS NULL RETURNING id, username, email",
             [$until, $userId]
         );
+
+        $this->emailService->sendAccountSuspendedEmail((int)$user['id'], $user['email'], $user['username'], $until, $reason);
 
         if (!$user) {
             JsonResponse::notFound(['error' => 'Utilisateur introuvable']);
