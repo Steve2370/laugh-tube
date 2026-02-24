@@ -16,22 +16,22 @@ class EmailService
         EmailProviderInterface $provider,
         string $baseUrl
     ) {
-        $this->logRepo  = $logRepo;
+        $this->logRepo = $logRepo;
         $this->provider = $provider;
-        $this->baseUrl  = rtrim($baseUrl, '/');
+        $this->baseUrl = rtrim($baseUrl, '/');
     }
 
 
-    public function sendVerificationEmail(int $userId, string $email, string $username, string $token): bool
+    public function sendVerificationEmail(int $userId, string $email, string $username, string $subject, string $verificationUrl): bool
     {
-        $verificationUrl = $this->baseUrl . '/verify-email.php?token=' . urlencode($token);
-        $subject = 'Vérifiez votre adresse email - Laugh Tube';
-        $body    = $this->getVerificationEmailTemplate($username, $verificationUrl);
+        $body = $this->getVerificationEmailTemplate($username, $verificationUrl);
+        return $this->send($userId, $email, $subject, $body, 'verification');
+    }
 
-        $sentVerification = $this->send($userId, $email, $subject, $body, 'verification');
-        $sentWelcome      = $sentVerification ? $this->sendWelcomeEmail($userId, $email, $username) : false;
-
-        return $sentVerification && $sentWelcome;
+    public function sendAccountSuspendedEmail(int $userId, string $email, string $username, string $until, string $reason): bool {
+        $subject = 'Votre compte a été suspendu - LaughTube';
+        $body = $this->getAccountSuspendedTemplate($username, $until, $reason);
+        return $this->send($userId, $email, $subject, $body, 'account_suspended', 'legal@laughtube.ca');
     }
 
     public function sendWelcomeEmail(int $userId, string $email, string $username): bool
@@ -44,23 +44,23 @@ class EmailService
     public function send2FAEnabledEmail(int $userId, string $email, string $username): bool
     {
         $subject = 'Authentification 2FA activée - Laugh Tube';
-        $body    = $this->get2FAEnabledTemplate($username);
+        $body = $this->get2FAEnabledTemplate($username);
         return $this->send($userId, $email, $subject, $body, '2fa_enabled');
     }
 
     public function sendPasswordResetEmail(int $userId, string $email, string $username, string $token): bool
     {
         $resetUrl = $this->baseUrl . '/#/reset-password?token=' . urlencode($token);
-        $subject  = 'Réinitialisation de votre mot de passe - Laugh Tube';
-        $body     = $this->getPasswordResetTemplate($username, $resetUrl);
+        $subject = 'Réinitialisation de votre mot de passe - Laugh Tube';
+        $body = $this->getPasswordResetTemplate($username, $resetUrl);
         return $this->send($userId, $email, $subject, $body, 'password_reset');
     }
 
     public function sendAccountDeletionEmail(int $userId, string $email, string $username, string $deletionDate): bool
     {
         $cancelUrl = $this->baseUrl . '/#/settings';
-        $subject   = 'Confirmation de suppression de compte - Laugh Tube';
-        $body      = $this->getAccountDeletionTemplate($username, $deletionDate, $cancelUrl);
+        $subject = 'Confirmation de suppression de compte - Laugh Tube';
+        $body = $this->getAccountDeletionTemplate($username, $deletionDate, $cancelUrl);
         return $this->send($userId, $email, $subject, $body, 'account_deletion');
     }
 
@@ -68,14 +68,14 @@ class EmailService
     public function sendPasswordChangedEmail(int $userId, string $email, string $username): bool
     {
         $subject = 'Votre mot de passe a été modifié - Laugh Tube';
-        $body    = $this->getPasswordChangedTemplate($username);
+        $body = $this->getPasswordChangedTemplate($username);
         return $this->send($userId, $email, $subject, $body, 'password_changed');
     }
 
     public function send2FADisabledEmail(int $userId, string $email, string $username): bool
     {
         $subject = 'Authentification 2FA désactivée - Laugh Tube';
-        $body    = $this->get2FADisabledTemplate($username);
+        $body = $this->get2FADisabledTemplate($username);
         return $this->send($userId, $email, $subject, $body, '2fa_disabled');
     }
 
@@ -88,12 +88,12 @@ class EmailService
     private function send(int $userId, string $to, string $subject, string $body, string $emailType, ?string $replyTo = null): bool
     {
         $emailId = $this->logRepo->logEmail([
-            'user_id'    => $userId,
+            'user_id' => $userId,
             'email_type' => $emailType,
-            'recipient'  => $to,
-            'subject'    => $subject,
-            'body'       => substr($body, 0, 500),
-            'status'     => 'pending',
+            'recipient' => $to,
+            'subject' => $subject,
+            'body' => substr($body, 0, 500),
+            'status' => 'pending',
         ]);
 
         $success = $this->provider->sendEmail($to, $subject, $body, true, $replyTo);
@@ -152,9 +152,65 @@ class EmailService
 HTML;
     }
 
+    private function getAccountSuspendedTemplate(
+        string $username,
+        string $until,
+        string $reason
+    ): string {
+        $logo = $this->logoHtml();
+        $siteUrl = $this->baseUrl;
+        $replyEmail = 'legal@laughtube.ca';
+        $untilFormatted = date('d/m/Y à H:i', strtotime($until));
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
+  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+  .header{background:#ffffff;padding:24px;text-align:center;}
+  .badge{display:inline-block;background:#dc3545;color:#fff;font-size:11px;font-weight:bold;padding:4px 14px;border-radius:20px;margin-top:12px;letter-spacing:1px;text-transform:uppercase;}
+  .content{padding:32px;}
+  .danger{background:#f8d7da;border-left:4px solid #dc3545;padding:16px;border-radius:0 8px 8px 0;margin:20px 0;}
+  .info-box{background:#f9f9f9;border-radius:8px;padding:16px;margin:16px 0;font-size:14px;}
+  .info-box strong{display:inline-block;width:90px;color:#555;}
+  .reply-box{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px;margin-top:20px;font-size:13px;}
+  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    {$logo}
+    <div class="badge">⚠️ Compte suspendu</div>
+  </div>
+  <div class="content">
+    <h2 style="color:#111;">Bonjour {$username},</h2>
+    <div class="danger">
+      <strong>Votre compte LaughTube a été temporairement suspendu.</strong>
+    </div>
+    <div class="info-box">
+      <div><strong>Raison :</strong> {$reason}</div>
+      <div style="margin-top:8px;"><strong>Jusqu'au :</strong> {$untilFormatted}</div>
+    </div>
+    <p>Pendant cette période, vous ne pourrez pas vous connecter, uploader de vidéos, commenter ou interagir avec la communauté.</p>
+    <p>Si vous pensez que cette suspension est une erreur, vous pouvez contacter notre équipe :</p>
+    <div class="reply-box">
+      <strong>Contacter le support :</strong><br>
+      Écrivez-nous à <a href="mailto:{$replyEmail}" style="color:#111;font-weight:bold;">{$replyEmail}</a>
+      ou via <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
+    </div>
+  </div>
+  <div class="footer">© 2026 LaughTube. Tous droits réservés. · <a href="{$siteUrl}" style="color:#999;">laughtube.ca</a></div>
+</div>
+</body></html>
+HTML;
+    }
+
     private function getWelcomeEmailTemplate(string $username): string
     {
-        $logo    = $this->logoHtml();
+        $logo = $this->logoHtml();
         $siteUrl = $this->baseUrl;
         return <<<HTML
 <!DOCTYPE html>
@@ -296,7 +352,7 @@ HTML;
 
     private function getPasswordChangedTemplate(string $username): string
     {
-        $logo    = $this->logoHtml();
+        $logo = $this->logoHtml();
         $siteUrl = $this->baseUrl;
         return <<<HTML
 <!DOCTYPE html>
@@ -373,7 +429,7 @@ HTML;
         string $message
     ): bool {
         $fullSubject = '[LaughTube] ' . $subject;
-        $body        = $this->getAdminMessageTemplate($username, $subject, $message);
+        $body = $this->getAdminMessageTemplate($username, $subject, $message);
         return $this->send($userId, $email, $fullSubject, $body, 'admin_message', 'legal@laughtube.ca');
     }
 
@@ -382,10 +438,10 @@ HTML;
         string $subject,
         string $message
     ): string {
-        $logo        = $this->logoHtml();
+        $logo = $this->logoHtml();
         $messageHtml = nl2br(htmlspecialchars($message));
-        $replyEmail  = 'legal@laughtube.ca';
-        $siteUrl     = $this->baseUrl;
+        $replyEmail = 'legal@laughtube.ca';
+        $siteUrl = $this->baseUrl;
 
         return <<<HTML
 <!DOCTYPE html>
@@ -432,11 +488,11 @@ HTML;
         string $subject,
         string $message
     ): bool {
-        $adminEmail  = 'legal@laughtube.ca';
+        $adminEmail = 'legal@laughtube.ca';
         $fullSubject = '[LaughTube Contact] ' . $subject;
         $messageHtml = nl2br(htmlspecialchars($message));
-        $logo        = $this->logoHtml();
-        $baseUrl     = $this->baseUrl;
+        $logo = $this->logoHtml();
+        $baseUrl = $this->baseUrl;
 
         $body = <<<HTML
 <!DOCTYPE html><html lang="fr">

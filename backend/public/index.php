@@ -700,11 +700,16 @@ try {
 
     if (str_starts_with($uri, '/admin')) {
         $adminUser = $adminMiddleware->handle();
-
         if ($method === 'GET' && $uri === '/admin/users') {
             $adminController->getUsers();
         } elseif ($method === 'DELETE' && preg_match('#^/admin/users/(\d+)$#', $uri, $m)) {
             $adminController->deleteUser((int)$m[1]);
+        } elseif ($method === 'PATCH' && preg_match('#^/admin/users/(\d+)/suspend$#', $uri, $m)) {
+            $adminController->suspendUser((int)$m[1]);
+        } elseif ($method === 'PATCH' && preg_match('#^/admin/users/(\d+)/unsuspend$#', $uri, $m)) {
+            $adminController->unsuspendUser((int)$m[1]);
+        } elseif ($method === 'PATCH' && preg_match('#^/admin/users/(\d+)/restore$#', $uri, $m)) {
+            $adminController->restoreUser((int)$m[1]);
         } elseif ($method === 'GET' && $uri === '/admin/videos') {
             $adminController->getVideos();
         } elseif ($method === 'DELETE' && preg_match('#^/admin/videos/(\d+)$#', $uri, $m)) {
@@ -713,6 +718,14 @@ try {
             $adminController->getSignalements();
         } elseif ($method === 'PATCH' && preg_match('#^/admin/signalements/(\d+)$#', $uri, $m)) {
             $adminController->updateSignalement((int)$m[1], $adminUser);
+        } elseif ($method === 'GET' && $uri === '/admin/messages') {
+            $adminMessagesController->getMessages();
+        } elseif ($method === 'POST' && $uri === '/admin/messages') {
+            $adminMessagesController->sendMessage();
+        } elseif ($method === 'GET' && $uri === '/admin/contact') {
+            $adminMessagesController->getInbox();
+        } elseif ($method === 'PATCH' && preg_match('#^/admin/contact/(\d+)$#', $uri, $m)) {
+            $adminMessagesController->updateInbox((int)$m[1]);
         } else {
             http_response_code(404);
             echo json_encode(['error' => 'Route admin introuvable']);

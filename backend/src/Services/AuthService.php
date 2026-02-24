@@ -400,45 +400,33 @@ class AuthService
     public function verifyEmail(string $token): array
     {
         if (empty($token)) {
-            return [
-                'success' => false,
-                'code' => 400,
-                'message' => 'Token manquant'
-            ];
+            return ['success' => false, 'code' => 400, 'message' => 'Token manquant'];
+        }
+
+        $token = trim($token);
+        if (!preg_match('/^[a-f0-9]{64}$/i', $token)) {
+            return ['success' => false, 'code' => 400, 'message' => 'Token invalide ou expiré'];
         }
 
         try {
             $user = $this->userModel->findByVerificationToken($token);
 
             if (!$user) {
-                return [
-                    'success' => false,
-                    'code' => 400,
-                    'message' => 'Token invalide ou expiré'
-                ];
+                return ['success' => false, 'code' => 400, 'message' => 'Token invalide ou expiré'];
             }
 
             $this->userModel->updateEmailVerified($user['id']);
             $this->auditService->logEmailVerified((int)$user['id']);
-            $token = trim($token);
-            if (!preg_match('/^[a-f0-9]{64}$/i', $token)) {
-                return ['success'=>false,'code'=>400,'message'=>'Token invalide ou expiré'];
-            }
 
             return [
                 'success' => true,
-                'userId' => $user['id'],
+                'userId'  => $user['id'],
                 'message' => 'Email vérifié avec succès'
             ];
 
         } catch (\Exception $e) {
             error_log("AuthService::verifyEmail - Error: " . $e->getMessage());
-
-            return [
-                'success' => false,
-                'code' => 500,
-                'message' => 'Erreur lors de la vérification'
-            ];
+            return ['success' => false, 'code' => 500, 'message' => 'Erreur lors de la vérification'];
         }
     }
 
@@ -652,5 +640,9 @@ class AuthService
     public function refreshToken(string $refreshToken): array
     {
         return $this->tokenService->refreshToken($refreshToken);
+    }
+
+    public function getUserById(mixed $userId)
+    {
     }
 }

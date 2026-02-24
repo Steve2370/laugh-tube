@@ -24,6 +24,14 @@ const Home = () => {
         setDisplayVideos(videos);
     }, [videos]);
 
+    useEffect(() => {
+        const hash = window.location.hash;
+        if (hash.includes('verified=1')) {
+            toast.success('Email vérifié avec succès ! Bienvenue!!!');
+            window.location.hash = '#/home';
+        }
+    }, []);
+
     const handleSearch = async (value) => {
         setSearchTerm(value);
 
