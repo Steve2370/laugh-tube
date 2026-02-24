@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Interfaces\DatabaseInterface;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\InputSanitizerMiddleware;
+use App\Middleware\RateLimitMiddleware;
 use App\Repositories\SessionRepository;
 use App\Services\AuditService;
 use App\Services\AuthService;
@@ -26,7 +27,8 @@ class AuthController
         private SessionRepository $sessionRepository,
         private TwoFactorService $twoFactorService,
         private TokenService $tokenService,
-        private EmailService $emailService
+        private EmailService $emailService,
+        private RateLimitMiddleware $rateLimitMiddleware
     ) {}
 
     public function register(): void
@@ -109,7 +111,6 @@ class AuthController
     {
         try {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
-
             $email = SecurityHelper::sanitizeInput($data['email'] ?? '');
             $password = $data['password'] ?? '';
 
@@ -121,8 +122,9 @@ class AuthController
                 ]);
                 return;
             }
-
+            $this->rateLimitMiddleware->checkLoginAttempts($email);
             $result = $this->authService->login($email, $password);
+            $this->rateLimitMiddleware->logAttempt($email, $result['success']);
 
             if (!$result['success']) {
                 http_response_code($result['code'] ?? 401);

@@ -249,7 +249,8 @@ $container->set(AuthController::class, function($c) {
         $c->get(ValidationService::class),
         $c->get(AuditService::class),
         $c->get(AuthMiddleware::class),
-        $c->get(EmailService::class)
+        $c->get(EmailService::class),
+        $c->get(RateLimitMiddleware::class)
     );
 });
 
