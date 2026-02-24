@@ -208,7 +208,7 @@ try {
     );
 
     $adminMiddleware      = new AdminMiddleware($authMiddleware);
-    $adminController      = new AdminController($db, $adminMiddleware);
+    $adminController      = new AdminController($db, $adminMiddleware, $emailService);
     $signalementController = new SignalementController($db);
 
     $videoController = new VideoController(
