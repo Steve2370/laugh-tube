@@ -81,6 +81,9 @@ const Notifications = () => {
     } = useNotifications();
 
     const [filter, setFilter] = useState('all');
+    const navigateTo = (route) => {
+        window.location.hash = `#/${route}`;
+    };
 
     const handleNotificationClick = async (notification) => {
         if (!notification.is_read) {
@@ -90,14 +93,18 @@ const Notifications = () => {
         if (notification.video_id) {
             try {
                 const video = await apiService.getVideoById(notification.video_id);
-                localStorage.setItem('selectedVideo', JSON.stringify(video));
+                localStorage.setItem('currentVideo', JSON.stringify(video));
                 window.location.hash = '#/video';
             } catch {
                 toast.error('Erreur lors du chargement de la vidéo');
             }
         } else if (notification.type === 'subscribe' && notification.actor_id) {
             localStorage.setItem('channelUser', JSON.stringify({ id: notification.actor_id, username: notification.actor_name }));
-            window.location.hash = `#/chaine/${notification.actor_id}`;
+            localStorage.setItem('channelUser', JSON.stringify({
+                id: notification.actor_id,
+                username: notification.actor_name || ''
+            }));
+            navigateTo('chaine');
         }
     };
 

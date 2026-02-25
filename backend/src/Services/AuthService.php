@@ -592,12 +592,8 @@ class AuthService
             $token = bin2hex(random_bytes(32));
             $this->userRepository->saveVerificationToken($user['id'], $token);
 
-            $this->emailService->sendVerificationEmail(
-                $user['id'],
-                $user['email'],
-                $user['username'],
-                $token
-            );
+            $this->emailService->sendVerificationEmail($user['id'], $user['email'], $user['username'], $token);
+            $this->emailService->sendWelcomeEmail((int)$user['id'], $user['email'], $user['username']);
 
             $this->auditService->logSecurityEvent($user['id'], 'verification_email_resent', []);
 
