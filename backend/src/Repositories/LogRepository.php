@@ -94,14 +94,4 @@ class LogRepository {
         $result = $this->db->fetchOne($sql, [$email, $ipAddress, $minutes]);
         return $result ? (int)$result['count'] : 0;
     }
-
-    public function getUserSecurityLogs(int $userId, int $limit = 50): array {
-        $sql = "SELECT event_type, description, ip_address, created_at 
-                FROM security_logs 
-                WHERE user_id = $1 
-                ORDER BY created_at DESC 
-                LIMIT $2";
-
-        return $this->db->fetchAll($sql, [$userId, $limit]);
-    }
 }

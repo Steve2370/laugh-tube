@@ -68,17 +68,6 @@ class TokenService
         }
     }
 
-    public function isTokenExpired(string $token): bool
-    {
-        $payload = $this->validateToken($token);
-
-        if (!$payload) {
-            return true;
-        }
-
-        return isset($payload['exp']) && $payload['exp'] < time();
-    }
-
     public function decodeTokenSansValider(string $token): ?array
     {
         try {
@@ -92,21 +81,6 @@ class TokenService
         } catch (Exception $e) {
             return null;
         }
-    }
-
-    public function refreshAccessToken(string $refreshToken, array $userData): ?string
-    {
-        $payload = $this->decodeTokenSansValider($refreshToken);
-
-        if (!$payload || !isset($payload['type']) || $payload['type'] !== 'refresh') {
-            return null;
-        }
-
-        if ($payload['sub'] !== $userData['id']) {
-            return null;
-        }
-
-        return $this->generateToken($userData);
     }
 
     public function generateTokenFromPayload(array $payload): string

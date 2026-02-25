@@ -266,28 +266,6 @@ class ApiService {
         });
     }
 
-    async check2FAStatus() {
-        try {
-            const token = localStorage.getItem('access_token');
-            if (!token) return { enabled: false };
-
-            const response = await fetch(`${this.baseURL}/api/auth/2fa/status`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok || response.status === 404) return { enabled: false };
-
-            const text = await response.text();
-            if (!text || text.trim() === '') return { enabled: false };
-
-            const data = JSON.parse(text);
-            return data.data || data;
-        } catch (error) {
-            console.warn('2FA status non disponible:', error.message);
-            return { enabled: false };
-        }
-    }
-
     async verify2FA(userId, code) {
         const response = await this.request('/auth/2fa/login', {
             method: 'POST',
@@ -343,16 +321,6 @@ class ApiService {
      */
     async getVideos() {
         const response = await this.request('/videos');
-        return response.data || response.videos || response;
-    }
-
-    /**
-     *
-     * @param {number} period
-     * @param {number} limit
-     */
-    async getTrendingVideos(period = 7, limit = 10) {
-        const response = await this.request(`/videos/trending?period=${period}&limit=${limit}`);
         return response.data || response.videos || response;
     }
 
@@ -425,11 +393,11 @@ class ApiService {
         try {
             const sessionId = this.getOrCreateSessionId();
             const payload = {
-                session_id:       data.session_id      ?? sessionId,
-                user_id:          data.user_id          ?? null,
-                watch_time:       data.watch_time       ?? 0,
+                session_id: data.session_id ?? sessionId,
+                user_id: data.user_id ?? null,
+                watch_time: data.watch_time ?? 0,
                 watch_percentage: data.watch_percentage ?? 0,
-                completed:        data.completed        ?? false,
+                completed: data.completed ?? false,
             };
             return await this.request(`/videos/${videoId}/record-view`, {
                 method: 'POST',
@@ -439,41 +407,6 @@ class ApiService {
             console.warn('Erreur enregistrement vue:', error);
             return null;
         }
-    }
-
-    /**
-     *
-     * @param {number} videoId
-     */
-    async incrementVideoView(videoId) {
-        try {
-            return await this.request(`/videos/${videoId}/view`, {
-                method: 'POST',
-            });
-        } catch (error) {
-            console.warn('Erreur increment view:', error);
-            return null;
-        }
-    }
-
-    async getVideoViews(videoId) {
-        const response = await this.request(`/videos/${videoId}/views`);
-        return response.data || response.views || response;
-    }
-
-    async checkViewed(videoId) {
-        const response = await this.request(`/videos/${videoId}/viewed`);
-        return response.data || response.viewed || response;
-    }
-
-    /**
-     *
-     * @param {number} videoId
-     * @param {string} period
-     */
-    async getVideoAnalytics(videoId, period = '7d') {
-        const response = await this.request(`/videos/${videoId}/analytics?period=${period}`);
-        return response.data || response;
     }
 
     async likeVideo(videoId) {
@@ -518,30 +451,6 @@ class ApiService {
         return response.data || response.comments || response.commentaires || response;
     }
 
-    async createComment(videoId, content) {
-        if (!videoId) throw new Error('ID de la vidéo manquant');
-        const trimmed = (content || '').trim();
-        if (trimmed.length === 0) throw new Error('Le commentaire ne peut pas être vide');
-        return this.request(`/videos/${videoId}/comments`, {
-            method: 'POST',
-            body: JSON.stringify({ content: trimmed }),
-        });
-    }
-
-    async replyToComment(commentId, content) {
-        if (!commentId) throw new Error('ID du commentaire manquant');
-        const trimmed = (content || '').trim();
-        if (trimmed.length === 0) throw new Error('La réponse ne peut pas être vide');
-        return this.request(`/comments/${commentId}/replies`, {
-            method: 'POST',
-            body: JSON.stringify({ content: trimmed }),
-        });
-    }
-
-    async likeComment(commentId) {
-        return this.request(`/comments/${commentId}/like`, { method: 'POST' });
-    }
-
     async toggleReplyLike(replyId) {
         return this.request(`/replies/${replyId}/like`, {
             method: 'POST'
@@ -570,16 +479,6 @@ class ApiService {
 
     async getReplies(commentId) {
         return this.request(`/comments/${commentId}/replies`);
-    }
-
-    async toggleReplyDislike(replyId) {
-        return this.request(`/replies/${replyId}/dislike`, {
-            method: 'POST'
-        });
-    }
-
-    async likeReply(replyId) {
-        return this.request(`/replies/${replyId}/like`, { method: 'POST' });
     }
 
     async getReplyLikeStatus(replyId) {
@@ -618,10 +517,10 @@ class ApiService {
 
         return list.map(v => ({
             ...v,
-            views:    v.views    ?? v.nb_vues           ?? v.view_count    ?? v.views_count    ?? 0,
-            likes:    v.likes    ?? v.nb_likes           ?? v.likes_count   ?? v.like_count     ?? 0,
-            comments: v.comments ?? v.nb_commentaires    ?? v.comments_count ?? v.comment_count ?? 0,
-            user_id:  v.user_id  ?? v.userId             ?? v.author_id     ?? v.authorId       ?? null,
+            views: v.views ?? v.nb_vues ?? v.view_count ?? v.views_count ?? 0,
+            likes: v.likes ?? v.nb_likes ?? v.likes_count ?? v.like_count ?? 0,
+            comments: v.comments ?? v.nb_commentaires ?? v.comments_count ?? v.comment_count ?? 0,
+            user_id: v.user_id ?? v.userId ?? v.author_id ?? v.authorId ?? null,
         }));
     }
 
@@ -685,25 +584,6 @@ class ApiService {
         return '/images/default-avatar.png';
     }
 
-    /**
-     *
-     * @param {number|object} userOrId
-     * @returns {string}
-     */
-    getCoverImageUrl(userOrId) {
-        if (typeof userOrId === 'object' && userOrId?.cover_url) {
-            return userOrId.cover_url.startsWith('http')
-                ? userOrId.cover_url
-                : `${this.baseURL}${userOrId.cover_url}`;
-        }
-
-        if (typeof userOrId === 'number' || typeof userOrId === 'string') {
-            return `${this.baseURL}/api/users/${userOrId}/cover-image`;
-        }
-
-        return '/images/default-cover.png';
-    }
-
     async updateBio(bio) {
         return this.request('/users/me/bio', {
             method: 'PUT',
@@ -711,60 +591,9 @@ class ApiService {
         });
     }
 
-    async getWatchHistory(userId) {
-        const response = await this.request(`/users/${userId}/watch-history`);
-        return response.data || response.history || response;
-    }
-
-    async subscribe(userId) {
-        return this.request(`/users/${userId}/subscribe`, { method: 'POST' });
-    }
-
-    async unsubscribe(userId) {
-        return this.request(`/users/${userId}/unsubscribe`, { method: 'DELETE' });
-    }
-
-    async getSubscribeStatus(userId) {
-        const response = await this.request(`/users/${userId}/subscribe-status`);
-        return response.data || response.subscribed || response;
-    }
-
     async getSubscribersCount(userId) {
         const response = await this.request(`/users/${userId}/subscribers-count`);
         return response;
-    }
-
-    async getSubscribersCountValue(userId) {
-        const response = await this.request(`/users/${userId}/subscribers-count`);
-        return response.count ?? response.subscribers_count ?? response.data?.count ?? response.data?.subscribers_count ?? 0;
-    }
-
-    async getNotifications(limit = 20, offset = 0) {
-        const response = await this.request(`/notifications?limit=${limit}&offset=${offset}`);
-        return response.data || response.notifications || response;
-    }
-
-    async getUnreadCount() {
-        const response = await this.request('/notifications/unread-count');
-        return response.data || response.count || response.unread_count || 0;
-    }
-
-    async markAsRead(notificationId) {
-        return this.request(`/notifications/${notificationId}/read`, {
-            method: 'PUT'
-        });
-    }
-
-    async markAllAsRead() {
-        return this.request('/notifications/mark-all-read', {
-            method: 'PUT'
-        });
-    }
-
-    async deleteNotification(notificationId) {
-        return this.request(`/notifications/${notificationId}`, {
-            method: 'DELETE'
-        });
     }
 
     /**
@@ -793,9 +622,7 @@ class ApiService {
 
     hasViewedVideo(videoId, userId = null) {
         const sessionId = this.getOrCreateSessionId();
-        const viewedKey = userId
-            ? `video_viewed_${videoId}_${userId}`
-            : `video_viewed_${videoId}_${sessionId}`;
+        const viewedKey = userId ? `video_viewed_${videoId}_${userId}` : `video_viewed_${videoId}_${sessionId}`;
         return localStorage.getItem(viewedKey) === 'true';
     }
 
@@ -815,26 +642,6 @@ class ApiService {
             return `${(count / 1000).toFixed(1)}K`;
         }
         return count.toString();
-    }
-
-    formatWatchTime(milliseconds) {
-        if (!milliseconds) return '0s';
-        const seconds = Math.floor(milliseconds / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
-
-        if (hours > 0) return `${hours}h ${minutes % 60}m`;
-        if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
-        return `${seconds}s`;
-    }
-
-    formatDate(date) {
-        if (!date) return 'Date inconnue';
-        return new Date(date).toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
     }
 }
 

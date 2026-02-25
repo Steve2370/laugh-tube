@@ -167,18 +167,8 @@ class PostgreSQLDatabase implements DatabaseInterface
         $this->connection = null;
     }
 
-    public function getLastError(): ?string
-    {
-        return $this->lastError;
-    }
-
     public function getConnection(): ?PDO
     {
         return $this->connection;
-    }
-
-    public function prepare(string $string)
-    {
-        // TODO: Implement prepare() method.
     }
 }

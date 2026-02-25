@@ -3,8 +3,7 @@
 namespace App\Models;
 
 use App\Interfaces\DatabaseInterface;
-use Database;
-use PDO;
+
 
 class Commentaire
 {
@@ -44,12 +43,6 @@ class Commentaire
         return $result ? (int)$result['count'] : 0;
     }
 
-    public function deleteByVideo(int $videoId): bool
-    {
-        $sql = "DELETE FROM commentaires WHERE video_id = $1";
-        return $this->db->execute($sql, [$videoId]);
-    }
-
     public function findById(int $id): ?array
     {
         $sql = "SELECT c.*, u.username, u.avatar_url
@@ -64,12 +57,5 @@ class Commentaire
     {
         $sql = "DELETE FROM commentaires WHERE id = $1";
         return $this->db->execute($sql, [$id]);
-    }
-
-    public function isOwner(int $commentId, int $userId): bool
-    {
-        $sql = "SELECT user_id FROM commentaires WHERE id = $1";
-        $result = $this->db->fetchOne($sql, [$commentId]);
-        return $result && (int)$result['user_id'] === $userId;
     }
 }

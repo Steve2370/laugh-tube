@@ -104,14 +104,6 @@ class Notification
         return $this->db->execute($sql, [$notificationId, $userId]);
     }
 
-    public function deleteOldNotifications(): bool
-    {
-        $sql = "DELETE FROM notifications 
-                WHERE created_at < NOW() - INTERVAL '30 days'";
-
-        return $this->db->execute($sql);
-    }
-
     public function notificationExists(
         int $userId,
         string $type,
@@ -138,25 +130,5 @@ class Notification
         }
 
         return $result !== null;
-    }
-
-    public function deleteByUser(int $userId): bool
-    {
-        $sql = "DELETE FROM notifications WHERE user_id = $1";
-        return $this->db->execute($sql, [$userId]);
-    }
-
-    public function deleteByVideo(int $videoId): bool
-    {
-        $sql = "DELETE FROM notifications WHERE video_id = $1";
-        return $this->db->execute($sql, [$videoId]);
-    }
-
-    public function getTypeStats(int $userId)
-    {
-    }
-
-    public function deleteAllForUser(int $userId)
-    {
     }
 }

@@ -9,23 +9,22 @@ use App\Utils\SecurityHelper;
 class ResendInboundWebhook
 {
     public function __construct(
-        private DatabaseInterface $db
-    ) {}
+        private DatabaseInterface $db) {}
 
     public function handle(): void
     {
         $payload = file_get_contents('php://input');
-        $event   = json_decode($payload, true);
+        $event = json_decode($payload, true);
 
         if (!$event || ($event['type'] ?? '') !== 'email.received') {
             JsonResponse::success(['ok' => true]);
             return;
         }
 
-        $data    = $event['data'] ?? [];
-        $from    = $data['from']    ?? '';
+        $data = $event['data'] ?? [];
+        $from = $data['from']    ?? '';
         $subject = $data['subject'] ?? '(sans sujet)';
-        $to      = is_array($data['to']) ? implode(', ', $data['to']) : ($data['to'] ?? '');
+        $to = is_array($data['to']) ? implode(', ', $data['to']) : ($data['to'] ?? '');
 
         $toLower = strtolower($to);
         if (!str_contains($toLower, 'legal@laughtube.ca') && !str_contains($toLower, 'legal@')) {
@@ -40,9 +39,9 @@ class ResendInboundWebhook
             $senderEmail = trim($matches[2]);
         }
 
-        $senderName  = SecurityHelper::sanitizeInput($senderName  ?: $senderEmail);
+        $senderName = SecurityHelper::sanitizeInput($senderName  ?: $senderEmail);
         $senderEmail = SecurityHelper::sanitizeInput($senderEmail);
-        $subject     = SecurityHelper::sanitizeInput($subject);
+        $subject = SecurityHelper::sanitizeInput($subject);
 
         $message = $this->fetchEmailBody($data['email_id'] ?? null);
         if (!$message) {

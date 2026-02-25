@@ -110,46 +110,4 @@ class AbonnementController
             JsonResponse::serverError(['success' => false, 'error' => 'Erreur serveur']);
         }
     }
-
-    public function getSubscribers(int $userId): void
-    {
-        try {
-            $result = $this->abonnementService->getSubscribers($userId);
-
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'subscribers' => $result['subscribers']
-            ]);
-
-        } catch (\Exception $e) {
-            error_log("AbonnementController::getSubscribers - Error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Erreur serveur'
-            ]);
-        }
-    }
-
-    public function getSubscriptions(int $userId): void
-    {
-        try {
-            $result = $this->abonnementService->getSubscriptions($userId);
-
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'subscriptions' => $result['subscriptions']
-            ]);
-
-        } catch (\Exception $e) {
-            error_log("AbonnementController::getSubscriptions - Error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Erreur serveur'
-            ]);
-        }
-    }
 }

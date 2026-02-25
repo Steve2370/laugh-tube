@@ -200,8 +200,7 @@ HTML;
     <p>Si vous pensez que cette suspension est une erreur, vous pouvez contacter notre équipe :</p>
     <div class="reply-box">
       <strong>Contacter le support :</strong><br>
-      Écrivez-nous à <a href="mailto:{$replyEmail}" style="color:#111;font-weight:bold;">{$replyEmail}</a>
-      ou via <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
+      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
     </div>
   </div>
   <div class="footer">© 2026 LaughTube. Tous droits réservés. · <a href="{$siteUrl}" style="color:#999;">laughtube.ca</a></div>
@@ -232,7 +231,7 @@ HTML;
 <div class="wrap">
   <div class="header">{$logo}</div>
   <div class="content">
-    <h2>Bienvenue sur Laugh Tube, {$username} ! 🎉</h2>
+    <h2>Bienvenue sur Laugh Tube, {$username} !</h2>
     <p>Votre email a été vérifié avec succès. Votre compte est maintenant actif !</p>
     <h3>Ce que vous pouvez faire :</h3>
     <div class="feature"><strong>Partager vos vidéos</strong><br>Uploadez vos punchlines avec la communauté.</div>
@@ -377,7 +376,7 @@ HTML;
     <h2>Bonjour {$username} !</h2>
     <div class="success">Votre mot de passe a été modifié avec succès.</div>
     <div class="warning">
-      <strong>⚠️ Ce n'était pas vous ?</strong><br>
+      <strong>Ce n'était pas vous ?</strong><br>
       Si vous n'avez pas effectué ce changement, contactez-nous immédiatement et sécurisez votre compte.
     </div>
   </div>
@@ -390,6 +389,7 @@ HTML;
     private function getAccountDeletionTemplate(string $username, string $deletionDate, string $cancelUrl): string
     {
         $logo = $this->logoHtml();
+        $siteUrl = $this->baseUrl;
         return <<<HTML
 <!DOCTYPE html>
 <html lang="fr">
@@ -415,7 +415,8 @@ HTML;
       Toutes vos vidéos, commentaires, abonnements et données seront perdus définitivement.
     </div>
     <p>Vous avez encore 30 jours pour changer d'avis :</p>
-    <p style="text-align:center;"><a href="{$cancelUrl}" class="btn">Annuler la suppression</a></p>
+    <strong>Contacter le support :</strong><br>
+      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
   </div>
   <div class="footer">© 2026 Laugh Tube. Tous droits réservés.</div>
 </div>
@@ -475,7 +476,8 @@ HTML;
     <div class="message-box">{$messageHtml}</div>
     <div class="reply-box">
       <strong>Pour répondre ou contacter l'équipe :</strong><br>
-      Envoyez un email à <a href="mailto:{$replyEmail}" class="reply-email">{$replyEmail}</a>
+      <strong>Contacter le support :</strong><br>
+      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
     </div>
   </div>
   <div class="footer">© 2026 LaughTube. Tous droits réservés. · <a href="{$siteUrl}" style="color:#999;">laughtube.ca</a></div>
@@ -495,6 +497,7 @@ HTML;
         $messageHtml = nl2br(htmlspecialchars($message));
         $logo = $this->logoHtml();
         $baseUrl = $this->baseUrl;
+        $siteUrl = $this->baseUrl;
 
         $body = <<<HTML
 <!DOCTYPE html><html lang="fr">
@@ -522,7 +525,8 @@ HTML;
     <div class="subject">{$subject}</div>
     <div class="message-box">{$messageHtml}</div>
     <p style="margin-top:20px;font-size:13px;color:#666;">
-      Pour répondre, répondez directement à cet email ou écrivez à <strong>{$senderEmail}</strong>
+      Pour répondre, <strong>Contacter le support :</strong><br>
+      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
     </p>
   </div>
   <div class="footer">© 2026 LaughTube · <a href="{$baseUrl}" style="color:#999;">laughtube.ca</a></div>

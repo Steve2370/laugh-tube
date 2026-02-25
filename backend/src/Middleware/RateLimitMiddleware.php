@@ -12,11 +12,11 @@ class RateLimitMiddleware
     private int $lockoutMinutes;
 
     private const LIMITS = [
-        'auth'    => ['max' => 10,  'window' => 60],
-        'upload'  => ['max' => 5,   'window' => 60],
-        'api'     => ['max' => 120, 'window' => 60],
+        'auth' => ['max' => 10,  'window' => 60],
+        'upload' => ['max' => 5,   'window' => 60],
+        'api' => ['max' => 120, 'window' => 60],
         'comment' => ['max' => 20,  'window' => 60],
-        'signal'  => ['max' => 5,   'window' => 300],
+        'signal' => ['max' => 5,   'window' => 300],
     ];
 
     public function __construct(LogRepository $logRepo, int $maxAttempts = 5, int $lockoutMinutes = 15)
@@ -95,8 +95,8 @@ class RateLimitMiddleware
             session_start();
         }
 
-        $sessionKey    = "rate_limit_{$key}";
-        $now           = time();
+        $sessionKey = "rate_limit_{$key}";
+        $now = time();
         $windowSeconds = $windowMinutes * 60;
 
         if (!isset($_SESSION[$sessionKey])) {

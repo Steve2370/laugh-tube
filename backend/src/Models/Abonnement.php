@@ -67,13 +67,6 @@ class Abonnement
         return $result ? (int)$result['count'] : 0;
     }
 
-    public function conterAbonnements(int $abonneId): int
-    {
-        $sql = "SELECT COUNT(*) as count FROM abonnements WHERE subscriber_id = $1";
-        $result = $this->db->fetchOne($sql, [$abonneId]);
-        return $result ? (int)$result['count'] : 0;
-    }
-
     public function listeAbonnesAvecAbonnement(int $userId): array
     {
         $sql = "SELECT 
@@ -112,16 +105,5 @@ class Abonnement
                 ORDER BY s.created_at DESC";
 
         return $this->db->fetchAll($sql, [$userId]);
-    }
-
-    public function toggleAbonnement(int $abonneId, int $targetUserId): bool
-    {
-        $isAbonne = $this->isAbonne($abonneId, $targetUserId);
-
-        if ($isAbonne) {
-            return $this->desabonneToi($abonneId, $targetUserId);
-        } else {
-            return $this->abonneToi($abonneId, $targetUserId);
-        }
     }
 }

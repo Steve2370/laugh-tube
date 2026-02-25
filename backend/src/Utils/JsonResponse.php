@@ -14,13 +14,6 @@ class JsonResponse
         self::send($data, 201);
     }
 
-    public static function noContent(): void
-    {
-        http_response_code(204);
-        header('Content-Type: application/json');
-        exit;
-    }
-
     public static function badRequest(array $data): void
     {
         self::send($data, 400);
@@ -41,19 +34,9 @@ class JsonResponse
         self::send($data, 404);
     }
 
-    public static function conflict(array $data): void
-    {
-        self::send($data, 409);
-    }
-
     public static function gone(array $data = []): void
     {
         self::send($data, 410);
-    }
-
-    public static function unprocessableEntity(array $data): void
-    {
-        self::send($data, 422);
     }
 
     public static function tooManyRequests(array $data = []): void
@@ -101,20 +84,6 @@ class JsonResponse
 
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
-    }
-
-    public static function paginated(array $items, int $total, int $page, int $limit): void
-    {
-        self::send([
-            'success' => true,
-            'data' => $items,
-            'pagination' => [
-                'total' => $total,
-                'page' => $page,
-                'limit' => $limit,
-                'pages' => (int)ceil($total / $limit)
-            ]
-        ], 200);
     }
 
     public static function methodNotAllowed(array $data): void

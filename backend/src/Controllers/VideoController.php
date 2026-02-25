@@ -103,23 +103,6 @@ class VideoController
         }
     }
 
-    public function getVideo(int $videoId): void
-    {
-        try {
-            $result = $this->videoService->getVideoDetails($videoId);
-
-            if (!$result['success']) {
-                JsonResponse::notFound(['error' => 'Vidéo non trouvée']);
-            }
-
-            JsonResponse::success(['video' => $result['data']]);
-
-        } catch (\Exception $e) {
-            error_log("VideoController::getVideo - Error: " . $e->getMessage());
-            JsonResponse::serverError(['error' => 'Erreur serveur']);
-        }
-    }
-
     public function delete(int $videoId): void
     {
         try {

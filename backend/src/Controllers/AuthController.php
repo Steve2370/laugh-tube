@@ -269,14 +269,14 @@ class AuthController
             echo json_encode([
                 'success' => true,
                 'user' => [
-                    'id'             => $user['id'],
-                    'username'       => $user['username'],
-                    'email'          => $user['email'],
-                    'role'           => $user['role'],
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                    'email' => $user['email'],
+                    'role' => $user['role'],
                     'email_verified' => $user['email_verified'],
                     'two_fa_enabled' => $user['two_fa_enabled'],
-                    'avatar_url'     => $user['avatar_url'] ?? null,
-                    'cover_url'      => $user['cover_url'] ?? null,
+                    'avatar_url' => $user['avatar_url'] ?? null,
+                    'cover_url' => $user['cover_url'] ?? null,
                 ]
             ]);
         } catch (\Throwable $e) {
@@ -309,7 +309,7 @@ class AuthController
             }
 
             $currentPassword = (string)($data['current_password'] ?? '');
-            $newPassword     = (string)($data['new_password'] ?? '');
+            $newPassword = (string)($data['new_password'] ?? '');
 
             $errors = [];
             if ($currentPassword === '') $errors['current_password'] = 'Mot de passe actuel requis';
@@ -403,7 +403,7 @@ class AuthController
             if (!$input) return;
 
             $userId = (int)($input['user_id'] ?? 0);
-            $code   = SecurityHelper::sanitizeInput($input['code'] ?? '');
+            $code = SecurityHelper::sanitizeInput($input['code'] ?? '');
 
             if (empty($userId) || empty($code)) {
                 JsonResponse::badRequest(['error' => 'user_id et code requis']);
@@ -429,22 +429,22 @@ class AuthController
                 return;
             }
 
-            $ip        = SecurityHelper::getClientIp();
+            $ip = SecurityHelper::getClientIp();
             $userAgent = SecurityHelper::getUserAgent();
             $sessionId = $this->sessionRepository->createSession([
-                'user_id'    => $userId,
-                'token'      => bin2hex(random_bytes(32)),
+                'user_id' => $userId,
+                'token' => bin2hex(random_bytes(32)),
                 'ip_address' => $ip,
                 'user_agent' => $userAgent,
                 'expires_at' => date('Y-m-d H:i:s', time() + 604800),
             ]);
 
             $token = $this->authService->generateToken([
-                'sub'            => $userId,
-                'username'       => $user['username'],
-                'email'          => $user['email'],
-                'role'           => $user['role'],
-                'session_id'     => $sessionId,
+                'sub' => $userId,
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'role' => $user['role'],
+                'session_id' => $sessionId,
                 'two_fa_verified' => true,
             ]);
 
@@ -452,12 +452,12 @@ class AuthController
 
             JsonResponse::success([
                 'success' => true,
-                'token'   => $token,
-                'user'    => [
-                    'id'       => $user['id'],
+                'token' => $token,
+                'user' => [
+                    'id' => $user['id'],
                     'username' => $user['username'],
-                    'email'    => $user['email'],
-                    'role'     => $user['role'],
+                    'email' => $user['email'],
+                    'role' => $user['role'],
                 ],
             ]);
         } catch (\Exception $e) {

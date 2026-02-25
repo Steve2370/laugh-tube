@@ -83,30 +83,10 @@ class Video
         return $this->db->fetchAll($sql);
     }
 
-    public function findByUser(int $userId): array
-    {
-        $sql = "SELECT v.id, v.title, v.filename, v.views, v.unique_views, v.created_at, v.visibility,
-                       (SELECT COUNT(*) FROM likes l WHERE l.video_id = v.id) AS likes,
-                       (SELECT COUNT(*) FROM dislikes d WHERE d.video_id = v.id) AS dislikes,
-                       (SELECT COUNT(*) FROM commentaires c WHERE c.video_id = v.id) AS comments
-                FROM videos v
-                WHERE v.user_id = $1
-                ORDER BY v.created_at DESC";
-
-        return $this->db->fetchAll($sql, [$userId]);
-    }
-
     public function delete(int $videoId): bool
     {
         $sql = "DELETE FROM videos WHERE id = $1";
         return $this->db->execute($sql, [$videoId]);
-    }
-
-    public function proprietaire(int $videoId): ?int
-    {
-        $sql = "SELECT user_id FROM videos WHERE id = $1";
-        $result = $this->db->fetchOne($sql, [$videoId]);
-        return $result ? (int)$result['user_id'] : null;
     }
 
     public function exists(int $videoId, bool $publicOnly = false): bool
@@ -128,14 +108,6 @@ class Video
         return $result['filename'] ?? null;
     }
 
-    public function getThumbnail(int $videoId): ?string
-    {
-        $sql = "SELECT thumbnail FROM videos 
-                WHERE id = $1 AND encoded = TRUE AND visibility = 'publique'";
-        $result = $this->db->fetchOne($sql, [$videoId]);
-        return $result['thumbnail'] ?? null;
-    }
-
     public function getMetadata(int $videoId): ?array
     {
         $sql = "SELECT filename, thumbnail, user_id FROM videos WHERE id = $1";
@@ -149,16 +121,5 @@ class Video
                 WHERE id = $1";
 
         return $this->db->execute($sql, [$videoId]);
-    }
-
-    public function getViews(int $videoId): array
-    {
-        $sql = "SELECT views, unique_views FROM videos WHERE id = $1";
-        $result = $this->db->fetchOne($sql, [$videoId]);
-
-        return [
-            'views' => (int)($result['views'] ?? 0),
-            'unique_views' => (int)($result['unique_views'] ?? 0)
-        ];
     }
 }

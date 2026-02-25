@@ -51,45 +51,11 @@ class SessionRepository {
         return $this->db->fetchOne($sql, [$token]);
     }
 
-    public function updateActivity(string $token): bool {
-        $sql = "UPDATE sessions 
-                SET last_activity = NOW() 
-                WHERE token = $1";
-        return $this->db->execute($sql, [$token]);
-    }
-
-    public function invalidateSession(string $token): bool {
-        $sql = "UPDATE sessions 
-                SET is_active = FALSE 
-                WHERE token = $1";
-        return $this->db->execute($sql, [$token]);
-    }
-
     public function invalidateAllUserSessions(int $userId): bool {
         $sql = "UPDATE sessions 
                 SET is_active = FALSE 
                 WHERE user_id = $1";
         return $this->db->execute($sql, [$userId]);
-    }
-
-    public function getUserActiveSessions(int $userId): array {
-        $sql = "SELECT id, ip_address, user_agent, created_at, last_activity 
-                FROM sessions 
-                WHERE user_id = $1 
-                AND is_active = TRUE 
-                AND expires_at > NOW()
-                ORDER BY last_activity DESC";
-
-        return $this->db->fetchAll($sql, [$userId]);
-    }
-
-    public function deleteExpiredSessions(): int {
-        $sql = "DELETE FROM sessions 
-                WHERE expires_at < NOW() 
-                OR last_activity < NOW() - INTERVAL '30 days'";
-
-        $this->db->execute($sql);
-        return 0;
     }
 
     public function findById(mixed $session_id)

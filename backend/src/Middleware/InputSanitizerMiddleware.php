@@ -6,36 +6,6 @@ use App\Utils\SecurityHelper;
 
 class InputSanitizerMiddleware {
 
-    public static function sanitize(): void {
-        $_GET = self::sanitizeArray($_GET);
-        $_POST = self::sanitizeArray($_POST);
-
-        $input = file_get_contents('php://input');
-        if ($input) {
-            $decoded = json_decode($input, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $_POST = array_merge($_POST, self::sanitizeArray($decoded));
-            }
-        }
-    }
-
-    private static function sanitizeArray(array $data): array {
-        $sanitized = [];
-        foreach ($data as $key => $value) {
-            $sanitizedKey = SecurityHelper::sanitizeInput($key);
-            $sanitized[$sanitizedKey] = SecurityHelper::sanitizeInput($value);
-        }
-        return $sanitized;
-    }
-
-    public static function getCleanInput(string $key, $default = null) {
-        return $_POST[$key] ?? $_GET[$key] ?? $default;
-    }
-
-    public static function getAllCleanInputs(): array {
-        return array_merge($_GET, $_POST);
-    }
-
     public static function validateJsonInput(): ?array
     {
         $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';

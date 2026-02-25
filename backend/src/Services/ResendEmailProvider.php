@@ -19,11 +19,11 @@ class ResendEmailProvider implements EmailProviderInterface
     public function sendEmail(string $to, string $subject, string $body, bool $isHtml = true, ?string $replyTo = null): bool
     {
         $payload = [
-            'from'    => 'Laugh Tube <' . $this->from . '>',
-            'to'      => [$to],
+            'from' => 'Laugh Tube <' . $this->from . '>',
+            'to' => [$to],
             'subject' => $subject,
-            'html'    => $isHtml ? $body : null,
-            'text'    => !$isHtml ? $body : strip_tags($body),
+            'html' => $isHtml ? $body : null,
+            'text' => !$isHtml ? $body : strip_tags($body),
         ];
 
         if ($replyTo) {
@@ -32,11 +32,11 @@ class ResendEmailProvider implements EmailProviderInterface
 
         $ch = curl_init();
         curl_setopt_array($ch, [
-            CURLOPT_URL            => 'https://api.resend.com/emails',
+            CURLOPT_URL => 'https://api.resend.com/emails',
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode($payload),
-            CURLOPT_HTTPHEADER     => [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $this->apiKey,
                 'Content-Type: application/json',
             ],

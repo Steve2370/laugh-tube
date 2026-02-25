@@ -29,9 +29,6 @@ class TwoFactorService
     {
         try {
             $user = $this->userModel->findById($userId);
-
-            // Si un secret existe déjà et que la 2FA n'est pas encore activée,
-            // réutiliser le secret existant pour ne pas invalider le QR déjà scanné
             if (!empty($user['two_fa_secret']) && empty($user['two_fa_enabled'])) {
                 $secret = $user['two_fa_secret'];
                 $backupCodes = [];
@@ -471,52 +468,6 @@ class TwoFactorService
     private function isUserLockedOut(int $userId): bool
     {
         return $this->getFailedAttempts($userId) >= self::MAX_ATTEMPTS;
-    }
-
-    public function regenerateBackupCodes(int $userId, string $password): array
-    {
-        try {
-            $user = $this->userModel->findById($userId);
-
-            if (!$user || !password_verify($password, $user['password_hash'])) {
-                return [
-                    'success' => false,
-                    'message' => 'Mot de passe incorrect',
-                    'code' => 401
-                ];
-            }
-
-            if (!$user['two_fa_enabled']) {
-                return [
-                    'success' => false,
-                    'message' => '2FA non activé',
-                    'code' => 400
-                ];
-            }
-
-            $backupCodes = $this->generateBackupCodes();
-            $this->saveBackupCodes($userId, $backupCodes);
-            $this->auditService->logSecurityEvent(
-                $userId,
-                '2fa_backup_codes_regenerated',
-                []
-            );
-
-            return [
-                'success' => true,
-                'backup_codes' => $backupCodes,
-                'message' => 'Nouveaux codes générés'
-            ];
-
-        } catch (\Exception $e) {
-            error_log("TwoFactorService::regenerateBackupCodes - Error: " . $e->getMessage());
-
-            return [
-                'success' => false,
-                'message' => 'Erreur lors de la régénération',
-                'code' => 500
-            ];
-        }
     }
 
     public function get2FAStatus(int $userId): array
