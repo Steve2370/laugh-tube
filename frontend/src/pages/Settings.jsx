@@ -355,9 +355,20 @@ const Settings = () => {
 
                         {activeTab === 'notifications' && (
                             <div>
-                                <h2 className="text-2xl font-bold mb-6 text-gray-900">Préférences de notifications</h2>
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                                    <p className="text-blue-900">Fonctionnalité à venir.</p>
+                                <h2 className="text-2xl font-bold mb-2 text-gray-900">Notifications</h2>
+                                <p className="text-gray-500 mb-6 text-sm">Consultez et gérez vos notifications depuis cette page ou depuis la cloche en haut à droite.</p>
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Bell size={20} className="text-blue-600" />
+                                        <p className="text-blue-900 font-medium">Voir toutes vos notifications</p>
+                                    </div>
+                                    <button
+                                        onClick={() => window.location.hash = '#/notifications'}
+                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all text-sm shadow"
+                                    >
+                                        <ExternalLink size={16} />
+                                        Ouvrir
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -390,7 +401,10 @@ const Settings = () => {
                                                     <p className="font-semibold text-gray-900 truncate">{sub.username}</p>
                                                     {sub.subscribed_at && <p className="text-xs text-gray-400">Abonné depuis le {new Date(sub.subscribed_at).toLocaleDateString('fr-FR')}</p>}
                                                 </div>
-                                                <button onClick={() => window.location.hash = `#/chaine/${sub.id || sub.user_id}`}
+                                                <button onClick={() => {
+                                                    localStorage.setItem('channelUser', JSON.stringify({ id: sub.id || sub.user_id, username: sub.username }));
+                                                    window.location.hash = `#/chaine/${sub.id || sub.user_id}`;
+                                                }}
                                                         className="text-gray-400 hover:text-blue-600 transition-colors p-1"><ExternalLink size={16} /></button>
                                             </div>
                                         ))}

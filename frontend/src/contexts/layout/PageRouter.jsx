@@ -17,6 +17,7 @@ const CGU = lazy(() => import('../../pages/CGU'));
 const Contact = lazy(() => import('../../pages/Contact'));
 const ForgotPassword = lazy(() => import('../../pages/ForgotPassword'));
 const ResetPassword  = lazy(() => import('../../pages/ResetPassword'));
+const Notifications  = lazy(() => import('../../pages/Notification.jsx'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -49,6 +50,8 @@ const PageRouter = () => {
                 return <ForgotPassword />;
             case 'reset-password':
                 return <ResetPassword />;
+            case 'notifications':
+                return <Notifications />;
             case 'admin':
                 return (
                     <AdminRoute>

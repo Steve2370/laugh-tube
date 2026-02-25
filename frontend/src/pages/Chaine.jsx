@@ -4,6 +4,7 @@ import {useAbonnement} from '../hooks/useAbonnement.js';
 import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
+import BoutonSignaler from '../components/BoutonSignaler.jsx';
 import VideoCard from '../components/VideoCard.jsx';
 import {
     ArrowLeft,
@@ -83,7 +84,8 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end pt-4 gap-3">
+                    <BoutonSignaler videoId={null} userId={channelUser.id} />
                     <BoutonAbonne targetUserId={channelUser.id} />
                 </div>
 
@@ -253,8 +255,8 @@ const Chaine = () => {
     };
 
     const calculateStats = () => {
-        const totalViews    = videos.reduce((sum, v) => sum + (v.views    || v.views_count    || 0), 0);
-        const totalLikes    = videos.reduce((sum, v) => sum + (v.likes    || v.likes_count    || 0), 0);
+        const totalViews = videos.reduce((sum, v) => sum + (v.views    || v.views_count    || 0), 0);
+        const totalLikes = videos.reduce((sum, v) => sum + (v.likes    || v.likes_count    || 0), 0);
         const totalComments = videos.reduce((sum, v) => sum + (v.comments || v.comments_count || 0), 0);
 
         setStats({
