@@ -14,6 +14,4 @@ interface DatabaseInterface
     public function commit(): bool;
     public function rollback(): bool;
     public function disconnect(): void;
-
-    public function prepare(string $string);
 }

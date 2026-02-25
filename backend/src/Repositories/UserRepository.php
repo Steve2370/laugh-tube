@@ -25,9 +25,7 @@ class UserRepository {
             RETURNING id";
 
         $pdo = $this->db->getConnection();
-
         $emailVerified = (bool)($userData['email_verified'] ?? false);
-
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':username', $userData['username'] ?? null, \PDO::PARAM_STR);
@@ -96,14 +94,6 @@ class UserRepository {
         ]);
     }
 
-
-
-    public function emailExists(string $email): bool {
-        $sql = "SELECT COUNT(*) as count FROM users WHERE email = $1 AND deleted_at IS NULL";
-        $result = $this->db->fetchOne($sql, [$email]);
-        return $result && $result['count'] > 0;
-    }
-
     public function existsByEmailOrUsername(string $email, string $username): bool
     {
         $sql = "SELECT id FROM users 
@@ -111,12 +101,6 @@ class UserRepository {
 
         $result = $this->db->fetchOne($sql, [$email, $username]);
         return $result !== null;
-    }
-
-    public function usernameExists(string $username): bool {
-        $sql = "SELECT COUNT(*) as count FROM users WHERE username = $1 AND deleted_at IS NULL";
-        $result = $this->db->fetchOne($sql, [$username]);
-        return $result && $result['count'] > 0;
     }
 
     public function updateEmailVerified(int $userId): bool {
@@ -127,15 +111,6 @@ class UserRepository {
                     updated_at = NOW()
                 WHERE id = $1";
         return $this->db->execute($sql, [$userId]);
-    }
-
-    public function updateVerificationToken(int $userId, string $token, string $expires): bool {
-        $sql = "UPDATE users 
-                SET verification_token = $1, 
-                    verification_token_expires = $2,
-                    updated_at = NOW()
-                WHERE id = $3";
-        return $this->db->execute($sql, [$token, $expires, $userId]);
     }
 
     public function updateLastLogin(int $userId): bool {
@@ -164,42 +139,6 @@ class UserRepository {
         return $this->db->execute($sql, [$minutes, $userId]);
     }
 
-    public function isAccountLocked(int $userId): bool {
-        $sql = "SELECT account_locked_until FROM users WHERE id = $1";
-        $result = $this->db->fetchOne($sql, [$userId]);
-
-        if (!$result || !$result['account_locked_until']) {
-            return false;
-        }
-
-        return strtotime($result['account_locked_until']) > time();
-    }
-
-    public function update2FASecret(int $userId, string $secret): bool {
-        $sql = "UPDATE users 
-                SET two_fa_secret = $1,
-                    updated_at = NOW()
-                WHERE id = $2";
-        return $this->db->execute($sql, [$secret, $userId]);
-    }
-
-    public function enable2FA(int $userId): bool {
-        $sql = "UPDATE users 
-                SET two_fa_enabled = TRUE,
-                    updated_at = NOW()
-                WHERE id = $1";
-        return $this->db->execute($sql, [$userId]);
-    }
-
-    public function disable2FA(int $userId): bool {
-        $sql = "UPDATE users 
-                SET two_fa_enabled = FALSE,
-                    two_fa_secret = NULL,
-                    updated_at = NOW()
-                WHERE id = $1";
-        return $this->db->execute($sql, [$userId]);
-    }
-
     public function softDelete(int $userId, ?string $reason = null): bool {
         $sql = "UPDATE users 
                 SET deleted_at = NOW() + '30 days'::INTERVAL,
@@ -207,20 +146,6 @@ class UserRepository {
                     updated_at = NOW()
                 WHERE id = $2";
         return $this->db->execute($sql, [$reason, $userId]);
-    }
-
-    public function cancelDeletion(int $userId): bool {
-        $sql = "UPDATE users 
-                SET deleted_at = NULL,
-                    deletion_reason = NULL,
-                    updated_at = NOW()
-                WHERE id = $1";
-        return $this->db->execute($sql, [$userId]);
-    }
-
-    public function hardDelete(int $userId): bool {
-        $sql = "DELETE FROM users WHERE id = $1";
-        return $this->db->execute($sql, [$userId]);
     }
 
     public function updatePassword(int $userId, string $hash): bool

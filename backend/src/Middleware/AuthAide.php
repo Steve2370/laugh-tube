@@ -11,12 +11,6 @@ class AuthAide
     private static ?TokenService $tokenService = null;
     private static ?User $userModel = null;
 
-    public static function init(TokenService $tokenService, User $userModel): void
-    {
-        self::$tokenService = $tokenService;
-        self::$userModel = $userModel;
-    }
-
     public static function getAuthenticatedUser(): ?array
     {
         $token = self::getTokenFromRequest();
@@ -63,42 +57,6 @@ class AuthAide
         return $user;
     }
 
-    public static function requireAdminRole(): array
-    {
-        return self::requireRole('admin');
-
-    }
-
-    public static function requireAnyRole(array $roles): array
-    {
-        $user = self::requireAuth();
-
-        if (!in_array($user['role'], $roles)) {
-            JsonResponse::forbidden([
-                'error' => 'Accès refusé',
-                'message' => 'Rôle non autorisé'
-            ]);
-        }
-        return $user;
-    }
-
-    public static function requireProprietaire(int $resourceProprietaireId): array
-    {
-        $user = self::requireAuth();
-
-        if ($user['role'] === 'admin') {
-            return $user;
-        }
-
-        if ($user['sub'] !== $resourceProprietaireId) {
-            JsonResponse::forbidden([
-                'error' => 'Accès refusé',
-                'message' => 'Vous n\'êtes pas autorisé à accéder à cette ressource'
-            ]);
-        }
-        return $user;
-    }
-
     private static function getTokenFromRequest(): ?string
     {
         $headers = self::getAuthorizationHeader();
@@ -136,32 +94,9 @@ class AuthAide
         return $headers;
     }
 
-    public static function getUserInfo(): ?array
-    {
-        $user = self::getAuthenticatedUser();
-
-        if (!$user) {
-            return null;
-        }
-
-        return self::$userModel->findById($user['sub']);
-    }
-
-    public static function isAuthenticated(): bool
-    {
-        return self::getAuthenticatedUser() !== null;
-
-    }
-
     public static function hasRole(string $role): bool
     {
         $user = self::getAuthenticatedUser();
         return $user && $user ['role'] === $role;
-    }
-
-    public static function isAdmin(): bool
-    {
-        return self::hasRole('admin');
-
     }
 }

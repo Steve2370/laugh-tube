@@ -6,8 +6,6 @@ class UploadService
 {
     private const MAX_VIDEO_SIZE = 524288000;
     private const MAX_IMAGE_SIZE = 5242880;
-    private const MAX_THUMBNAIL_SIZE = 2097152;
-
     private const ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'];
     private const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
@@ -350,48 +348,5 @@ class UploadService
                 @mkdir($dir, 0755, true);
             }
         }
-    }
-
-    public function getFileSize(string $filename, string $type = 'video'): ?int
-    {
-        $subdir = match($type) {
-            'video' => 'videos/',
-            'profile', 'avatar' => 'profiles/',
-            'cover' => 'covers/',
-            'thumbnail' => 'thumbnails/',
-            default => ''
-        };
-
-        $filePath = $this->uploadDir . $subdir . basename($filename);
-
-        return file_exists($filePath) ? filesize($filePath) : null;
-    }
-
-    public function fileExists(string $filename, string $type = 'video'): bool
-    {
-        $subdir = match($type) {
-            'video' => 'videos/',
-            'profile', 'avatar' => 'profiles/',
-            'cover' => 'covers/',
-            'thumbnail' => 'thumbnails/',
-            default => ''
-        };
-
-        $filePath = $this->uploadDir . $subdir . basename($filename);
-
-        return file_exists($filePath);
-    }
-
-    public function getFilePath(string $filename, string $type = 'video'): string
-    {
-        $subdir = match($type) {
-            'video' => 'videos/',
-            'profile', 'avatar' => 'profiles/',
-            'cover' => 'covers/',
-            'thumbnail' => 'thumbnails/',
-            default => ''
-        };
-
-        return $this->uploadDir . $subdir . basename($filename);
     }
 }

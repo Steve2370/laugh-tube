@@ -233,91 +233,6 @@ class AuthService
         }
     }
 
-    public function refresh(string $refreshToken): array
-    {
-        $payload = $this->tokenService->validateToken($refreshToken);
-
-        if (!$payload || !isset($payload['type']) || $payload['type'] !== 'refresh') {
-            return [
-                'success' => false,
-                'code' => 401,
-                'message' => 'Refresh token invalide'
-            ];
-        }
-
-        try {
-            $session = $this->sessionRepository->findByToken($refreshToken);
-
-            if (!$session || !$session['is_active']) {
-                return [
-                    'success' => false,
-                    'code' => 401,
-                    'message' => 'Session invalide ou expirée'
-                ];
-            }
-        } catch (\Exception $e) {
-            error_log("AuthService::refresh - Session check error: " . $e->getMessage());
-        }
-
-        $user = $this->userModel->findById($payload['sub']);
-
-        if (!$user) {
-            return [
-                'success' => false,
-                'code' => 404,
-                'message' => 'Utilisateur introuvable'
-            ];
-        }
-
-        if (isset($user['deleted_at']) && $user['deleted_at'] !== null) {
-            return [
-                'success' => false,
-                'code' => 403,
-                'message' => 'Compte désactivé'
-            ];
-        }
-
-        $newAccessToken = $this->tokenService->generateToken($user);
-
-        return [
-            'success' => true,
-            'data' => [
-                'access_token' => $newAccessToken,
-                'token_type' => 'Bearer',
-                'expires_in' => 3600
-            ]
-        ];
-    }
-
-    public function getCurrentUser(int $userId): array
-    {
-        $user = $this->userModel->findById($userId);
-
-        if (!$user) {
-            return [
-                'success' => false,
-                'code' => 404,
-                'message' => 'Utilisateur introuvable'
-            ];
-        }
-
-        return [
-            'success' => true,
-            'data' => [
-                'id' => $user['id'],
-                'username' => $user['username'],
-                'email' => $user['email'],
-                'role' => $user['role'] ?? 'user',
-                'avatar_url' => $user['avatar_url'] ?? null,
-                'cover_url' => $user['cover_url'] ?? null,
-                'bio' => $user['bio'] ?? null,
-                'email_verified' => $user['email_verified'] ?? false,
-                'two_fa_enabled' => $user['two_fa_enabled'] ?? false,
-                'created_at' => $user['created_at']
-            ]
-        ];
-    }
-
     public function changePassword(int $userId, string $currentPassword, string $newPassword): array
     {
         $errors = $this->validationService->validatePassword($newPassword);
@@ -380,6 +295,7 @@ class AuthService
             ];
         }
     }
+
 
     public function verifyEmail(string $token): array
     {
@@ -616,14 +532,5 @@ class AuthService
         }
 
         return $this->tokenService->generateToken($payload);
-    }
-
-    public function refreshToken(string $refreshToken): array
-    {
-        return $this->tokenService->refreshToken($refreshToken);
-    }
-
-    public function getUserById(mixed $userId)
-    {
     }
 }

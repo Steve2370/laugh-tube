@@ -97,90 +97,6 @@ class AnalyticsService
         }
     }
 
-    public function checkUserViewed(int $videoId, int $userId): array
-    {
-        try {
-            $result = $this->db->fetchOne(
-                "SELECT EXISTS(
-                    SELECT 1 FROM video_views
-                    WHERE video_id = $1 AND user_id = $2
-                ) AS exists",
-                [$videoId, $userId]
-            );
-
-            $hasViewed = (bool)($result['exists'] ?? false);
-
-            return ['hasViewed' => $hasViewed];
-
-        } catch (\Exception $e) {
-            error_log("AnalyticsService::checkUserViewed - Error: " . $e->getMessage());
-            return ['hasViewed' => false];
-        }
-    }
-
-    public function getViewCounts(int $videoId): array
-    {
-        try {
-            $result = $this->db->fetchOne(
-                "SELECT
-                    COUNT(*)::int AS total_views,
-                    COUNT(DISTINCT session_id)::int AS unique_views
-                 FROM video_views
-                 WHERE video_id = $1",
-                [$videoId]
-            );
-
-            if (!$result) {
-                return [
-                    'total_views' => 0,
-                    'unique_views' => 0
-                ];
-            }
-
-            return [
-                'total_views' => (int)$result['total_views'],
-                'unique_views' => (int)$result['unique_views']
-            ];
-
-        } catch (\Exception $e) {
-            error_log("AnalyticsService::getViewCounts - Error: " . $e->getMessage());
-            return [
-                'total_views' => 0,
-                'unique_views' => 0
-            ];
-        }
-    }
-
-    public function getTrendingVideos(int $period, int $limit): array
-    {
-        $sql = "SELECT
-                v.id,
-                v.title,
-                v.thumbnail,
-                v.user_id,
-                v.views,
-                u.username,
-                COUNT(vv.id)::int AS views_period
-             FROM videos v
-             LEFT JOIN video_views vv ON vv.video_id = v.id
-                AND vv.viewed_at >= NOW() - ($1 || ' days')::interval
-             JOIN users u ON u.id = v.user_id
-             WHERE v.visibility = 'publique'
-               AND v.encoded = TRUE
-             GROUP BY v.id, u.username
-             ORDER BY views_period DESC, v.views DESC
-             LIMIT $2";
-
-        try {
-            $results = $this->db->fetchAll($sql, [$period, $limit]);
-            return $results ?? [];
-
-        } catch (\Exception $e) {
-            error_log("AnalyticsService::getTrendingVideos - Error: " . $e->getMessage());
-            return [];
-        }
-    }
-
     public function getVideoAnalytics(int $videoId, int $userId, string $period): array
     {
         $periodDays = (int)$period;
@@ -253,28 +169,6 @@ class AnalyticsService
                 'success' => false,
                 'code' => 500,
                 'message' => 'Erreur lors de la récupération des analytics'
-            ];
-        }
-    }
-
-    public function cleanupOldSessions(): array
-    {
-        try {
-            $this->db->execute(
-                "DELETE FROM video_views WHERE viewed_at < NOW() - INTERVAL '180 days'"
-            );
-
-            return [
-                'success' => true,
-                'message' => 'Anciennes sessions nettoyées'
-            ];
-
-        } catch (\Exception $e) {
-            error_log("AnalyticsService::cleanupOldSessions - Error: " . $e->getMessage());
-
-            return [
-                'success' => false,
-                'message' => 'Erreur lors du nettoyage'
             ];
         }
     }

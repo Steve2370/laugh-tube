@@ -27,9 +27,9 @@ class AdminMessagesController
                 am.subject,
                 am.message,
                 am.sent_at,
-                u.id       AS user_id,
+                u.id AS user_id,
                 u.username AS user_username,
-                u.email    AS user_email,
+                u.email AS user_email,
                 a.username AS admin_username
              FROM admin_messages am
              JOIN users u ON u.id = am.user_id

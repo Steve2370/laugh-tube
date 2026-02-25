@@ -220,120 +220,6 @@ class UserService {
         }
     }
 
-    async isSubscribed(creatorId) {
-        try {
-            const response = await apiService.request(
-                `/users/${creatorId}/is-subscribed`
-            );
-
-            return response.subscribed || response.isSubscribed || false;
-
-        } catch (error) {
-            console.error('UserService.isSubscribed:', error);
-            return false;
-        }
-    }
-
-    async getSubscribers(userId, options = {}) {
-        try {
-            const { limit = 20, offset = 0 } = options;
-
-            const response = await apiService.request(
-                `/users/${userId}/subscribers?limit=${limit}&offset=${offset}`
-            );
-
-            return {
-                success: true,
-                subscribers: response.subscribers || [],
-                total: response.total || 0
-            };
-
-        } catch (error) {
-            console.error('UserService.getSubscribers:', error);
-            return {
-                success: false,
-                subscribers: [],
-                total: 0
-            };
-        }
-    }
-
-    async getSubscriptions(userId, options = {}) {
-        try {
-            const { limit = 20, offset = 0 } = options;
-
-            const response = await apiService.request(
-                `/users/${userId}/subscriptions?limit=${limit}&offset=${offset}`
-            );
-
-            return {
-                success: true,
-                subscriptions: response.subscriptions || [],
-                total: response.total || 0
-            };
-
-        } catch (error) {
-            console.error('UserService.getSubscriptions:', error);
-            return {
-                success: false,
-                subscriptions: [],
-                total: 0
-            };
-        }
-    }
-
-    async searchUsers(query, options = {}) {
-        try {
-            if (!query || query.trim().length < 2) {
-                return { success: false, users: [] };
-            }
-
-            const { limit = 20, offset = 0 } = options;
-
-            const response = await apiService.request(
-                `/users/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
-            );
-
-            return {
-                success: true,
-                users: response.users || [],
-                total: response.total || 0
-            };
-
-        } catch (error) {
-            console.error('UserService.searchUsers:', error);
-            return {
-                success: false,
-                users: [],
-                total: 0
-            };
-        }
-    }
-
-    async getWatchHistory(userId, options = {}) {
-        try {
-            const { limit = 20, offset = 0 } = options;
-
-            const response = await apiService.request(
-                `/users/${userId}/watch-history?limit=${limit}&offset=${offset}`
-            );
-
-            return {
-                success: true,
-                videos: response.videos || response.history || [],
-                total: response.total || 0
-            };
-
-        } catch (error) {
-            console.error('UserService.getWatchHistory:', error);
-            return {
-                success: false,
-                videos: [],
-                total: 0
-            };
-        }
-    }
-
     _validateImageFile(file) {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
         const maxSize = 5 * 1024 * 1024; // 5 MB
@@ -383,17 +269,6 @@ class UserService {
                 this.cache.delete(key);
             }
         }
-    }
-
-    clearCache() {
-        this.cache.clear();
-    }
-
-    getStatus() {
-        return {
-            cacheSize: this.cache.size,
-            cacheDuration: this.cacheDuration
-        };
     }
 }
 

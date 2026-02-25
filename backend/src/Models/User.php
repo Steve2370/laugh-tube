@@ -10,26 +10,6 @@ class User
 {
     public function __construct(private DatabaseInterface $db) {}
 
-    public function findByEmail(string $email): ?array
-    {
-        $sql = "SELECT id, username, email, password_hash, role, avatar_url, email_verified, deleted_at, two_fa_enabled
-            FROM users
-            WHERE email = :email
-            LIMIT 1";
-
-        try {
-            $pdo = $this->db->getConnection();
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':email' => $email]);
-            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-            return $row ?: null;
-        } catch (\Throwable $e) {
-            error_log("findByEmail error: " . $e->getMessage());
-            return null;
-        }
-    }
-
-
     public function findById(int $id): ?array
     {
         $sql = "SELECT id, username, email, password_hash, role, avatar_url, cover_url, bio, 
@@ -38,53 +18,6 @@ class User
                 WHERE id = $1 AND deleted_at IS NULL";
 
         return $this->db->fetchOne($sql, [$id]);
-    }
-
-    public function findByUsername(string $username): ?array
-    {
-        $sql = "SELECT id, username, email, password_hash, role, avatar_url, cover_url, bio, 
-                       created_at, email_verified, two_fa_enabled
-                FROM users 
-                WHERE username = $1 AND deleted_at IS NULL";
-
-        return $this->db->fetchOne($sql, [$username]);
-    }
-
-    public function updateAvatar(int $userId, string $filename): bool
-    {
-        try {
-            $result = $this->db->query(
-                "UPDATE users SET avatar_url = $1 WHERE id = $2",
-                [$filename, $userId]
-            );
-            return $result !== false;
-        } catch (\Exception $e) {
-            error_log("User::updateAvatar - Error: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function updateCover(int $userId, string $filename): bool
-    {
-        try {
-            $result = $this->db->query(
-                "UPDATE users SET cover_url = $1 WHERE id = $2",
-                [$filename, $userId]
-            );
-            return $result !== false;
-        } catch (\Exception $e) {
-            error_log("User::updateCover - Error: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function existsByEmailOrUsername(string $email, string $username): bool
-    {
-        $sql = "SELECT id FROM users 
-                WHERE (email = $1 OR username = $2) AND deleted_at IS NULL";
-
-        $result = $this->db->fetchOne($sql, [$email, $username]);
-        return $result !== null;
     }
 
     public function emailExists(string $email, ?int $excludeUserId = null): bool
@@ -180,37 +113,10 @@ class User
         return $this->db->execute($sql, [$coverPath, $id]);
     }
 
-    public function updateBio(int $id, string $bio): bool
-    {
-        $sql = "UPDATE users SET bio = $1, updated_at = NOW() WHERE id = $2";
-        return $this->db->execute($sql, [$bio, $id]);
-    }
-
-    public function updateRole(int $id, string $role): bool
-    {
-        if (!in_array($role, ['admin', 'membre'], true)) {
-            return false;
-        }
-
-        $sql = "UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2";
-        return $this->db->execute($sql, [$role, $id]);
-    }
-
     public function delete(int $id): bool
     {
         $sql = "DELETE FROM users WHERE id = $1";
         return $this->db->execute($sql, [$id]);
-    }
-
-    public function findAll(int $limit = 50, int $offset = 0): array
-    {
-        $sql = "SELECT id, username, email, role, avatar_url, cover_url, bio, created_at
-                FROM users 
-                WHERE deleted_at IS NULL
-                ORDER BY created_at DESC
-                LIMIT $1 OFFSET $2";
-
-        return $this->db->fetchAll($sql, [$limit, $offset]);
     }
 
     public function count(): int
@@ -255,36 +161,6 @@ class User
             'total_dislikes' => (int)($stats['total_dislikes'] ?? 0),
             'total_commentaires' => (int)($stats['total_commentaires'] ?? 0)
         ];
-    }
-
-    public function getProfileImage(int $userId): ?string
-    {
-        $sql = "SELECT avatar_url FROM users WHERE id = $1 AND deleted_at IS NULL";
-        $result = $this->db->fetchOne($sql, [$userId]);
-        return $result['avatar_url'] ?? null;
-    }
-
-    public function getProfileCover(int $userId): ?string
-    {
-        $sql = "SELECT cover_url FROM users WHERE id = $1 AND deleted_at IS NULL";
-        $result = $this->db->fetchOne($sql, [$userId]);
-        return $result['cover_url'] ?? null;
-    }
-
-    public function markEmailAsVerified(mixed $id)
-    {
-    }
-
-    public function findByEmailVerificationToken(string $token)
-    {
-    }
-
-    public function saveEmailVerificationToken(int $userId, string $verificationToken)
-    {
-    }
-
-    public function updateProfile(int $userId, mixed $username, mixed $email, mixed $bio)
-    {
     }
 
     public function isSubscribed(int $subscriberId, int $targetUserId): bool

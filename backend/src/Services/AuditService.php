@@ -46,48 +46,12 @@ class AuditService {
         return $this->log('logout', $userId, "Déconnexion");
     }
 
-    public function log2FAEnabled(int $userId): bool {
-        return $this->log('2fa_enabled', $userId, "Authentification 2FA activée");
-    }
-
-    public function log2FADisabled(int $userId): bool {
-        return $this->log('2fa_disabled', $userId, "Authentification 2FA désactivée");
-    }
-
-    public function log2FASuccess(int $userId): bool {
-        return $this->log('2fa_success', $userId, "Code 2FA vérifié");
-    }
-
-    public function log2FAFailed(int $userId): bool {
-        return $this->log('2fa_failed', $userId, "Échec vérification 2FA");
-    }
-
-    public function logPasswordChanged(int $userId): bool {
-        return $this->log('password_changed', $userId, "Mot de passe modifié");
-    }
-
-    public function logPasswordResetRequested(int $userId, string $email): bool {
-        return $this->log('password_reset_requested', $userId, "Reset mot de passe demandé: {$email}");
-    }
-
     public function logAccountDeletionRequested(int $userId): bool {
         return $this->log('account_deletion_requested', $userId, "Suppression de compte demandée");
     }
 
-    public function logAccountDeletionCancelled(int $userId): bool {
-        return $this->log('account_deletion_cancelled', $userId, "Suppression de compte annulée");
-    }
-
-    public function logAccountDeleted(int $userId): bool {
-        return $this->log('account_deleted', $userId, "Compte supprimé définitivement");
-    }
-
     public function logSuspiciousActivity(int $userId, string $description, ?array $data = null): bool {
         return $this->log('suspicious_activity', $userId, $description, $data);
-    }
-
-    public function getUserLogs(int $userId, int $limit = 50): array {
-        return $this->logRepo->getUserSecurityLogs($userId, $limit);
     }
 
     public function logSecurityEvent(mixed $userId, string $eventType, array $metadata): bool

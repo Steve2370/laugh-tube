@@ -143,17 +143,17 @@ class AuthMiddleware
             }
 
             $this->user = [
-                'user_id'        => (int)$userCheck['id'],
-                'sub'            => (int)$userCheck['id'],
-                'username'       => $userCheck['username'] ?? ($payload['username'] ?? null),
-                'email'          => $userCheck['email'] ?? null,
-                'role'           => $userCheck['role'] ?? ($payload['role'] ?? 'membre'),
+                'user_id' => (int)$userCheck['id'],
+                'sub' => (int)$userCheck['id'],
+                'username' => $userCheck['username'] ?? ($payload['username'] ?? null),
+                'email' => $userCheck['email'] ?? null,
+                'role' => $userCheck['role'] ?? ($payload['role'] ?? 'membre'),
                 'email_verified' => (bool)($userCheck['email_verified'] ?? false),
                 'two_fa_enabled' => (bool)($userCheck['two_fa_enabled'] ?? false),
-                'avatar_url'     => $userCheck['avatar_url'] ?? null,
-                'cover_url'      => $userCheck['cover_url'] ?? null,
-                'session_id'     => $payload['session_id'] ?? null,
-                'jti'            => $payload['jti'] ?? null,
+                'avatar_url' => $userCheck['avatar_url'] ?? null,
+                'cover_url' => $userCheck['cover_url'] ?? null,
+                'session_id' => $payload['session_id'] ?? null,
+                'jti' => $payload['jti'] ?? null,
             ];
 
             return true;
@@ -187,81 +187,6 @@ class AuthMiddleware
             throw new \Exception("Non authentifié");
         }
         return $this->user;
-    }
-
-
-    public function requireRole(string $role): bool
-    {
-        if (!$this->handle()) {
-            return false;
-        }
-
-        return ($this->user['role'] ?? null) === $role;
-    }
-
-    public function requireAnyRole(array $roles): bool
-    {
-        if (!$this->handle()) {
-            return false;
-        }
-
-        return in_array($this->user['role'] ?? null, $roles, true);
-    }
-
-    public function requireOwnership(int $resourceOwnerId): bool
-    {
-        if (!$this->handle()) {
-            return false;
-        }
-
-        if (($this->user['role'] ?? null) === 'admin') {
-            return true;
-        }
-
-        return ($this->user['sub'] ?? null) === $resourceOwnerId;
-    }
-
-    public function require2FA(): bool
-    {
-        if (!$this->handle()) {
-            return false;
-        }
-
-        return ($this->user['two_fa_enabled'] ?? false) === true;
-    }
-
-    public function requireVerifiedEmail(): bool
-    {
-        if (!$this->handle()) {
-            return false;
-        }
-
-        return ($this->user['email_verified'] ?? false) === true;
-    }
-
-//    public function getUser(): ?array
-//    {
-//        return $this->user;
-//    }
-//
-//    public function getUserId(): ?int
-//    {
-//        return $this->user['sub'] ?? null;
-//    }
-
-    public function getUserRole(): ?string
-    {
-        return $this->user['role'] ?? null;
-    }
-
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    public function isAuthenticated(): bool
-    {
-        return $this->user !== null;
     }
 
     public function isAdmin(): bool
@@ -304,18 +229,5 @@ class AuthMiddleware
         }
 
         return null;
-    }
-
-    public function logUnauthorizedAccess(string $reason = 'invalid_token'): void
-    {
-        $this->auditService->logSecurityEvent(
-            $this->getUserId(),
-            'unauthorized_access',
-            [
-                'reason' => $reason,
-                'token_present' => $this->token !== null,
-                'uri' => $_SERVER['REQUEST_URI'] ?? '/'
-            ]
-        );
     }
 }

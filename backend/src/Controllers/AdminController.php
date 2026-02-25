@@ -73,9 +73,7 @@ class AdminController
         }
 
         $this->deleteUserVideoFiles($userId);
-
         $this->db->fetchOne('DELETE FROM users WHERE id = $1', [$userId]);
-
         $this->json(['success' => true, 'message' => 'Compte supprimé']);
     }
 
@@ -204,29 +202,6 @@ class AdminController
         );
 
         $this->json(['success' => true, 'statut' => $statut]);
-    }
-
-    public function getStats(): void
-    {
-        $totalUsers = $this->db->fetchOne(
-            "SELECT COUNT(*) AS total FROM users WHERE deleted_at IS NULL"
-        );
-        $totalVideos = $this->db->fetchOne(
-            "SELECT COUNT(*) AS total FROM videos"
-        );
-        $totalViews = $this->db->fetchOne(
-            "SELECT COUNT(*) AS total FROM video_views"
-        );
-        $pendingReports = $this->db->fetchOne(
-            "SELECT COUNT(*) AS total FROM signalements WHERE statut = 'pending'"
-        );
-
-        $this->json(['stats' => [
-            'total_users' => (int)($totalUsers['total'] ?? 0),
-            'total_videos' => (int)($totalVideos['total'] ?? 0),
-            'total_views' => (int)($totalViews['total'] ?? 0),
-            'pending_reports' => (int)($pendingReports['total'] ?? 0),
-        ]]);
     }
 
     private function deleteVideoFiles(?string $filename, int $videoId): void

@@ -58,56 +58,6 @@ class VideoService {
         return this.getVideo(id);
     }
 
-    async getTrendingVideos(options = {}) {
-        try {
-            const { limit = 10, period = 7 } = options;
-
-            const response = await apiService.request(
-                `/videos/trending?limit=${limit}&period=${period}`
-            );
-
-            return {
-                success: true,
-                videos: response.videos || []
-            };
-
-        } catch (error) {
-            console.error('VideoService.getTrendingVideos:', error);
-            return {
-                success: false,
-                videos: []
-            };
-        }
-    }
-
-    async searchVideos(query, options = {}) {
-        try {
-            if (!query || query.trim().length < 2) {
-                return { success: false, videos: [] };
-            }
-
-            const { limit = 20, offset = 0 } = options;
-
-            const response = await apiService.request(
-                `/videos/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
-            );
-
-            return {
-                success: true,
-                videos: response.videos || [],
-                total: response.total || 0
-            };
-
-        } catch (error) {
-            console.error('VideoService.searchVideos:', error);
-            return {
-                success: false,
-                videos: [],
-                total: 0
-            };
-        }
-    }
-
     async uploadVideo(file, metadata = {}, onProgress = null) {
         try {
             if (!file) {
@@ -203,16 +153,15 @@ class VideoService {
             const baseUrl = window.location.origin;
             const fullUrl = `${baseUrl}/api${endpoint}`;
 
-            console.log('📤 Upload URL:', fullUrl);
+            console.log('Upload URL:', fullUrl);
 
             xhr.open('POST', fullUrl);
 
             const token = localStorage.getItem('access_token');
             if (token) {
                 xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-                console.log('🔐 Token ajouté');
             } else {
-                console.warn('⚠️ Pas de token trouvé!');
+                console.warn('Pas de token trouvé!');
             }
 
             console.log('Envoi du FormData...');
@@ -283,17 +232,6 @@ class VideoService {
         } catch (error) {
             console.error('VideoService.recordView:', error);
             return { success: false };
-        }
-    }
-
-    async getViews(videoId) {
-        try {
-            const response = await apiService.request(`/videos/${videoId}/views`);
-            return response.views || response.count || 0;
-
-        } catch (error) {
-            console.error('VideoService.getViews:', error);
-            return 0;
         }
     }
 
@@ -416,13 +354,6 @@ class VideoService {
         }
     }
 
-    getStreamUrl(id) {
-        if (!id) {
-            throw new Error('ID de vidéo requis');
-        }
-        return apiService.getVideoStreamUrl(id);
-    }
-
     getThumbnailUrl(video) {
         if (!video) {
             return '/default-thumbnail.jpg';
@@ -511,52 +442,12 @@ class VideoService {
         }
     }
 
-    clearCache() {
-        this.cache.clear();
-    }
-
     _formatFileSize(bytes) {
         if (bytes === 0) return '0 B';
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-    }
-
-    getStatus() {
-        return {
-            cacheSize: this.cache.size,
-            cacheDuration: this.cacheDuration,
-            uploadQueueLength: this.uploadQueue.length
-        };
-    }
-
-    async getUserVideos(userId) {
-        try {
-            if (!userId) {
-                throw new Error('User ID requis');
-            }
-
-            const cacheKey = `user_videos_${userId}`;
-            const cached = this._getFromCache(cacheKey);
-
-            if (cached) {
-                return cached;
-            }
-
-            const response = await apiService.request(`/users/${userId}/videos`);
-
-            if (response.success && response.videos) {
-                this._setInCache(cacheKey, response.videos);
-                return response.videos;
-            }
-
-            return [];
-
-        } catch (error) {
-            console.error('VideoService.getUserVideos:', error);
-            throw error;
-        }
     }
 }
 

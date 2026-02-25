@@ -64,52 +64,6 @@ class VideoStreamService
         }
     }
 
-    public function serveThumbnail(int $videoId): void
-    {
-        try {
-            $thumbnail = $this->videoModel->getThumbnail($videoId);
-
-            if (!$thumbnail) {
-                $this->sendError(404, 'Miniature introuvable');
-                return;
-            }
-
-            $thumbnail = basename($thumbnail);
-            $thumbPath = $this->thumbsDir . '/' . $thumbnail;
-
-            if (!file_exists($thumbPath)) {
-                $this->sendError(404, 'Fichier miniature introuvable');
-                return;
-            }
-
-            $realPath = realpath($thumbPath);
-            $realThumbsDir = realpath($this->thumbsDir);
-
-            if ($realPath === false || strpos($realPath, $realThumbsDir) !== 0) {
-                $this->sendError(403, 'Accès refusé');
-                return;
-            }
-
-            $imageInfo = @getimagesize($thumbPath);
-
-            if (!$imageInfo) {
-                $this->sendError(415, 'Fichier image invalide');
-                return;
-            }
-
-            if (!in_array($imageInfo['mime'], self::ALLOWED_IMAGE_TYPES, true)) {
-                $this->sendError(415, 'Type d\'image non supporté');
-                return;
-            }
-
-            $this->serveImage($thumbPath, $imageInfo);
-
-        } catch (\Exception $e) {
-            error_log("VideoStreamService::serveThumbnail - Error: " . $e->getMessage());
-            $this->sendError(500, 'Erreur lors du chargement');
-        }
-    }
-
     private function streamFile(string $filepath, string $mimeType): void
     {
         $fileSize = filesize($filepath);
@@ -202,30 +156,6 @@ class VideoStreamService
         fclose($file);
     }
 
-    private function serveImage(string $imagePath, array $imageInfo): void
-    {
-        $fileSize = filesize($imagePath);
-
-        header('Content-Type: ' . $imageInfo['mime']);
-        header('Content-Length: ' . $fileSize);
-        header('Cache-Control: public, max-age=86400'); // 24h cache
-        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 86400) . ' GMT');
-
-        $etag = md5_file($imagePath);
-        header('ETag: "' . $etag . '"');
-
-        if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
-            $clientEtag = trim($_SERVER['HTTP_IF_NONE_MATCH'], '"');
-
-            if ($clientEtag === $etag) {
-                http_response_code(304);
-                return;
-            }
-        }
-
-        readfile($imagePath);
-    }
-
     private function getMimeType(string $filepath): string
     {
         if (!function_exists('finfo_open')) {
@@ -247,86 +177,5 @@ class VideoStreamService
             'error' => $message,
             'code' => $code
         ]);
-    }
-
-    public function getVideoInfo(int $videoId): ?array
-    {
-        try {
-            $filename = $this->videoModel->getFilename($videoId);
-
-            if (!$filename) {
-                return null;
-            }
-
-            $filename = basename($filename);
-            $filepath = $this->videosDir . '/' . $filename;
-
-            if (!file_exists($filepath)) {
-                return null;
-            }
-
-            return [
-                'filename' => $filename,
-                'size' => filesize($filepath),
-                'mime_type' => $this->getMimeType($filepath),
-                'modified' => filemtime($filepath)
-            ];
-
-        } catch (\Exception $e) {
-            error_log("VideoStreamService::getVideoInfo - Error: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public function videoFileExists(int $videoId): bool
-    {
-        try {
-            $filename = $this->videoModel->getFilename($videoId);
-
-            if (!$filename) {
-                return false;
-            }
-
-            $filename = basename($filename);
-            $filepath = $this->videosDir . '/' . $filename;
-
-            return file_exists($filepath);
-
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    public function getVideoDuration(int $videoId): ?int
-    {
-        try {
-            $filename = $this->videoModel->getFilename($videoId);
-
-            if (!$filename) {
-                return null;
-            }
-
-            $filename = basename($filename);
-            $filepath = $this->videosDir . '/' . $filename;
-
-            if (!file_exists($filepath)) {
-                return null;
-            }
-
-            if (function_exists('shell_exec')) {
-                $cmd = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " . escapeshellarg($filepath);
-                $output = shell_exec($cmd);
-
-                if ($output) {
-                    return (int)round((float)$output);
-                }
-            }
-
-            return null;
-
-        } catch (\Exception $e) {
-            error_log("VideoStreamService::getVideoDuration - Error: " . $e->getMessage());
-            return null;
-        }
     }
 }
