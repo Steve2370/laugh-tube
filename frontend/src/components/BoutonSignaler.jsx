@@ -3,22 +3,22 @@ import { useSignalement } from '../hooks/useSignalement.js';
 import { useToast } from '../contexts/ToastContext';
 
 const RAISONS = [
-    { value: 'spam',          label: 'Spam ou publicité' },
-    { value: 'inapproprie',   label: 'Contenu inapproprié' },
-    { value: 'haine',         label: 'Discours haineux' },
-    { value: 'desinformation',label: 'Désinformation' },
-    { value: 'droits',        label: 'Violation de droits d\'auteur' },
-    { value: 'autre',         label: 'Autre raison' },
+    { value: 'spam', label: 'Spam ou publicité' },
+    { value: 'inapproprie', label: 'Contenu inapproprié' },
+    { value: 'haine', label: 'Discours haineux' },
+    { value: 'desinformation', label: 'Désinformation' },
+    { value: 'droits', label: 'Violation de droits d\'auteur' },
+    { value: 'autre', label: 'Autre raison' },
 ];
 
-export default function BoutonSignaler({ videoId }) {
+export default function BoutonSignaler({ videoId, userId }) {
     const { signaler, loading } = useSignalement(videoId);
     const toast = useToast();
 
-    const [modalOpen, setModalOpen]       = useState(false);
-    const [raison, setRaison]             = useState('');
-    const [description, setDescription]  = useState('');
-    const [submitted, setSubmitted]       = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [raison, setRaison] = useState('');
+    const [description, setDescription] = useState('');
+    const [submitted, setSubmitted] = useState(false);
 
     const openModal = () => {
         setRaison('');
@@ -67,9 +67,11 @@ export default function BoutonSignaler({ videoId }) {
         <>
             <button
                 onClick={openModal}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500
-                           hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                title="Signaler cette vidéo"
+                className={userId
+                    ? "flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl border border-gray-200 transition-all"
+                    : "flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                }
+                title={userId ? "Signaler cette chaîne" : "Signaler cette vidéo"}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
                      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -85,9 +87,10 @@ export default function BoutonSignaler({ videoId }) {
                     onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
                 >
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-                        {/* Header */}
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-900">Signaler la vidéo</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                {userId ? 'Signaler la chaîne' : 'Signaler la vidéo'}
+                            </h2>
                             <button
                                 onClick={closeModal}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"

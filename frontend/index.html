@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="/src/assets/Animation1.png">
     <title>LaughTube - Partagez vos punchlines</title>
     <meta name="description" content="LaughTube - Partagez et découvrez les meilleures vidéos humoristiques. La plateforme québécoise de partage de vidéos.">
-    <meta name="keywords" content="vidéos, humour, partage, québec, laughtube, comédie">
+    <meta name="keywords" content="vidéos, humour, partage, québec, laughtube, comédie, laugh, drôle, rire, punchline, humouriste">
     <meta name="author" content="LaughTube">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://www.laughtube.ca">
@@ -133,13 +133,13 @@
 <script type="module" src="/src/main.jsx"></script>
 <script>
     console.log('%cSTOP! INTERDIT', 'color: red; font-size: 48px; font-weight: bold;');
-    console.log('%cCette console est réservée aux développeurs.\nSi quelqu\'un vous a demandé de coller quelque chose ici, c\'est une tentative de piratage de votre compte.', 'color: #333; font-size: 14px; line-height: 1.6;');
+    console.log('%cCette console est réservée aux développeurs.\nSi quelqu\'un vous a demandé de coller quelque chose ici, c\'est une tentative de piratage de votre compte.', 'color: #fff; font-size: 14px; line-height: 1.6;');
     (function() {
         const threshold = 160;
         setInterval(function() {
             if (window.outerWidth - window.innerWidth > threshold ||
                 window.outerHeight - window.innerHeight > threshold) {
-                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:16px"><h1 style="color:red">⛔ Accès refusé</h1><p>Fermez les outils développeurs pour continuer.</p></div>';
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:16px"><h1 style="color:red">Accès refusé</h1><p>Fermez les outils développeurs pour continuer.</p></div>';
             }
         }, 1000);
     })();
