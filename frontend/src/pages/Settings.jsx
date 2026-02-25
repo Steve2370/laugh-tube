@@ -403,7 +403,7 @@ const Settings = () => {
                                                 </div>
                                                 <button onClick={() => {
                                                     localStorage.setItem('channelUser', JSON.stringify({ id: sub.id || sub.user_id, username: sub.username }));
-                                                    window.location.hash = `#/chaine/${sub.id || sub.user_id}`;
+                                                    window.location.hash = '#/chaine';
                                                 }}
                                                         className="text-gray-400 hover:text-blue-600 transition-colors p-1"><ExternalLink size={16} /></button>
                                             </div>
