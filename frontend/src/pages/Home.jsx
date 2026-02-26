@@ -8,7 +8,7 @@ import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkl
 
 const FLOATING = ['😂','🤣','💀','😭','🔥','👏','💯','🎭','🎬','✨'];
 const FloatingEmoji = ({ emoji, style }) => (
-    <span className="absolute text-2xl select-none pointer-events-none opacity-20 animate-bounce" style={style}>
+    <span className="absolute text-2xl select-none pointer-events-none opacity-50 animate-bounce" style={style}>
         {emoji}
     </span>
 );
@@ -28,21 +28,21 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
         , []);
 
     return (
-        <div className="relative overflow-hidden rounded-3xl mb-10 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl mb-10 bg-blue-500 shadow-2xl">
             {particles.map((p, i) => <FloatingEmoji key={i} {...p} />)}
 
-            <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-400 rounded-full opacity-20 blur-3xl" />
-            <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-400 rounded-full opacity-20 blur-3xl" />
+            <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-400 rounded-full opacity-10 blur-3xl" />
+            <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-400 rounded-full opacity-10 blur-3xl" />
 
             <div className="relative z-10 px-8 py-12 text-center">
-                <div className="inline-flex items-center gap-2 bg-white bg-opacity-30 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+                <div className="inline-flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full mb-4">
                     <Flame size={14} className="text-orange-300" />
                     {total > 0 ? `${total} punchlines disponibles` : 'Bienvenue sur LaughTube'}
                 </div>
                 <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-                    Là où le rire prend{' '}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">
-                        toute sa place
+                    Le rire,{' '}
+                    <span className="text-yellow-400">
+                        à la québécoise
                     </span>
                 </h1>
                 <p className="text-blue-100 text-lg mb-8 max-w-lg mx-auto">
@@ -81,6 +81,7 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
     );
 };
 
+
 const FILTERS = [
     { id: 'all', label: 'Tout', icon: Play },
     { id: 'trending', label: 'Tendances', icon: TrendingUp },
@@ -106,6 +107,7 @@ const FilterBar = ({ filter, onChange }) => (
         ))}
     </div>
 );
+
 
 const SkeletonCard = ({ delay = 0 }) => (
     <div
@@ -134,12 +136,13 @@ const SkeletonCard = ({ delay = 0 }) => (
     </div>
 );
 
+
 const SectionTitle = ({ filter, count }) => {
     const titles = {
-        all: { text: 'Toutes les punchlines', icon: <LayoutGrid size={22} className="text-orange-500" /> },
-        trending: { text: 'En tendance', icon: <TrendingUp size={22} className="text-orange-500" /> },
-        popular: { text: 'Les plus populaires', icon: <Trophy size={22} className="text-orange-500" /> },
-        recent: { text: 'Les plus récentes', icon: <Zap size={22} className="text-orange-500" /> },
+        all:      { text: 'Toutes les punchlines', icon: <LayoutGrid size={22} className="text-blue-500" /> },
+        trending: { text: 'En tendance',            icon: <TrendingUp size={22} className="text-orange-500" /> },
+        popular:  { text: 'Les plus populaires',    icon: <Trophy size={22} className="text-yellow-500" /> },
+        recent:   { text: 'Les plus récentes',      icon: <Zap size={22} className="text-green-500" /> },
     };
     const { text, icon } = titles[filter] || titles.all;
     return (
@@ -161,18 +164,18 @@ const Home = () => {
     const { isAuthenticated } = useAuth();
     const toast = useToast();
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filter, setFilter] = useState("all");
+    const [searchTerm, setSearchTerm]     = useState("");
+    const [filter, setFilter]             = useState("all");
     const [trendingVideos, setTrendingVideos] = useState([]);
-    const [displayVideos, setDisplayVideos] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
+    const [displayVideos, setDisplayVideos]   = useState([]);
+    const [isSearching, setIsSearching]   = useState(false);
 
     useEffect(() => { if (error) toast.error(error); }, [error, toast]);
     useEffect(() => { setDisplayVideos(videos); }, [videos]);
     useEffect(() => {
         const hash = window.location.hash;
         if (hash.includes('verified=1')) {
-            toast.success('Email vérifié avec succès ! Bienvenue sur LaughTube');
+            toast.success('Email vérifié avec succès ! Bienvenue sur LaughTube 🎉');
             window.location.hash = '#/home';
         }
     }, []);
