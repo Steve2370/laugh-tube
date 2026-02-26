@@ -31,11 +31,11 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
         <div className="relative overflow-hidden rounded-3xl mb-10 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 shadow-2xl">
             {particles.map((p, i) => <FloatingEmoji key={i} {...p} />)}
 
-            <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-400 rounded-full opacity-10 blur-3xl" />
-            <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-400 rounded-full opacity-10 blur-3xl" />
+            <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-400 rounded-full opacity-20 blur-3xl" />
+            <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-400 rounded-full opacity-20 blur-3xl" />
 
             <div className="relative z-10 px-8 py-12 text-center">
-                <div className="inline-flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+                <div className="inline-flex items-center gap-2 bg-white bg-opacity-30 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full mb-4">
                     <Flame size={14} className="text-orange-300" />
                     {total > 0 ? `${total} punchlines disponibles` : 'Bienvenue sur LaughTube'}
                 </div>
