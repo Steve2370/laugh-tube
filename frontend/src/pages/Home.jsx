@@ -40,9 +40,9 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
                     {total > 0 ? `${total} punchlines disponibles` : 'Bienvenue sur LaughTube'}
                 </div>
                 <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-                    Le rire,{' '}
+                    Là où le rire prend{' '}
                     <span className="text-yellow-400">
-                        à la québécoise
+                        toute sa place
                     </span>
                 </h1>
                 <p className="text-blue-100 text-lg mb-8 max-w-lg mx-auto">
@@ -140,9 +140,9 @@ const SkeletonCard = ({ delay = 0 }) => (
 const SectionTitle = ({ filter, count }) => {
     const titles = {
         all:      { text: 'Toutes les punchlines', icon: <LayoutGrid size={22} className="text-blue-500" /> },
-        trending: { text: 'En tendance',            icon: <TrendingUp size={22} className="text-orange-500" /> },
-        popular:  { text: 'Les plus populaires',    icon: <Trophy size={22} className="text-yellow-500" /> },
-        recent:   { text: 'Les plus récentes',      icon: <Zap size={22} className="text-green-500" /> },
+        trending: { text: 'En tendance', icon: <TrendingUp size={22} className="text-orange-500" /> },
+        popular:  { text: 'Les plus populaires', icon: <Trophy size={22} className="text-yellow-500" /> },
+        recent:   { text: 'Les plus récentes', icon: <Zap size={22} className="text-green-500" /> },
     };
     const { text, icon } = titles[filter] || titles.all;
     return (
