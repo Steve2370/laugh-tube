@@ -249,14 +249,14 @@ const VideoCard = ({ video, onClick }) => {
                         <button
                             onClick={handleLikeClick}
                             className={`flex items-center gap-1 transition-all duration-200 relative
-                                ${hovered ? 'text-red-500 scale-110' : 'text-gray-500'}
+                                ${hovered ? 'text-blue-500 scale-110' : 'text-gray-500'}
                                 hover:scale-125 active:scale-95`}
                         >
                             <ThumbsUp size={14} />
                             <span className={visible ? 'count-anim' : ''}>{fmt(animLikes, 'like')}</span>
                             <ConfettiBurst trigger={likesBurst} />
                         </button>
-                        <div className={`flex items-center gap-1 transition-colors duration-200 ${hovered ? 'text-green-500' : ''}`}>
+                        <div className={`flex items-center gap-1 transition-colors duration-200 ${hovered ? 'text-blue-500' : ''}`}>
                             <MessageCircle size={14} />
                             <span className={visible ? 'count-anim' : ''}>{fmt(animComments, 'commentaire')}</span>
                         </div>
@@ -315,7 +315,8 @@ const VideoCard = ({ video, onClick }) => {
                     )}
                 </div>
 
-                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 transition-all duration-300 ${hovered ? 'opacity-100' : 'opacity-0'}`} />
+                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 transition-all duration-300 ${hovered ? 'opacity-100' : 'opacity-0'}`}
+                />
             </div>
         </>
     );
