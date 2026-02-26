@@ -70,8 +70,9 @@ const ParticleNetwork = () => {
     return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }} />;
 };
 
+const FLOATING = ['😂','🤣','💀','😭','🔥','👏','💯','🎭','🎬','✨'];
 const FloatingEmoji = ({ emoji, style }) => (
-    <span className="absolute text-2xl select-none pointer-events-none opacity-60 animate-bounce" style={style}>
+    <span className="absolute text-2xl select-none pointer-events-none opacity-50 animate-bounce" style={style}>
         {emoji}
     </span>
 );
@@ -203,9 +204,9 @@ const SkeletonCard = ({ delay = 0 }) => (
 const SectionTitle = ({ filter, count }) => {
     const titles = {
         all: { text: 'Toutes les punchlines', icon: <LayoutGrid size={22} className="text-blue-500" /> },
-        trending: { text: 'En tendance', icon: <TrendingUp size={22} className="text-blue-500" /> },
-        popular: { text: 'Les plus populaires', icon: <Trophy size={22} className="text-blue-500" /> },
-        recent: { text: 'Les plus récentes', icon: <Zap size={22} className="text-blue-500" /> },
+        trending: { text: 'En tendance', icon: <TrendingUp size={22} className="text-orange-500" /> },
+        popular: { text: 'Les plus populaires', icon: <Trophy size={22} className="text-yellow-500" /> },
+        recent: { text: 'Les plus récentes', icon: <Zap size={22} className="text-green-500" /> },
     };
     const { text, icon } = titles[filter] || titles.all;
     return (
@@ -226,11 +227,11 @@ const Home = () => {
     const { isAuthenticated } = useAuth();
     const toast = useToast();
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filter, setFilter] = useState("all");
+    const [searchTerm, setSearchTerm]     = useState("");
+    const [filter, setFilter]             = useState("all");
     const [trendingVideos, setTrendingVideos] = useState([]);
-    const [displayVideos, setDisplayVideos] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
+    const [displayVideos, setDisplayVideos]   = useState([]);
+    const [isSearching, setIsSearching]   = useState(false);
 
     useEffect(() => { if (error) toast.error(error); }, [error, toast]);
     useEffect(() => { setDisplayVideos(videos); }, [videos]);
