@@ -30,13 +30,87 @@ import {
 } from 'lucide-react';
 import videoService from "../services/videoService.js";
 
+const useAnimatedCount = (target, duration = 700) => {
+    const [count, setCount] = useState(0);
+    const started = useRef(false);
+    useEffect(() => {
+        if (started.current || !target) return;
+        started.current = true;
+        const t0 = performance.now();
+        const tick = (now) => {
+            const p = Math.min((now - t0) / duration, 1);
+            const ease = 1 - Math.pow(1 - p, 3);
+            setCount(Math.floor(ease * target));
+            if (p < 1) requestAnimationFrame(tick);
+            else setCount(target);
+        };
+        requestAnimationFrame(tick);
+    }, [target, duration]);
+    return count;
+};
+
+const useScrollReveal = (threshold = 0.1) => {
+    const ref = useRef(null);
+    const [visible, setVisible] = useState(false);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+            { threshold }
+        );
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, []);
+    return [ref, visible];
+};
+
+const EMOJIS_BURST = ['😂','🤣','💀','🔥','👏','💯','❤️'];
+const ConfettiBurst = ({ trigger }) => {
+    const [particles, setParticles] = useState([]);
+    useEffect(() => {
+        if (!trigger) return;
+        setParticles(Array.from({ length: 7 }, (_, i) => ({
+            id: Date.now() + i,
+            emoji: EMOJIS_BURST[i % EMOJIS_BURST.length],
+            x: (Math.random() - 0.5) * 100,
+            y: -(30 + Math.random() * 50),
+            rot: (Math.random() - 0.5) * 360,
+        })));
+        setTimeout(() => setParticles([]), 900);
+    }, [trigger]);
+    return (
+        <div className="absolute inset-0 pointer-events-none overflow-visible z-20">
+            {particles.map(p => (
+                <span key={p.id} className="absolute left-1/2 top-1/2 text-base select-none"
+                      style={{ animation: 'confettiBurst 0.9s ease-out forwards', '--tx': `${p.x}px`, '--ty': `${p.y}px`, '--rot': `${p.rot}deg` }}>
+                    {p.emoji}
+                </span>
+            ))}
+        </div>
+    );
+};
+
+const ANIM_STYLES = `
+    @keyframes confettiBurst {
+        0%   { transform: translate(-50%,-50%) translate(0,0) rotate(0deg); opacity:1; }
+        100% { transform: translate(-50%,-50%) translate(var(--tx),var(--ty)) rotate(var(--rot)); opacity:0; }
+    }
+    @keyframes slideUp   { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeInScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+    @keyframes countUp   { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .anim-slide-up   { animation: slideUp 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .anim-fade-scale { animation: fadeInScale 0.4s ease-out forwards; }
+    .anim-count      { animation: countUp 0.35s ease-out forwards; }
+`;
+
 const RAISONS_SIGNALEMENT = [
-    { value: 'spam',           label: 'Spam ou publicité' },
-    { value: 'inapproprie',    label: 'Contenu inapproprié' },
-    { value: 'haine',          label: 'Discours haineux' },
+    { value: 'spam', label: 'Spam ou publicité' },
+    { value: 'inapproprie', label: 'Contenu inapproprié' },
+    { value: 'haine', label: 'Discours haineux' },
     { value: 'desinformation', label: 'Désinformation' },
-    { value: 'droits',         label: "Violation de droits d'auteur" },
-    { value: 'autre',          label: 'Autre raison' },
+    { value: 'droits', label: "Violation de droits d'auteur" },
+    { value: 'autre', label: 'Autre raison' },
 ];
 
 
@@ -363,6 +437,11 @@ const Video = () => {
     const [signalDescription, setSignalDescription] = useState('');
     const [signalLoading, setSignalLoading] = useState(false);
     const [signalDone, setSignalDone] = useState(false);
+    const [likeBurst, setLikeBurst] = useState(0);
+    const [shareAnim, setShareAnim] = useState(false);
+    const animLikes = useAnimatedCount(reactionsCount.likes);
+    const animDislikes = useAnimatedCount(reactionsCount.dislikes);
+    const animViews = useAnimatedCount(viewsCount);
     const videoSrc = video?.filename
         ? `/uploads/videos/${video.filename}`
         : null;
@@ -429,12 +508,11 @@ const Video = () => {
             setShowLoginModal(true);
             return;
         }
-
         try {
             const result = await videoService.likeVideo(videoId);
             setUserReaction(result.liked ? 'like' : null);
+            if (result.liked) setLikeBurst(b => b + 1);
             await loadReactions();
-
         } catch (err) {
             toast.error('Erreur lors du like');
         }
@@ -505,13 +583,11 @@ const Video = () => {
 
     const handleShare = async () => {
         const url = window.location.href;
+        setShareAnim(true);
+        setTimeout(() => setShareAnim(false), 600);
         try {
             if (navigator.share) {
-                await navigator.share({
-                    title: video.title,
-                    text: video.description,
-                    url: url
-                });
+                await navigator.share({ title: video.title, text: video.description, url });
             } else {
                 await navigator.clipboard.writeText(url);
                 toast.success('Lien copié dans le presse-papiers');
@@ -578,10 +654,11 @@ const Video = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20">
+            <style>{ANIM_STYLES}</style>
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <button
                     onClick={goBack}
-                    className="mb-6 flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
+                    className="mb-6 flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-all hover:-translate-x-1"
                 >
                     <ArrowLeft size={20} />
                     <span className="font-medium">Retour</span>
@@ -598,13 +675,13 @@ const Video = () => {
                             />
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+                        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 anim-slide-up" style={{animationDelay:'0.1s',opacity:0}}>
                             <h1 className="text-2xl font-bold text-gray-900 mb-4">{video.title}</h1>
 
                             <div className="flex items-center gap-6 mb-6 text-sm text-gray-600 flex-wrap">
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 transition-all hover:text-blue-600">
                                     <Eye size={18} />
-                                    <span className="font-medium">{formatNumber(viewsCount)} vues</span>
+                                    <span className="font-medium anim-count">{formatNumber(animViews)} vues</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <Calendar size={18} />
@@ -616,37 +693,41 @@ const Video = () => {
                                 <div className="flex items-center gap-2 bg-gray-100 rounded-xl p-1">
                                     <button
                                         onClick={handleLike}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                                            userReaction === 'like'
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-white text-gray-700 hover:bg-gray-50'
+                                        className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 active:scale-90
+                                            ${userReaction === 'like'
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105'
+                                            : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600 hover:scale-105'
                                         }`}
                                     >
-                                        <ThumbsUp size={20} fill={userReaction === 'like' ? 'currentColor' : 'none'} />
-                                        <span className="font-medium">{formatNumber(reactionsCount.likes)}</span>
+                                        <ThumbsUp size={20} fill={userReaction === 'like' ? 'currentColor' : 'none'}
+                                                  className={`transition-transform duration-200 ${userReaction === 'like' ? 'scale-125' : ''}`} />
+                                        <span className="font-medium anim-count">{formatNumber(animLikes)}</span>
+                                        <ConfettiBurst trigger={likeBurst} />
                                     </button>
                                     <button
                                         onClick={handleDislike}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                                            userReaction === 'dislike'
-                                                ? 'bg-red-600 text-white'
-                                                : 'bg-white text-gray-700 hover:bg-gray-50'
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 active:scale-90
+                                            ${userReaction === 'dislike'
+                                            ? 'bg-red-600 text-white shadow-lg shadow-red-200 scale-105'
+                                            : 'bg-white text-gray-700 hover:bg-red-50 hover:text-red-500 hover:scale-105'
                                         }`}
                                     >
-                                        <ThumbsDown size={20} fill={userReaction === 'dislike' ? 'currentColor' : 'none'} />
-                                        <span className="font-medium">{formatNumber(reactionsCount.dislikes)}</span>
+                                        <ThumbsDown size={20} fill={userReaction === 'dislike' ? 'currentColor' : 'none'}
+                                                    className={`transition-transform duration-200 ${userReaction === 'dislike' ? 'scale-125' : ''}`} />
+                                        <span className="font-medium anim-count">{formatNumber(animDislikes)}</span>
                                     </button>
                                 </div>
                                 <button
                                     onClick={handleShare}
-                                    className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl transition-all font-medium shadow-lg"
+                                    className={`flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl transition-all font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95
+                                        ${shareAnim ? 'scale-110' : ''}`}
                                 >
-                                    <Share2 size={20} /> Partager
+                                    <Share2 size={20} className={shareAnim ? 'animate-spin' : ''} /> Partager
                                 </button>
                                 <BoutonAbonne targetUserId={auteurId} user={user} />
                                 <button
                                     onClick={handleSignalOpen}
-                                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105 active:scale-95"
                                     title="Signaler cette vidéo"
                                 >
                                     <Flag size={16} />
@@ -696,9 +777,9 @@ const Video = () => {
                             )}
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-xl p-6">
+                        <div className="bg-white rounded-2xl shadow-xl p-6 anim-slide-up" style={{animationDelay:'0.2s',opacity:0}}>
                             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <MessageCircle size={22} />
+                                <MessageCircle size={22} className="text-blue-500" />
                                 Commentaires ({comments.length})
                             </h3>
 
