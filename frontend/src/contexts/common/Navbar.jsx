@@ -74,11 +74,13 @@ export default function Navbar() {
 
     const isAdmin = user?.role === 'admin' || user?.is_admin === true;
 
-    const profileImage = user?.id ? `/api/users/${user.id}/profile-image` : null;
+    const profileImage = user?.id
+        ? `/api/users/${user.id}/profile-image`
+        : null;
 
     return (
         <header
-            className="fixed top-0 left-0 right-0 z-50 text-black text-sm shadow-md backdrop-blur-md overflow-hidden"
+            className="fixed top-0 left-0 right-0 z-50 text-black text-sm shadow-md backdrop-blur-md"
             style={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
         >
             <style>{`
@@ -98,11 +100,13 @@ export default function Navbar() {
                 }
             `}</style>
 
-            {navEmojis.map(e => (
-                <span key={e.id} className="nav-emoji" style={{ left: e.left }}>
-                    {e.emoji}
-                </span>
-            ))}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {navEmojis.map(e => (
+                    <span key={e.id} className="nav-emoji" style={{ left: e.left }}>
+                        {e.emoji}
+                    </span>
+                ))}
+            </div>
             <nav className="container mx-auto px-6 py-2">
                 <div className="grid grid-cols-3 items-center gap-8">
                     <div className="flex justify-start">
