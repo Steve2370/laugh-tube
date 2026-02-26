@@ -264,6 +264,18 @@ const VideoPlayer = ({
             onMouseMove={handleMouseMove}
             onMouseLeave={() => isPlaying && setShowControls(false)}
         >
+            <style>{`
+                @keyframes playPulse {
+                    0%,100% { transform:scale(1); box-shadow:0 0 0 0 rgba(59,130,246,0.5); }
+                    50%     { transform:scale(1.08); box-shadow:0 0 0 12px rgba(59,130,246,0); }
+                }
+                @keyframes progressGlow {
+                    0%,100% { filter: drop-shadow(0 0 2px rgba(59,130,246,0.6)); }
+                    50%     { filter: drop-shadow(0 0 6px rgba(59,130,246,1)); }
+                }
+                .play-pulse-btn { animation: playPulse 1.8s ease-in-out infinite; }
+                .progress-glow  { animation: progressGlow 2s ease-in-out infinite; }
+            `}</style>
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center z-20 bg-black bg-opacity-50">
                     <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent"></div>
@@ -275,6 +287,9 @@ const VideoPlayer = ({
                 className="w-full aspect-video"
                 src={src}
                 poster={poster}
+                playsInline
+                webkit-playsinline="true"
+                x5-playsinline="true"
                 onPlaying={() => {
                     setIsPlaying(true);
                     sendViewStartOnce();
@@ -338,7 +353,7 @@ const VideoPlayer = ({
                     <div className="flex items-center gap-4">
                         <button
                             onClick={togglePlay}
-                            className="text-white hover:text-blue-400 transition"
+                            className="text-white hover:text-blue-400 transition-all hover:scale-110 active:scale-90"
                         >
                             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
                         </button>
@@ -346,7 +361,7 @@ const VideoPlayer = ({
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={toggleMute}
-                                className="text-white hover:text-blue-400 transition"
+                                className="text-white hover:text-blue-400 transition-all hover:scale-110 active:scale-90"
                             >
                                 {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
                             </button>
@@ -369,7 +384,7 @@ const VideoPlayer = ({
                     <div className="flex items-center gap-4">
                         <button
                             onClick={toggleFullscreen}
-                            className="text-white hover:text-blue-400 transition"
+                            className="text-white hover:text-blue-400 transition-all hover:scale-110 active:scale-90"
                         >
                             <Maximize size={20} />
                         </button>
@@ -380,7 +395,7 @@ const VideoPlayer = ({
             {!isPlaying && !isLoading && (
                 <button
                     onClick={togglePlay}
-                    className="absolute inset-0 m-auto w-20 h-20 bg-blue-600 bg-opacity-80 hover:bg-opacity-100 rounded-full flex items-center justify-center transition z-10"
+                    className="absolute inset-0 m-auto w-20 h-20 bg-blue-600 bg-opacity-80 hover:bg-opacity-100 rounded-full flex items-center justify-center transition-all z-10 play-pulse-btn"
                 >
                     <Play size={32} className="text-white ml-1" />
                 </button>

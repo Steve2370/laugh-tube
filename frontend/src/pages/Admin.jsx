@@ -10,16 +10,16 @@ import {Flag, MessageCircle, Users, Video} from "lucide-react";
 
 const TABS = [
     { key: 'reports', label: 'Signalements', icon: Flag },
-    { key: 'users',   label: 'Utilisateurs', icon: Users },
-    { key: 'videos',  label: 'Vidéos',       icon: Video },
+    { key: 'users', label: 'Utilisateurs', icon: Users },
+    { key: 'videos', label: 'Vidéos', icon: Video },
     { key: 'messages', label: 'Messagerie', icon: MessageCircle },
 ];
 
 function StatCard({ label, value, sub, color = 'blue' }) {
     const colors = {
-        blue:   'bg-blue-50 text-blue-700 border-blue-100',
-        red:    'bg-red-50 text-red-700 border-red-100',
-        green:  'bg-green-50 text-green-700 border-green-100',
+        blue: 'bg-blue-50 text-blue-700 border-blue-100',
+        red: 'bg-red-50 text-red-700 border-red-100',
+        green: 'bg-green-50 text-green-700 border-green-100',
         purple: 'bg-purple-50 text-purple-700 border-purple-100',
     };
     return (
