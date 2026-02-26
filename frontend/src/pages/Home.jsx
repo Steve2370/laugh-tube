@@ -6,9 +6,72 @@ import VideoCard from "../components/VideoCard";
 import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap } from "lucide-react";
 
 
-const FLOATING = ['😂','🤣','💀','😭','🔥','👏','💯','🎭','🎬','✨'];
+const ParticleNetwork = () => {
+    const canvasRef = useRef(null);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animId;
+        let particles = [];
+        const PARTICLE_COUNT = 55;
+        const MAX_DIST = 140;
+        const SPEED = 0.4;
+
+        const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+        const init = () => {
+            resize();
+            particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * SPEED,
+                vy: (Math.random() - 0.5) * SPEED,
+                r: 1.5 + Math.random() * 2,
+            }));
+        };
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < MAX_DIST) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(59,130,246,${(1 - dist / MAX_DIST) * 0.22})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(99,102,241,0.3)';
+                ctx.fill();
+            });
+        };
+        const loop = () => {
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+            });
+            draw();
+            animId = requestAnimationFrame(loop);
+        };
+        init(); loop();
+        const ro = new ResizeObserver(() => init());
+        ro.observe(canvas);
+        return () => { cancelAnimationFrame(animId); ro.disconnect(); };
+    }, []);
+    return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }} />;
+};
+
 const FloatingEmoji = ({ emoji, style }) => (
-    <span className="absolute text-2xl select-none pointer-events-none opacity-50 animate-bounce" style={style}>
+    <span className="absolute text-2xl select-none pointer-events-none opacity-60 animate-bounce" style={style}>
         {emoji}
     </span>
 );
@@ -139,17 +202,16 @@ const SkeletonCard = ({ delay = 0 }) => (
 
 const SectionTitle = ({ filter, count }) => {
     const titles = {
-        all:      { text: 'Toutes les punchlines', icon: <LayoutGrid size={22} className="text-blue-500" /> },
-        trending: { text: 'En tendance', icon: <TrendingUp size={22} className="text-orange-500" /> },
-        popular:  { text: 'Les plus populaires', icon: <Trophy size={22} className="text-yellow-500" /> },
-        recent:   { text: 'Les plus récentes', icon: <Zap size={22} className="text-green-500" /> },
+        all: { text: 'Toutes les punchlines', icon: <LayoutGrid size={22} className="text-blue-500" /> },
+        trending: { text: 'En tendance', icon: <TrendingUp size={22} className="text-blue-500" /> },
+        popular: { text: 'Les plus populaires', icon: <Trophy size={22} className="text-blue-500" /> },
+        recent: { text: 'Les plus récentes', icon: <Zap size={22} className="text-blue-500" /> },
     };
     const { text, icon } = titles[filter] || titles.all;
     return (
         <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                {icon}
-                {text}
+                {icon} {text}
                 {count > 0 && (
                     <span className="text-sm font-medium text-gray-400 ml-1">({count})</span>
                 )}
@@ -164,11 +226,11 @@ const Home = () => {
     const { isAuthenticated } = useAuth();
     const toast = useToast();
 
-    const [searchTerm, setSearchTerm]     = useState("");
-    const [filter, setFilter]             = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filter, setFilter] = useState("all");
     const [trendingVideos, setTrendingVideos] = useState([]);
-    const [displayVideos, setDisplayVideos]   = useState([]);
-    const [isSearching, setIsSearching]   = useState(false);
+    const [displayVideos, setDisplayVideos] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => { if (error) toast.error(error); }, [error, toast]);
     useEffect(() => { setDisplayVideos(videos); }, [videos]);
@@ -269,10 +331,13 @@ const Home = () => {
                 ) : (
                     <>
                         <SectionTitle filter={filter} count={filteredVideos.length} />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredVideos.map((video) => (
-                                <VideoCard key={video.id} video={video} onClick={() => handleVideoClick(video)} />
-                            ))}
+                        <div className="relative rounded-3xl overflow-hidden">
+                            <ParticleNetwork />
+                            <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2">
+                                {filteredVideos.map((video) => (
+                                    <VideoCard key={video.id} video={video} onClick={() => handleVideoClick(video)} />
+                                ))}
+                            </div>
                         </div>
                     </>
                 )}

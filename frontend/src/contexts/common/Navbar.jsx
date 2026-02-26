@@ -2,14 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import {
     ChevronDown,
     LayoutDashboard,
-    LogIn,
     LogOut,
     MessageSquare,
     Search,
     Settings,
     Upload,
     User,
-    UserPlus,
 } from "lucide-react";
 import { useAuth } from "../AuthContext.jsx";
 import { useToast } from "../ToastContext.jsx";
@@ -22,6 +20,24 @@ export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const dropdownRef = useRef(null);
+
+    const [navEmojis, setNavEmojis] = useState([]);
+    const emojiPool = ['😂','🤣','💀','🔥','👏','😭','💯','🎭'];
+    useEffect(() => {
+        const spawn = () => {
+            const emoji = emojiPool[Math.floor(Math.random() * emojiPool.length)];
+            const id = Date.now();
+            setNavEmojis(prev => [...prev, {
+                id,
+                emoji,
+                left: `${5 + Math.random() * 90}%`,
+                delay: 0,
+            }]);
+            setTimeout(() => setNavEmojis(prev => prev.filter(e => e.id !== id)), 2000);
+        };
+        const interval = setInterval(spawn, 1800);
+        return () => clearInterval(interval);
+    }, []);
 
     const navigateTo = (route) => {
         window.location.hash = `#/${route}`;
@@ -58,17 +74,35 @@ export default function Navbar() {
 
     const isAdmin = user?.role === 'admin' || user?.is_admin === true;
 
-    const profileImage = user?.id
-        ? `/api/users/${user.id}/profile-image`
-        : null;
+    const profileImage = user?.id ? `/api/users/${user.id}/profile-image` : null;
 
     return (
         <header
-            className="fixed top-0 left-0 right-0 z-50 text-black text-sm shadow-md backdrop-blur-md"
-            style={{
-                backgroundColor: "rgba(255, 255, 255, 0.3)",
-            }}
+            className="fixed top-0 left-0 right-0 z-50 text-black text-sm shadow-md backdrop-blur-md overflow-hidden"
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
         >
+            <style>{`
+                @keyframes navEmojiFloat {
+                    0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+                    15%  { opacity: 1; transform: translateY(-4px) scale(1); }
+                    85%  { opacity: 1; transform: translateY(-18px) scale(1); }
+                    100% { opacity: 0; transform: translateY(-26px) scale(0.8); }
+                }
+                .nav-emoji {
+                    position: absolute;
+                    bottom: 2px;
+                    font-size: 1rem;
+                    pointer-events: none;
+                    animation: navEmojiFloat 2s ease-in-out forwards;
+                    z-index: 0;
+                }
+            `}</style>
+
+            {navEmojis.map(e => (
+                <span key={e.id} className="nav-emoji" style={{ left: e.left }}>
+                    {e.emoji}
+                </span>
+            ))}
             <nav className="container mx-auto px-6 py-2">
                 <div className="grid grid-cols-3 items-center gap-8">
                     <div className="flex justify-start">
@@ -247,22 +281,6 @@ export default function Navbar() {
                                 >
                                     <MessageSquare size={16} />
                                     <span className="hidden lg:inline">Contact</span>
-                                </button>
-
-                                <button
-                                    onClick={() => navigateTo("login")}
-                                    className="flex items-center gap-2 text-black hover:text-gray-600 hover:bg-gray-200 hover:bg-opacity-50 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium"
-                                >
-                                    <LogIn size={16} />
-                                    <span className="hidden lg:inline">Connexion</span>
-                                </button>
-
-                                <button
-                                    onClick={() => navigateTo("register")}
-                                    className="flex items-center gap-2 bg-gray-400 bg-opacity-70 hover:bg-gray-500 hover:bg-opacity-70 text-black px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                                >
-                                    <UserPlus size={16} />
-                                    <span className="hidden lg:inline">Inscription</span>
                                 </button>
                             </>
                         )}
