@@ -40,9 +40,9 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
                     {total > 0 ? `${total} punchlines disponibles` : 'Bienvenue sur LaughTube'}
                 </div>
                 <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-                    Le rire,{' '}
+                    Là où le rire prend{' '}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">
-                        à la québécoise
+                        toute sa place
                     </span>
                 </h1>
                 <p className="text-blue-100 text-lg mb-8 max-w-lg mx-auto">

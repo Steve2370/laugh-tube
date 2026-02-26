@@ -34,35 +34,22 @@ const useAnimatedCount = (target, duration = 700) => {
     const [count, setCount] = useState(0);
     const started = useRef(false);
     useEffect(() => {
+        started.current = false;
+        setCount(0);
+    }, [target]);
+    useEffect(() => {
         if (started.current || !target) return;
         started.current = true;
         const t0 = performance.now();
         const tick = (now) => {
             const p = Math.min((now - t0) / duration, 1);
-            const ease = 1 - Math.pow(1 - p, 3);
-            setCount(Math.floor(ease * target));
+            setCount(Math.floor((1 - Math.pow(1 - p, 3)) * target));
             if (p < 1) requestAnimationFrame(tick);
             else setCount(target);
         };
         requestAnimationFrame(tick);
     }, [target, duration]);
     return count;
-};
-
-const useScrollReveal = (threshold = 0.1) => {
-    const ref = useRef(null);
-    const [visible, setVisible] = useState(false);
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const obs = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-            { threshold }
-        );
-        obs.observe(el);
-        return () => obs.disconnect();
-    }, []);
-    return [ref, visible];
 };
 
 const EMOJIS_BURST = ['😂','🤣','💀','🔥','👏','💯','❤️'];
@@ -96,12 +83,10 @@ const ANIM_STYLES = `
         0%   { transform: translate(-50%,-50%) translate(0,0) rotate(0deg); opacity:1; }
         100% { transform: translate(-50%,-50%) translate(var(--tx),var(--ty)) rotate(var(--rot)); opacity:0; }
     }
-    @keyframes slideUp   { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes fadeInScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
-    @keyframes countUp   { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-    .anim-slide-up   { animation: slideUp 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
-    .anim-fade-scale { animation: fadeInScale 0.4s ease-out forwards; }
-    .anim-count      { animation: countUp 0.35s ease-out forwards; }
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes countUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .anim-slide-up { animation: slideUp 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .anim-count    { animation: countUp 0.35s ease-out forwards; }
 `;
 
 const RAISONS_SIGNALEMENT = [
@@ -439,9 +424,9 @@ const Video = () => {
     const [signalDone, setSignalDone] = useState(false);
     const [likeBurst, setLikeBurst] = useState(0);
     const [shareAnim, setShareAnim] = useState(false);
-    const animLikes = useAnimatedCount(reactionsCount.likes);
+    const animLikes    = useAnimatedCount(reactionsCount.likes);
     const animDislikes = useAnimatedCount(reactionsCount.dislikes);
-    const animViews = useAnimatedCount(viewsCount);
+    const animViews    = useAnimatedCount(viewsCount);
     const videoSrc = video?.filename
         ? `/uploads/videos/${video.filename}`
         : null;
@@ -504,32 +489,51 @@ const Video = () => {
     };
 
     const handleLike = async () => {
-        if (!isAuthenticated) {
-            setShowLoginModal(true);
-            return;
-        }
+        if (!isAuthenticated) { setShowLoginModal(true); return; }
+
+        const wasLiked    = userReaction === 'like';
+        const wasDisliked = userReaction === 'dislike';
+
+        setUserReaction(wasLiked ? null : 'like');
+        setReactionsCount(prev => ({
+            likes:    wasLiked    ? prev.likes - 1    : prev.likes + 1,
+            dislikes: wasDisliked ? prev.dislikes - 1 : prev.dislikes,
+        }));
+        if (!wasLiked) setLikeBurst(b => b + 1);
+
         try {
-            const result = await videoService.likeVideo(videoId);
-            setUserReaction(result.liked ? 'like' : null);
-            if (result.liked) setLikeBurst(b => b + 1);
+            await videoService.likeVideo(videoId);
             await loadReactions();
         } catch (err) {
+            setUserReaction(wasLiked ? 'like' : wasDisliked ? 'dislike' : null);
+            setReactionsCount(prev => ({
+                likes:    wasLiked    ? prev.likes + 1    : prev.likes - 1,
+                dislikes: wasDisliked ? prev.dislikes + 1 : prev.dislikes,
+            }));
             toast.error('Erreur lors du like');
         }
     };
 
     const handleDislike = async () => {
-        if (!isAuthenticated) {
-            setShowLoginModal(true);
-            return;
-        }
+        if (!isAuthenticated) { setShowLoginModal(true); return; }
+        const wasDisliked = userReaction === 'dislike';
+        const wasLiked    = userReaction === 'like';
+
+        setUserReaction(wasDisliked ? null : 'dislike');
+        setReactionsCount(prev => ({
+            dislikes: wasDisliked ? prev.dislikes - 1 : prev.dislikes + 1,
+            likes:    wasLiked    ? prev.likes - 1    : prev.likes,
+        }));
 
         try {
-            const result = await videoService.dislikeVideo(videoId);
-            setUserReaction(result.disliked ? 'dislike' : null);
+            await videoService.dislikeVideo(videoId);
             await loadReactions();
-
         } catch (err) {
+            setUserReaction(wasDisliked ? 'dislike' : wasLiked ? 'like' : null);
+            setReactionsCount(prev => ({
+                dislikes: wasDisliked ? prev.dislikes + 1 : prev.dislikes - 1,
+                likes:    wasLiked    ? prev.likes + 1    : prev.likes,
+            }));
             toast.error('Erreur lors du dislike');
         }
     };
@@ -675,7 +679,7 @@ const Video = () => {
                             />
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 anim-slide-up" style={{animationDelay:'0.1s',opacity:0}}>
+                        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 anim-slide-up" style={{opacity:0}}>
                             <h1 className="text-2xl font-bold text-gray-900 mb-4">{video.title}</h1>
 
                             <div className="flex items-center gap-6 mb-6 text-sm text-gray-600 flex-wrap">
@@ -701,7 +705,7 @@ const Video = () => {
                                     >
                                         <ThumbsUp size={20} fill={userReaction === 'like' ? 'currentColor' : 'none'}
                                                   className={`transition-transform duration-200 ${userReaction === 'like' ? 'scale-125' : ''}`} />
-                                        <span className="font-medium anim-count">{formatNumber(animLikes)}</span>
+                                        <span className="font-medium">{formatNumber(reactionsCount.likes)}</span>
                                         <ConfettiBurst trigger={likeBurst} />
                                     </button>
                                     <button
@@ -714,7 +718,7 @@ const Video = () => {
                                     >
                                         <ThumbsDown size={20} fill={userReaction === 'dislike' ? 'currentColor' : 'none'}
                                                     className={`transition-transform duration-200 ${userReaction === 'dislike' ? 'scale-125' : ''}`} />
-                                        <span className="font-medium anim-count">{formatNumber(animDislikes)}</span>
+                                        <span className="font-medium">{formatNumber(reactionsCount.dislikes)}</span>
                                     </button>
                                 </div>
                                 <button
@@ -777,9 +781,9 @@ const Video = () => {
                             )}
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-xl p-6 anim-slide-up" style={{animationDelay:'0.2s',opacity:0}}>
+                        <div className="bg-white rounded-2xl shadow-xl p-6">
                             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <MessageCircle size={22} className="text-blue-500" />
+                                <MessageCircle size={22} />
                                 Commentaires ({comments.length})
                             </h3>
 

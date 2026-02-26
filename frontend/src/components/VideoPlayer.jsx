@@ -288,8 +288,6 @@ const VideoPlayer = ({
                 src={src}
                 poster={poster}
                 playsInline
-                webkit-playsinline="true"
-                x5-playsinline="true"
                 onPlaying={() => {
                     setIsPlaying(true);
                     sendViewStartOnce();
@@ -326,7 +324,6 @@ const VideoPlayer = ({
 
                     onEnded?.();
                 }}
-                playsInline
                 preload="metadata"
             >
                 Votre navigateur ne supporte pas la lecture de vidéos.
