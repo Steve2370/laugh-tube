@@ -315,8 +315,7 @@ const VideoCard = ({ video, onClick }) => {
                     )}
                 </div>
 
-                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 transition-all duration-300 ${hovered ? 'opacity-100' : 'opacity-0'}`}
-                />
+                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 transition-all duration-300 ${hovered ? 'opacity-100' : 'opacity-0'}`}/>
             </div>
         </>
     );
