@@ -104,15 +104,15 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
                 </div>
 
                 <h1 className="text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
-                    Là où le rire prend{' '}
-                    <span className="text-yellow-400">toute sa place</span>
+                    Le tremplin des humoristes{' '}
+                    <span className="text-yellow-400">qui veulent être vus 😄</span>
                 </h1>
 
                 <p className="text-blue-100 text-lg mb-2 max-w-xl mx-auto font-medium">
-                    YouTube ? TikTok ? Trop de recettes de cuisine, trop de drama, trop de tout.
+                    Un espace 100% dédié à l'humour, conçu pour propulser les créateurs de contenu humoristique.
                 </p>
                 <p className="text-white text-xl mb-8 max-w-xl mx-auto font-bold">
-                    LaughTube, c'est <span className="text-yellow-400">100% humour</span>. Rien d'autre. On est sérieux là-dedans. 😄
+                    Ici, <span className="text-yellow-400">le rire est la vedette</span>. Et toi avec.
                 </p>
 
                 <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -153,11 +153,11 @@ const ValueSection = ({ navigateTo, isAuthenticated }) => (
 
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-3">
             <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center text-2xl">🎭</div>
-            <h3 className="font-black text-gray-900 text-lg">Pas un second YouTube</h3>
+            <h3 className="font-black text-gray-900 text-lg">Un tremplin, pas juste une plateforme</h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-                YouTube et TikTok, c'est bien. Mais tu y cherches du rire et tu finis par regarder un tutoriel de plomberie à 2h du matin.
+                LaughTube, c'est une scène numérique dédié à offrir de la visibilité aux créateurs de contenu humoristique.
                 <br /><br />
-                <span className="font-semibold text-gray-800">LaughTube : uniquement du contenu qui fait rire.</span> Promis, pas de plomberie.
+                <span className="font-semibold text-gray-800">Notre mission : propulser les humoristes émergents qui veulent se faire connaître.</span>
             </p>
         </div>
 
@@ -165,8 +165,8 @@ const ValueSection = ({ navigateTo, isAuthenticated }) => (
             <div className="w-11 h-11 rounded-xl bg-white bg-opacity-20 flex items-center justify-center text-2xl">👀</div>
             <h3 className="font-black text-white text-lg">Pour les spectateurs</h3>
             <ul className="text-blue-100 text-sm space-y-2">
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Du rire garanti, pas de contenu hors sujet</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Une plateforme pensée pour se divertir vite</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Du contenu 100% humour, sans distractions</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Découvrez des talents avant tout le monde</li>
                 <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Une communauté qui vient pour la même raison que toi</li>
                 <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Zéro drama. Que du LOL.</li>
             </ul>
@@ -183,9 +183,9 @@ const ValueSection = ({ navigateTo, isAuthenticated }) => (
             <h3 className="font-black text-white text-lg">Pour les créateurs</h3>
             <ul className="text-gray-300 text-sm space-y-2">
                 <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Une audience qui cherche exactement ton contenu</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Moins de compétition avec du contenu hors sujet</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Tu ne cours pas après un algorithme invisible</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Le côté humain est mis en avant ici</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> De la visibilité basée sur ta créativité</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Une communauté engagée qui vient pour rire</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Le côté humain mis en avant, pas l'algorithme</li>
             </ul>
             {!isAuthenticated && (
                 <button onClick={() => navigateTo("register")}
@@ -290,7 +290,7 @@ const Home = () => {
     useEffect(() => {
         const hash = window.location.hash;
         if (hash.includes('verified=1')) {
-            toast.success('Email vérifié avec succès ! Bienvenue sur LaughTube 🎉');
+            toast.success('Email vérifié avec succès ! Bienvenue sur LaughTube');
             window.location.hash = '#/home';
         }
     }, []);
