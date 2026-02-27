@@ -70,7 +70,7 @@ const ParticleNetwork = () => {
     return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }} />;
 };
 
-const FLOATING = ['😂','🤣','😁','😭','🔥','👏','💯','🎭','🎬','✨'];
+const FLOATING = ['😂','🤣','💀','😭','🔥','👏','💯','🎭','🎬','✨'];
 const FloatingEmoji = ({ emoji, style }) => (
     <span className="absolute text-2xl select-none pointer-events-none opacity-50 animate-bounce" style={style}>
         {emoji}
@@ -92,9 +92,8 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
         , []);
 
     return (
-        <div className="relative overflow-hidden rounded-3xl mb-10 bg-blue-500 shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl mb-6 bg-blue-500 shadow-2xl">
             {particles.map((p, i) => <FloatingEmoji key={i} {...p} />)}
-
             <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-400 rounded-full opacity-10 blur-3xl" />
             <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-400 rounded-full opacity-10 blur-3xl" />
 
@@ -103,15 +102,19 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
                     <Flame size={14} className="text-orange-300" />
                     {total > 0 ? `${total} punchlines disponibles` : 'Bienvenue sur LaughTube'}
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
+
+                <h1 className="text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
                     Là où le rire prend{' '}
-                    <span className="text-yellow-400">
-                        toute sa place 😄
-                    </span>
+                    <span className="text-yellow-400">toute sa place</span>
                 </h1>
-                <p className="text-blue-100 text-lg mb-8 max-w-lg mx-auto">
-                    Découvrez les meilleures punchlines, partagez vos moments hilarants.
+
+                <p className="text-blue-100 text-lg mb-2 max-w-xl mx-auto font-medium">
+                    YouTube ? TikTok ? Trop de recettes de cuisine, trop de drama, trop de tout.
                 </p>
+                <p className="text-white text-xl mb-8 max-w-xl mx-auto font-bold">
+                    LaughTube, c'est <span className="text-yellow-400">100% humour</span>. Rien d'autre. On est sérieux là-dedans.
+                </p>
+
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                     {isAuthenticated ? (
                         <button
@@ -128,14 +131,14 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
                                 className="flex items-center gap-2 bg-white text-blue-700 font-bold px-6 py-3 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
                             >
                                 <Star size={18} />
-                                Rejoindre LaughTube
+                                Je veux rire 😂
                             </button>
                             <button
-                                onClick={() => navigateTo("login")}
-                                className="flex items-center gap-2 bg-blue-500 bg-opacity-50 backdrop-blur text-white font-semibold px-6 py-3 rounded-xl hover:bg-opacity-70 transition-all border border-white border-opacity-30"
+                                onClick={() => navigateTo("register")}
+                                className="flex items-center gap-2 bg-yellow-400 text-blue-900 font-bold px-6 py-3 rounded-xl hover:bg-yellow-300 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
                             >
-                                <LogIn size={18} />
-                                Se connecter
+                                <Play size={18} fill="currentColor" />
+                                Je crée du contenu 🎤
                             </button>
                         </>
                     )}
@@ -144,6 +147,55 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
         </div>
     );
 };
+
+const ValueSection = ({ navigateTo, isAuthenticated }) => (
+    <div className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-3">
+            <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center text-2xl">🎭</div>
+            <h3 className="font-black text-gray-900 text-lg">Pas un second YouTube</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+                YouTube et TikTok, c'est bien. Mais tu y cherches du rire et tu finis par regarder un tutoriel de plomberie à 2h du matin.
+                <br /><br />
+                <span className="font-semibold text-gray-800">LaughTube : uniquement du contenu qui fait rire.</span> Promis, pas de plomberie.😄
+            </p>
+        </div>
+
+        <div className="bg-blue-500 rounded-2xl p-6 shadow-sm flex flex-col gap-3">
+            <div className="w-11 h-11 rounded-xl bg-white bg-opacity-20 flex items-center justify-center text-2xl">👀</div>
+            <h3 className="font-black text-white text-lg">Pour les spectateurs</h3>
+            <ul className="text-blue-100 text-sm space-y-2">
+                <li className="flex items-start gap-2"><span className="text-yellow-300 font-bold mt-0.5">✓</span> Du rire garanti, pas de contenu hors sujet</li>
+                <li className="flex items-start gap-2"><span className="text-yellow-300 font-bold mt-0.5">✓</span> Une plateforme pensée pour se divertir vite</li>
+                <li className="flex items-start gap-2"><span className="text-yellow-300 font-bold mt-0.5">✓</span> Une communauté qui vient pour la même raison que toi</li>
+                <li className="flex items-start gap-2"><span className="text-yellow-300 font-bold mt-0.5">✓</span> Zéro drama. Que du LOL.</li>
+            </ul>
+            {!isAuthenticated && (
+                <button onClick={() => navigateTo("register")}
+                        className="mt-2 w-full bg-white text-blue-700 font-bold py-2.5 rounded-xl hover:bg-blue-50 transition-all text-sm active:scale-95">
+                    Je veux rire 😂
+                </button>
+            )}
+        </div>
+
+        <div className="bg-gray-900 rounded-2xl p-6 shadow-sm flex flex-col gap-3">
+            <div className="w-11 h-11 rounded-xl bg-white bg-opacity-10 flex items-center justify-center text-2xl">🎤</div>
+            <h3 className="font-black text-white text-lg">Pour les créateurs</h3>
+            <ul className="text-gray-300 text-sm space-y-2">
+                <li className="flex items-start gap-2"><span className="text-yellow-400 font-bold mt-0.5">✓</span> Une audience qui cherche <em>exactement</em> ton contenu</li>
+                <li className="flex items-start gap-2"><span className="text-yellow-400 font-bold mt-0.5">✓</span> Moins de compétition avec du contenu hors sujet</li>
+                <li className="flex items-start gap-2"><span className="text-yellow-400 font-bold mt-0.5">✓</span> Tu ne cours pas après un algorithme invisible</li>
+                <li className="flex items-start gap-2"><span className="text-yellow-400 font-bold mt-0.5">✓</span> Le côté humain est mis en avant ici</li>
+            </ul>
+            {!isAuthenticated && (
+                <button onClick={() => navigateTo("register")}
+                        className="mt-2 w-full bg-yellow-400 text-gray-900 font-bold py-2.5 rounded-xl hover:bg-yellow-300 transition-all text-sm active:scale-95">
+                    Je crée du contenu 🎤
+                </button>
+            )}
+        </div>
+    </div>
+);
 
 
 const FILTERS = [
@@ -227,11 +279,11 @@ const Home = () => {
     const { isAuthenticated } = useAuth();
     const toast = useToast();
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filter, setFilter] = useState("all");
+    const [searchTerm, setSearchTerm]     = useState("");
+    const [filter, setFilter]             = useState("all");
     const [trendingVideos, setTrendingVideos] = useState([]);
-    const [displayVideos, setDisplayVideos] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
+    const [displayVideos, setDisplayVideos]   = useState([]);
+    const [isSearching, setIsSearching]   = useState(false);
 
     useEffect(() => { if (error) toast.error(error); }, [error, toast]);
     useEffect(() => { setDisplayVideos(videos); }, [videos]);
@@ -320,6 +372,10 @@ const Home = () => {
                     navigateTo={navigateTo}
                     total={videos.length}
                 />
+
+                {!isAuthenticated && (
+                    <ValueSection navigateTo={navigateTo} isAuthenticated={isAuthenticated} />
+                )}
 
                 <FilterBar filter={filter} onChange={handleFilterChange} />
 
