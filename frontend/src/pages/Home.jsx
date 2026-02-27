@@ -3,7 +3,7 @@ import { useVideos } from "../hooks/useVideos";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
 import VideoCard from "../components/VideoCard";
-import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap } from "lucide-react";
+import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap, CheckCircle2 } from "lucide-react";
 
 
 const ParticleNetwork = () => {
@@ -70,7 +70,7 @@ const ParticleNetwork = () => {
     return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }} />;
 };
 
-const FLOATING = ['😂','🤣','💀','😭','🔥','👏','💯','🎭','🎬','✨'];
+const FLOATING = ['😂','🤣','😄','😭','🔥','👏','💯','🎭','🎬','✨'];
 const FloatingEmoji = ({ emoji, style }) => (
     <span className="absolute text-2xl select-none pointer-events-none opacity-50 animate-bounce" style={style}>
         {emoji}
@@ -112,7 +112,7 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
                     YouTube ? TikTok ? Trop de recettes de cuisine, trop de drama, trop de tout.
                 </p>
                 <p className="text-white text-xl mb-8 max-w-xl mx-auto font-bold">
-                    LaughTube, c'est <span className="text-yellow-400">100% humour</span>. Rien d'autre. On est sérieux là-dedans.
+                    LaughTube, c'est <span className="text-yellow-400">100% humour</span>. Rien d'autre. On est sérieux là-dedans. 😄
                 </p>
 
                 <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -157,7 +157,7 @@ const ValueSection = ({ navigateTo, isAuthenticated }) => (
             <p className="text-gray-600 text-sm leading-relaxed">
                 YouTube et TikTok, c'est bien. Mais tu y cherches du rire et tu finis par regarder un tutoriel de plomberie à 2h du matin.
                 <br /><br />
-                <span className="font-semibold text-gray-800">LaughTube : uniquement du contenu qui fait rire.</span> Promis, pas de plomberie.😄
+                <span className="font-semibold text-gray-800">LaughTube : uniquement du contenu qui fait rire.</span> Promis, pas de plomberie.
             </p>
         </div>
 
@@ -165,10 +165,10 @@ const ValueSection = ({ navigateTo, isAuthenticated }) => (
             <div className="w-11 h-11 rounded-xl bg-white bg-opacity-20 flex items-center justify-center text-2xl">👀</div>
             <h3 className="font-black text-white text-lg">Pour les spectateurs</h3>
             <ul className="text-blue-100 text-sm space-y-2">
-                <li className="flex items-start gap-2"><span className="text-yellow-300 font-bold mt-0.5">✓</span> Du rire garanti, pas de contenu hors sujet</li>
-                <li className="flex items-start gap-2"><span className="text-yellow-300 font-bold mt-0.5">✓</span> Une plateforme pensée pour se divertir vite</li>
-                <li className="flex items-start gap-2"><span className="text-yellow-300 font-bold mt-0.5">✓</span> Une communauté qui vient pour la même raison que toi</li>
-                <li className="flex items-start gap-2"><span className="text-yellow-300 font-bold mt-0.5">✓</span> Zéro drama. Que du LOL.</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Du rire garanti, pas de contenu hors sujet</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Une plateforme pensée pour se divertir vite</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Une communauté qui vient pour la même raison que toi</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Zéro drama. Que du LOL.</li>
             </ul>
             {!isAuthenticated && (
                 <button onClick={() => navigateTo("register")}
@@ -182,10 +182,10 @@ const ValueSection = ({ navigateTo, isAuthenticated }) => (
             <div className="w-11 h-11 rounded-xl bg-white bg-opacity-10 flex items-center justify-center text-2xl">🎤</div>
             <h3 className="font-black text-white text-lg">Pour les créateurs</h3>
             <ul className="text-gray-300 text-sm space-y-2">
-                <li className="flex items-start gap-2"><span className="text-yellow-400 font-bold mt-0.5">✓</span> Une audience qui cherche <em>exactement</em> ton contenu</li>
-                <li className="flex items-start gap-2"><span className="text-yellow-400 font-bold mt-0.5">✓</span> Moins de compétition avec du contenu hors sujet</li>
-                <li className="flex items-start gap-2"><span className="text-yellow-400 font-bold mt-0.5">✓</span> Tu ne cours pas après un algorithme invisible</li>
-                <li className="flex items-start gap-2"><span className="text-yellow-400 font-bold mt-0.5">✓</span> Le côté humain est mis en avant ici</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Une audience qui cherche exactement ton contenu</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Moins de compétition avec du contenu hors sujet</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Tu ne cours pas après un algorithme invisible</li>
+                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Le côté humain est mis en avant ici</li>
             </ul>
             {!isAuthenticated && (
                 <button onClick={() => navigateTo("register")}
@@ -279,11 +279,11 @@ const Home = () => {
     const { isAuthenticated } = useAuth();
     const toast = useToast();
 
-    const [searchTerm, setSearchTerm]     = useState("");
-    const [filter, setFilter]             = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filter, setFilter] = useState("all");
     const [trendingVideos, setTrendingVideos] = useState([]);
-    const [displayVideos, setDisplayVideos]   = useState([]);
-    const [isSearching, setIsSearching]   = useState(false);
+    const [displayVideos, setDisplayVideos] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => { if (error) toast.error(error); }, [error, toast]);
     useEffect(() => { setDisplayVideos(videos); }, [videos]);
