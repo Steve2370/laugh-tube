@@ -104,8 +104,8 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
                 </div>
 
                 <h1 className="text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
-                    Le tremplin des humoristes{' '}
-                    <span className="text-yellow-400">qui veulent être vus 😄</span>
+                    Ton humour mérite une scène.{' '}
+                    <span className="text-yellow-400"> La voilà.</span>
                 </h1>
 
                 <p className="text-blue-100 text-lg mb-2 max-w-xl mx-auto font-medium">
