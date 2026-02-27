@@ -22,7 +22,7 @@ export default function Navbar() {
     const dropdownRef = useRef(null);
 
     const [navEmojis, setNavEmojis] = useState([]);
-    const emojiPool = ['😂','🤣','💀','🔥','👏','😭','💯','🎭'];
+    const emojiPool = ['😂','🤣','😁','🔥','👏','😭','💯','🎭'];
     useEffect(() => {
         const spawn = () => {
             const emoji = emojiPool[Math.floor(Math.random() * emojiPool.length)];

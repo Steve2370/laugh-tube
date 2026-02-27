@@ -70,7 +70,7 @@ const ParticleNetwork = () => {
     return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }} />;
 };
 
-const FLOATING = ['😂','🤣','💀','😭','🔥','👏','💯','🎭','🎬','✨'];
+const FLOATING = ['😂','🤣','😁','😭','🔥','👏','💯','🎭','🎬','✨'];
 const FloatingEmoji = ({ emoji, style }) => (
     <span className="absolute text-2xl select-none pointer-events-none opacity-50 animate-bounce" style={style}>
         {emoji}
@@ -106,7 +106,7 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
                 <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
                     Là où le rire prend{' '}
                     <span className="text-yellow-400">
-                        toute sa place
+                        toute sa place 😄
                     </span>
                 </h1>
                 <p className="text-blue-100 text-lg mb-8 max-w-lg mx-auto">
@@ -227,11 +227,11 @@ const Home = () => {
     const { isAuthenticated } = useAuth();
     const toast = useToast();
 
-    const [searchTerm, setSearchTerm]     = useState("");
-    const [filter, setFilter]             = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filter, setFilter] = useState("all");
     const [trendingVideos, setTrendingVideos] = useState([]);
-    const [displayVideos, setDisplayVideos]   = useState([]);
-    const [isSearching, setIsSearching]   = useState(false);
+    const [displayVideos, setDisplayVideos] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => { if (error) toast.error(error); }, [error, toast]);
     useEffect(() => { setDisplayVideos(videos); }, [videos]);
