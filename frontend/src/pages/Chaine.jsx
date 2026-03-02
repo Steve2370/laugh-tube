@@ -41,7 +41,8 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
 
     return (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-            <div className="relative h-56">
+
+            <div className="relative h-32 sm:h-56">
                 {getCoverUrl() ? (
                     <img
                         src={getCoverUrl()}
@@ -49,19 +50,18 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
                         className="w-full h-full object-cover"
                         onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement.innerHTML = `
-                                <div class="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"></div>
-                            `;
+                            e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"></div>`;
                         }}
                     />
                 ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"></div>
+                    <div className="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600" />
                 )}
             </div>
 
-            <div className="relative px-8 pb-8">
-                <div className="absolute -top-20 left-8">
-                    <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <div className="px-4 sm:px-8 pb-6 sm:pb-8">
+
+                <div className="flex items-end justify-between -mt-8 sm:-mt-16 mb-4">
+                    <div className="w-16 h-16 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
                         {getAvatarUrl() ? (
                             <img
                                 src={getAvatarUrl()}
@@ -69,81 +69,56 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                     e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = `
-                                        <span class="text-white text-5xl font-bold">
-                                            ${channelUser.username.charAt(0).toUpperCase()}
-                                        </span>
-                                    `;
+                                    e.target.parentElement.innerHTML = `<span class="text-white text-2xl sm:text-5xl font-bold">${channelUser.username.charAt(0).toUpperCase()}</span>`;
                                 }}
                             />
                         ) : (
-                            <span className="text-white text-5xl font-bold">
+                            <span className="text-white text-2xl sm:text-5xl font-bold">
                                 {channelUser.username.charAt(0).toUpperCase()}
                             </span>
                         )}
                     </div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <BoutonSignaler videoId={null} userId={channelUser.id} />
+                        <BoutonAbonne targetUserId={channelUser.id} />
+                    </div>
                 </div>
 
-                <div className="flex justify-end pt-4 gap-3">
-                    <BoutonSignaler videoId={null} userId={channelUser.id} />
-                    <BoutonAbonne targetUserId={channelUser.id} />
+                <div className="mb-5">
+                    <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">
+                        {channelUser.username}
+                    </h1>
+                    {channelUser.bio && (
+                        <p className="text-gray-700 mb-3 text-base sm:text-lg">{channelUser.bio}</p>
+                    )}
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <Calendar size={15} />
+                        Chaîne créée en{' '}
+                        {new Date(channelUser.created_at || Date.now()).toLocaleDateString('fr-FR', {
+                            month: 'long', year: 'numeric',
+                        })}
+                    </div>
                 </div>
 
-                <div className="pt-24">
-                    <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-                        <div className="flex-1">
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                                {channelUser.username}
-                            </h1>
-
-                            {channelUser.bio && (
-                                <p className="text-gray-700 mb-4 text-lg">
-                                    {channelUser.bio}
-                                </p>
-                            )}
-
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                                <div className="flex items-center gap-1">
-                                    <Calendar size={16} />
-                                    Chaîne créée en{' '}
-                                    {new Date(channelUser.created_at || Date.now()).toLocaleDateString(
-                                        'fr-FR',
-                                        {
-                                            month: 'long',
-                                            year: 'numeric',
-                                        }
-                                    )}
-                                </div>
-                            </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-gray-100 pt-5">
+                    <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-blue-600 flex items-center justify-center gap-1">
+                            <Users size={20} className="text-blue-500" />
+                            <span>{formatSubscribers(subscribersCount)}</span>
                         </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-blue-600 flex items-center justify-center gap-1">
-                                    <Users size={24} className="text-blue-500" />
-                                    <span>{formatSubscribers(subscribersCount)}</span>
-                                </div>
-                                <div className="text-sm text-gray-600">Abonnés</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-blue-600">
-                                    {formatNumber(stats.totalVideos)}
-                                </div>
-                                <div className="text-sm text-gray-600">Vidéos</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-blue-600">
-                                    {formatNumber(stats.totalViews)}
-                                </div>
-                                <div className="text-sm text-gray-600">Vues</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-blue-600">
-                                    {formatNumber(stats.totalLikes)}
-                                </div>
-                                <div className="text-sm text-gray-600">J'aime</div>
-                            </div>
-                        </div>
+                        <div className="text-xs sm:text-sm text-gray-600 mt-0.5">Abonnés</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-blue-600">{formatNumber(stats.totalVideos)}</div>
+                        <div className="text-xs sm:text-sm text-gray-600 mt-0.5">Vidéos</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-blue-600">{formatNumber(stats.totalViews)}</div>
+                        <div className="text-xs sm:text-sm text-gray-600 mt-0.5">Vues</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-blue-600">{formatNumber(stats.totalLikes)}</div>
+                        <div className="text-xs sm:text-sm text-gray-600 mt-0.5">J'aime</div>
                     </div>
                 </div>
             </div>
