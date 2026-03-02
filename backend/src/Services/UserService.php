@@ -341,7 +341,7 @@ class UserService
             return [
                 'success' => true,
                 'isSubscribed' => (int)($result['count'] ?? 0) > 0,
-                'subscribed' => (int)($result['count'] ?? 0) > 0  // Alias
+                'subscribed' => (int)($result['count'] ?? 0) > 0
             ];
 
         } catch (\Exception $e) {
@@ -366,7 +366,6 @@ class UserService
                 ];
             }
 
-            // Vérifier que le créateur existe
             if (!$this->userModel->findById($creatorId)) {
                 return [
                     'success' => false,
@@ -465,9 +464,6 @@ class UserService
         }
     }
 
-    /**
-     * ✅ BONUS - Obtenir la liste des abonnés
-     */
     public function getSubscribers(int $creatorId, int $limit = 20, int $offset = 0): array
     {
         try {
@@ -483,7 +479,6 @@ class UserService
 
             $subscribers = $this->db->fetchAll($sql, [$creatorId, $limit, $offset]);
 
-            // Compter le total
             $countResult = $this->db->fetchOne(
                 "SELECT COUNT(*) as count FROM subscriptions WHERE creator_id = $1",
                 [$creatorId]
@@ -510,9 +505,6 @@ class UserService
         }
     }
 
-    /**
-     * ✅ BONUS - Obtenir la liste des abonnements
-     */
     public function getSubscriptions(int $subscriberId, int $limit = 20, int $offset = 0): array
     {
         try {
@@ -528,7 +520,6 @@ class UserService
 
             $subscriptions = $this->db->fetchAll($sql, [$subscriberId, $limit, $offset]);
 
-            // Compter le total
             $countResult = $this->db->fetchOne(
                 "SELECT COUNT(*) as count FROM subscriptions WHERE subscriber_id = $1",
                 [$subscriberId]
@@ -555,9 +546,6 @@ class UserService
         }
     }
 
-    /**
-     * ✅ BONUS - Mettre à jour la bio uniquement
-     */
     public function updateBio(int $userId, string $bio): array
     {
         try {
