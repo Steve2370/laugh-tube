@@ -7,12 +7,13 @@ use App\Middleware\AuthAide;
 use App\Middleware\AuthMiddleware;
 use App\Services\AbonnementService;
 use App\Services\UploadService;
+use App\Services\UserService;
 use App\Utils\JsonResponse;
 use App\Models\User;
 
 class UserController
 {
-    private $userService;
+    private UserService $userService;
     private UploadService $uploadService;
     private User $userModel;
     private AbonnementService $abonnementService;
@@ -332,7 +333,7 @@ class UserController
     public function getStats(int $userId)
     {
         try {
-            $stats = $this->userService->getUserStats($userId);
+            $stats = $this->userService->getStats($userId);
 
             JsonResponse::success([
                 'stats' => $stats

@@ -42,16 +42,10 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
     return (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
 
-            <div className="relative h-32 sm:h-56">
+            <div className="h-32 sm:h-56">
                 {getCoverUrl() ? (
-                    <img
-                        src={getCoverUrl()}
-                        alt="Couverture"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"></div>`;
-                        }}
+                    <img src={getCoverUrl()} alt="Couverture" className="w-full h-full object-cover"
+                         onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.parentElement.innerHTML=`<div class="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"></div>`; }}
                     />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600" />
@@ -63,14 +57,8 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
                 <div className="flex items-end justify-between -mt-8 sm:-mt-16 mb-4">
                     <div className="w-16 h-16 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
                         {getAvatarUrl() ? (
-                            <img
-                                src={getAvatarUrl()}
-                                alt="Avatar"
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = `<span class="text-white text-2xl sm:text-5xl font-bold">${channelUser.username.charAt(0).toUpperCase()}</span>`;
-                                }}
+                            <img src={getAvatarUrl()} alt="Avatar" className="w-full h-full object-cover"
+                                 onError={(e) => { e.target.style.display='none'; e.target.parentElement.innerHTML=`<span class="text-white text-2xl sm:text-5xl font-bold">${channelUser.username.charAt(0).toUpperCase()}</span>`; }}
                             />
                         ) : (
                             <span className="text-white text-2xl sm:text-5xl font-bold">
@@ -78,25 +66,22 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center gap-2 mb-1">
+
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 mb-1">
                         <BoutonSignaler videoId={null} userId={channelUser.id} />
                         <BoutonAbonne targetUserId={channelUser.id} />
                     </div>
                 </div>
 
                 <div className="mb-5">
-                    <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">
-                        {channelUser.username}
-                    </h1>
+                    <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">{channelUser.username}</h1>
                     {channelUser.bio && (
                         <p className="text-gray-700 mb-3 text-base sm:text-lg">{channelUser.bio}</p>
                     )}
                     <div className="flex items-center gap-1 text-sm text-gray-500">
                         <Calendar size={15} />
                         Chaîne créée en{' '}
-                        {new Date(channelUser.created_at || Date.now()).toLocaleDateString('fr-FR', {
-                            month: 'long', year: 'numeric',
-                        })}
+                        {new Date(channelUser.created_at || Date.now()).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                     </div>
                 </div>
 

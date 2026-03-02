@@ -1,7 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { UserPlus, Mail, Lock, User, Eye, EyeOff, Check, X } from 'lucide-react';
+
+const BUBBLE_TEXTS = ['LOL', 'MDR', '😂', 'HAHA', '💀', '😭', 'XD', 'lmao', '🤣', 'ptdr', '😆', '👏'];
+
+const FloatingBubbles = () => {
+    const bubbles = useMemo(() =>
+            Array.from({ length: 12 }, (_, i) => ({
+                id: i,
+                text: BUBBLE_TEXTS[i % BUBBLE_TEXTS.length],
+                left: `${(i * 8.3 + 2) % 92}%`,
+                delay: `${(i * 0.5) % 5}s`,
+                duration: `${5 + (i % 4)}s`,
+                size: 0.75 + (i % 3) * 0.2,
+            }))
+        , []);
+
+    return (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+            <style>{`
+                @keyframes bubbleRise {
+                    0%   { transform: translateY(100vh) scale(0.8); opacity: 0; }
+                    10%  { opacity: 1; }
+                    90%  { opacity: 1; }
+                    100% { transform: translateY(-120px) scale(1.1); opacity: 0; }
+                }
+                @keyframes bubbleWobble {
+                    0%,100% { margin-left: 0; }
+                    25%     { margin-left: 12px; }
+                    75%     { margin-left: -12px; }
+                }
+                .bubble-item {
+                    animation: bubbleRise var(--dur) ease-in var(--delay) infinite,
+                               bubbleWobble calc(var(--dur) * 0.6) ease-in-out var(--delay) infinite;
+                }
+            `}</style>
+            {bubbles.map(b => (
+                <div
+                    key={b.id}
+                    className="bubble-item absolute bottom-0 flex items-center justify-center bg-white bg-opacity-80 rounded-full shadow-md font-bold text-gray-700 border border-gray-200"
+                    style={{
+                        left: b.left,
+                        '--dur': b.duration,
+                        '--delay': b.delay,
+                        width: `${b.size * 56}px`,
+                        height: `${b.size * 56}px`,
+                        fontSize: `${b.size * 0.85}rem`,
+                    }}
+                >
+                    {b.text}
+                </div>
+            ))}
+        </div>
+    );
+};
 
 const Register = () => {
     const [username, setUsername] = useState('');
@@ -84,7 +137,8 @@ const Register = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-pink-50 pt-16">
-            <div className="w-full max-w-md px-6">
+            <FloatingBubbles />
+            <div className="w-full max-w-md px-6 relative" style={{ zIndex: 1 }}>
                 <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
                     <div className="flex flex-col items-center mb-8">
                         <div className="mb-2 flex justify-center">
