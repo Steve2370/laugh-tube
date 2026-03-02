@@ -36,15 +36,12 @@ class UserService
             return [
                 'success' => true,
                 'data' => [
-                    'id' => $user['id'],
-                    'username' => $user['username'],
-                    'email' => $user['email'],
+                    'id'         => $user['id'],
+                    'username'   => $user['username'],
                     'avatar_url' => $user['avatar_url'] ?? '/uploads/avatars/default.png',
-                    'cover_url' => $user['cover_url'] ?? '/uploads/covers/default.png',
-                    'bio' => $user['bio'] ?? null,
+                    'cover_url'  => $user['cover_url'] ?? '/uploads/covers/default.png',
+                    'bio'        => $user['bio'] ?? null,
                     'created_at' => $user['created_at'],
-                    'email_verified' => $user['email_verified'] ?? false,
-                    'two_fa_enabled' => $user['two_fa_enabled'] ?? false
                 ]
             ];
 
@@ -72,13 +69,18 @@ class UserService
                 ];
             }
 
-            unset($user['password_hash']);
-            unset($user['two_fa_secret']);
-            unset($user['verification_token']);
+            $publicProfile = [
+                'id'         => $user['id'],
+                'username'   => $user['username'],
+                'bio'        => $user['bio'] ?? null,
+                'avatar_url' => $user['avatar_url'] ?? null,
+                'cover_url'  => $user['cover_url'] ?? null,
+                'created_at' => $user['created_at'] ?? null,
+            ];
 
             return [
                 'success' => true,
-                'profile' => $user
+                'profile' => $publicProfile
             ];
         } catch (\Exception $e) {
             error_log("UserService::getUserProfile - Error: " . $e->getMessage());
