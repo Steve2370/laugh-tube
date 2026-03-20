@@ -3,9 +3,9 @@ import videoService from '../services/videoService.js';
 import apiService from "../services/apiService.js";
 
 export const useVideos = (filters = {}) => {
-    const [videos, setVideos] = useState([]);
+    const [videos, setVideos]   = useState([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError]     = useState(null);
 
     const filtersKey = useMemo(() => JSON.stringify(filters ?? {}), [filters]);
 
@@ -13,10 +13,8 @@ export const useVideos = (filters = {}) => {
         try {
             setLoading(true);
             setError(null);
-
             const parsedFilters = JSON.parse(filtersKey);
             const params = { limit: 20, ...parsedFilters };
-
             const data = await videoService.getVideos(params);
             setVideos(data);
         } catch (err) {
@@ -26,9 +24,7 @@ export const useVideos = (filters = {}) => {
         }
     }, [filtersKey]);
 
-    useEffect(() => {
-        loadVideos();
-    }, [loadVideos]);
+    useEffect(() => { loadVideos(); }, [loadVideos]);
 
     const getUserVideos = useCallback(async (userId) => {
         if (!userId) return;
@@ -36,12 +32,37 @@ export const useVideos = (filters = {}) => {
         try {
             const data = await apiService.getUserVideos(userId);
             setVideos(data);
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    return { videos, loading, error, loadVideos, reload: loadVideos, getUserVideos };
+    const getTrending = useCallback(
+        (opts) => videoService.getTrending(opts),
+        []
+    );
+
+    const getPopular = useCallback(
+        (limit) => videoService.getPopular(limit),
+        []
+    );
+
+    const searchVideos = useCallback(
+        (query, { limit = 20 } = {}) => videoService.searchVideos(query, limit),
+        []
+    );
+
+    return {
+        videos,
+        loading,
+        error,
+        loadVideos,
+        reload: loadVideos,
+        getUserVideos,
+        getTrending,
+        getPopular,
+        searchVideos,
+    };
 };
