@@ -506,6 +506,11 @@ try {
         return;
     }
 
+    if ($uri === '/videos/recent' && $method === 'GET') {
+        $videoController->recent();
+        return;
+    }
+
     if ($uri === '/videos/popular' && $method === 'GET') {
         $videoController->popular();
         return;

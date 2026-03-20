@@ -275,7 +275,7 @@ const SectionTitle = ({ filter, count }) => {
 };
 
 const Home = () => {
-    const { videos, loading, error, getTrending, getPopular, searchVideos } = useVideos();
+    const { videos, loading, error, getTrending, getPopular, getRecent, searchVideos } = useVideos();
     const { isAuthenticated } = useAuth();
     const toast = useToast();
 
@@ -329,14 +329,9 @@ const Home = () => {
                 if (result?.success) setPopularVideos(result.videos ?? []);
 
             } else if (newFilter === "recent") {
-                const result = await getTrending({ limit: 20, period: 30 });
+                const result = await getRecent(20);
                 if (reqId !== reqIdRef.current) return;
-                if (result?.success) {
-                    const sorted = [...(result.videos ?? [])].sort(
-                        (a, b) => new Date(b.created_at) - new Date(a.created_at)
-                    );
-                    setRecentVideos(sorted);
-                }
+                if (result?.success) setRecentVideos(result.videos ?? []);
             }
         } catch {
             toast.error("Erreur lors du chargement");
