@@ -213,7 +213,7 @@ class VideoController
                  FROM videos v
                  LEFT JOIN users u ON v.user_id = u.id
                  LEFT JOIN video_views vv ON vv.video_id = v.id 
-                     AND vv.created_at >= NOW() - INTERVAL '$period days'
+                     AND vv.viewed_at >= NOW() - INTERVAL '$period days'
                  LEFT JOIN likes l ON l.video_id = v.id
                  AND l.created_at >= NOW() - INTERVAL '$period days'
                  WHERE v.deleted_at IS NULL
