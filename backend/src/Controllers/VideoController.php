@@ -233,7 +233,7 @@ class VideoController
             JsonResponse::success(['videos' => $videos]);
 
         } catch (\Exception $e) {
-            error_log("VideoController::trending - Error: " . $e->getMessage());
+            error_log("VideoController::trending -- Error: " . $e->getMessage());
             JsonResponse::serverError(['error' => 'Erreur serveur']);
         }
     }
