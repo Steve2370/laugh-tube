@@ -70,9 +70,9 @@ class UserService
             }
 
             $publicProfile = [
-                'id'         => $user['id'],
-                'username'   => $user['username'],
-                'bio'        => $user['bio'] ?? null,
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'bio' => $user['bio'] ?? null,
                 'avatar_url' => $user['avatar_url'] ?? null,
                 'cover_url'  => $user['cover_url'] ?? null,
                 'created_at' => $user['created_at'] ?? null,
