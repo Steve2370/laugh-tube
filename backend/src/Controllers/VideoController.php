@@ -242,12 +242,11 @@ class VideoController
     {
         try {
             $limit = min((int)($_GET['limit'] ?? 10), 50);
-            $period = min((int)($_GET['period'] ?? 7), 30);
 
             $videos = $this->db->fetchAll(
                 "SELECT v.*, u.username,
                  COUNT(DISTINCT vv.id) as total_views,
-                 COUNT(DISTINCT l.id) as likes_count,
+                 COUNT(DISTINCT l.user_id) as likes_count,
                  (COUNT(DISTINCT vv.id) + COUNT(DISTINCT l.user_id) * 3) as popular_score
                  FROM videos v
                  LEFT JOIN users u ON v.user_id = u.id
@@ -272,6 +271,29 @@ class VideoController
             error_log("VideoController::popular - Error: " . $e->getMessage());
             JsonResponse::serverError(['error' => 'Erreur serveur']);
         }
+    }
+
+    public function recent(): void
+    {
+        try {
+            $limit = min((int)($_GET['limit'] ?? 10), 50);
+
+            $videos = $this->db->fetchAll(
+                "SELECT v.*, u.username
+                FROM videos v
+                LEFT JOIN users u ON v.user_id = u.id
+                WHERE v.deleted_at IS NULL
+                ORDER BY v.created_at DESC
+                LIMIT $1",
+                [$limit]
+            );
+
+            JsonResponse::success(['videos' => $videos]);
+        } catch (\Exception $e) {
+            error_log("VideoController::recent - Error: " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
+
     }
 
     public function userVideos(int $userId): void

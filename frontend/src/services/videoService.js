@@ -414,6 +414,22 @@ class VideoService {
         }
     }
 
+    async getRecent(limit = 20) {
+        try {
+            const cacheKey = `recent_${limit}`;
+            const cached = this._getFromCache(cacheKey);
+            if (cached) return cached;
+
+            const response = await apiService.request(`/videos/recent?limit=${limit}`);
+            const result = {success: true, videos: response.videos ?? []};
+            this._setInCache(cacheKey, result);
+            return result;
+        } catch (error) {
+            console.error('VideoService.getRecent:', error);
+            return {success: false, videos: []};
+        }
+    }
+
 
     _validateVideoFile(file) {
         const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];

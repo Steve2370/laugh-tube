@@ -49,6 +49,11 @@ export const useVideos = (filters = {}) => {
         []
     );
 
+    const getRecent = useCallback(
+        (limit) => videoService.getRecent(limit),
+        []
+    );
+
     const searchVideos = useCallback(
         (query, { limit = 20 } = {}) => videoService.searchVideos(query, limit),
         []
@@ -63,6 +68,7 @@ export const useVideos = (filters = {}) => {
         getUserVideos,
         getTrending,
         getPopular,
+        getRecent,
         searchVideos,
     };
 };
