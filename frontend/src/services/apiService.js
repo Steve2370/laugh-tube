@@ -224,6 +224,10 @@ class ApiService {
         return response.data || response.user || response;
     }
 
+    async getPopularVideos(limit = 10) {
+        return await this.request(`/videos/popular?limit=${limit}`);
+    }
+
     clearAuth() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');

@@ -506,6 +506,11 @@ try {
         return;
     }
 
+    if ($uri === '/videos/popular' && $method === 'GET') {
+        $videoController->popular();
+        return;
+    }
+
     if (preg_match('#^/videos/(\d+)$#', $uri, $m) && $method === 'GET') {
         $videoController->expose((int)$m[1]);
         return;

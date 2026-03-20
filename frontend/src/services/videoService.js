@@ -370,6 +370,51 @@ class VideoService {
         return '/default-thumbnail.jpg';
     }
 
+    async getTrending({ limit = 20, period = '7' } = {}) {
+        try {
+            const cacheKey = `trending_${limit}_${period}`;
+            const cached = this._getFromCache(cacheKey);
+            if (cached) return cached;
+
+            const response = await apiService.request(`/videos/trending?limit=${limit}&period=${period}`);
+            const result = { success: true, videos: response.videos ?? [] };
+            this._setInCache(cacheKey, result);
+            return result;
+        } catch (error) {
+            console.error('VideoService.getTrending:', error);
+            return { success: false, videos: [] };
+        }
+    }
+
+    async getPopular(limit = 20) {
+        try {
+            const cacheKey = `popular_${limit}`;
+            const cached = this._getFromCache(cacheKey);
+            if (cached) return cached;
+
+            const response = await apiService.request(`/videos/popular?limit=${limit}`);
+            const result = {success: true, videos: response.videos ?? []};
+            this._setInCache(cacheKey, result);
+            return result;
+        } catch (error) {
+            console.error('VideoService.getPopular:', error);
+            return {success: false, videos: []};
+        }
+    }
+
+    async searchVideos(query, limit = 20) {
+        try {
+            if (!query?.trim()) return { success: true, videos: [] };
+
+            const response = await apiService.request(`/videos/search?query=${encodeURIComponent(query.trim())}&limit=${limit}`);
+            return { success: true, videos: response.videos ?? [] };
+        } catch (error) {
+            console.error('VideoService.searchVideos:', error);
+            return { success: false, videos: [] };
+        }
+    }
+
+
     _validateVideoFile(file) {
         const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
         const maxSize = 500 * 1024 * 1024; // 500 MB

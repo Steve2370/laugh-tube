@@ -202,27 +202,74 @@ class VideoController
     public function trending(): void
     {
         try {
-            $limit = (int)($_GET['limit'] ?? 10);
-            $period = (int)($_GET['period'] ?? 7);
+            $limit = min((int)($_GET['limit'] ?? 10), 50);
+            $period = min((int)($_GET['period'] ?? 7), 30);
 
             $videos = $this->db->fetchAll(
                 "SELECT v.*, u.username, 
-                        COUNT(DISTINCT vv.id) as view_count
+                        COUNT(DISTINCT vv.id) as recent_views,
+                        COUNT(DISTINCT l.id) as likes_count,
+                        (COUNT(DISTINCT vv.id) * 2 + COUNT(DISTINCT l.id) * 3) as trend_score
                  FROM videos v
                  LEFT JOIN users u ON v.user_id = u.id
-                 LEFT JOIN video_views vv ON v.id = vv.video_id 
+                 LEFT JOIN video_views vv ON vv.video_id = v.id 
                      AND vv.created_at >= NOW() - INTERVAL '$period days'
+                 LEFT JOIN likes l ON l.video_id = v.id
+                 AND l.created_at >= NOW() - INTERVAL '$period days'
                  WHERE v.deleted_at IS NULL
                  GROUP BY v.id, u.username
-                 ORDER BY view_count DESC
+                 ORDER BY trend_score DESC, v.created_at DESC
                  LIMIT $1",
                 [$limit]
             );
+
+            $videos = array_map(function($v) {
+                $v['recent_views'] = (int)($v['recent_views'] ?? 0);
+                $v['likes_count'] = (int)($v['likes_count'] ?? 0);
+                $v['trend_score'] = (int)($v['trend_score'] ?? 0);
+                return $v;
+            }, $videos);
 
             JsonResponse::success(['videos' => $videos]);
 
         } catch (\Exception $e) {
             error_log("VideoController::trending - Error: " . $e->getMessage());
+            JsonResponse::serverError(['error' => 'Erreur serveur']);
+        }
+    }
+
+    public function popular(): void
+    {
+        try {
+            $limit = min((int)($_GET['limit'] ?? 10), 50);
+            $period = min((int)($_GET['period'] ?? 7), 30);
+
+            $videos = $this->db->fetchAll(
+                "SELECT v.*, u.username,
+                 COUNT(DISTINCT vv.id) as total_views,
+                 COUNT(DISTINCT l.id) as likes_count,
+                 (COUNT(DISTINCT vv.id) + COUNT(DISTINCT l.id) * 3) as popular_score
+                 FROM videos v
+                 LEFT JOIN users u ON v.user_id = u.id
+                 LEFT JOIN video_views vv ON vv.video_id = v.id 
+                 LEFT JOIN likes l ON l.video_id = v.id
+                 WHERE v.deleted_at IS NULL
+                 GROUP BY v.id, u.username
+                 ORDER BY popular_score DESC, v.created_at DESC
+                 LIMIT $1",
+                [$limit]
+            );
+
+            $videos = array_map(function($v) {
+                $v['total_views'] = (int)($v['total_views'] ?? 0);
+                $v['likes_count'] = (int)($v['likes_count'] ?? 0);
+                $v['popular_score'] = (int)($v['popular_score'] ?? 0);
+                return $v;
+            }, $videos);
+
+            JsonResponse::success(['videos' => $videos]);
+        } catch (\Exception $e) {
+            error_log("VideoController::popular - Error: " . $e->getMessage());
             JsonResponse::serverError(['error' => 'Erreur serveur']);
         }
     }

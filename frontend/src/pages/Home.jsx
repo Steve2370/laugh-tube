@@ -275,7 +275,7 @@ const SectionTitle = ({ filter, count }) => {
 };
 
 const Home = () => {
-    const { videos, loading, error, getTrending, searchVideos } = useVideos();
+    const { videos, loading, error, getTrending, getPopular, searchVideos } = useVideos();
     const { isAuthenticated } = useAuth();
     const toast = useToast();
 
@@ -284,6 +284,8 @@ const Home = () => {
     const [trendingVideos, setTrendingVideos] = useState([]);
     const [displayVideos, setDisplayVideos] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [popularVideos, setPopularVideos] = useState([]);
+    const [recentVideos,  setRecentVideos]  = useState([]);
 
     useEffect(() => { if (error) toast.error(error); }, [error, toast]);
     useEffect(() => { setDisplayVideos(videos); }, [videos]);
@@ -310,15 +312,37 @@ const Home = () => {
     const reqIdRef = useRef(0);
     const handleFilterChange = async (newFilter) => {
         setFilter(newFilter);
-        if (newFilter !== "trending") return;
+        setSearchTerm("");
+        if (newFilter === "all") return;
+
         const reqId = ++reqIdRef.current;
         setIsSearching(true);
         try {
-            const result = await getTrending({ limit: 20, period: 7 });
-            if (reqId !== reqIdRef.current) return;
-            if (result?.success) setTrendingVideos(result.videos ?? []);
-        } catch { toast.error("Erreur lors du chargement des tendances"); }
-        finally { setIsSearching(false); }
+            if (newFilter === "trending") {
+                const result = await getTrending({ limit: 20, period: 7 });
+                if (reqId !== reqIdRef.current) return;
+                if (result?.success) setTrendingVideos(result.videos ?? []);
+
+            } else if (newFilter === "popular") {
+                const result = await getPopular(20);
+                if (reqId !== reqIdRef.current) return;
+                if (result?.success) setPopularVideos(result.videos ?? []);
+
+            } else if (newFilter === "recent") {
+                const result = await getTrending({ limit: 20, period: 30 });
+                if (reqId !== reqIdRef.current) return;
+                if (result?.success) {
+                    const sorted = [...(result.videos ?? [])].sort(
+                        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                    );
+                    setRecentVideos(sorted);
+                }
+            }
+        } catch {
+            toast.error("Erreur lors du chargement");
+        } finally {
+            if (reqId === reqIdRef.current) setIsSearching(false);
+        }
     };
 
     const handleVideoClick = (video) => {
@@ -328,15 +352,20 @@ const Home = () => {
 
     const navigateTo = (page) => { window.location.hash = `#/${page}`; };
 
-    const baseVideos = useMemo(() => filter === "trending" ? trendingVideos : displayVideos, [filter, trendingVideos, displayVideos]);
+    const baseVideos = useMemo(() => {
+        switch (filter) {
+            case "trending": return trendingVideos;
+            case "popular": return popularVideos;
+            case "recent": return recentVideos;
+            default: return displayVideos;
+        }
+    }, [filter, trendingVideos, popularVideos, recentVideos, displayVideos]);
 
-    const filteredVideos = useMemo(() => baseVideos.filter((video) => {
-        const q = searchTerm.toLowerCase();
-        const matchesSearch = (video.title ?? "").toLowerCase().includes(q) || (video.description ?? "").toLowerCase().includes(q);
-        if (!matchesSearch) return false;
-        if (filter === 'popular') return (video.views || 0) > 100;
-        return true;
-    }), [baseVideos, searchTerm, filter]);
+    const filteredVideos = useMemo(() =>
+            searchTerm ? baseVideos.filter(v =>
+                    (v.title ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (v.description ?? "").toLowerCase().includes(searchTerm.toLowerCase())) : baseVideos
+        , [baseVideos, searchTerm]);
 
     if (loading) {
         return (
