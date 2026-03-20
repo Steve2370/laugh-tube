@@ -208,8 +208,8 @@ class VideoController
             $videos = $this->db->fetchAll(
                 "SELECT v.*, u.username, 
                         COUNT(DISTINCT vv.id) as recent_views,
-                        COUNT(DISTINCT l.id) as likes_count,
-                        (COUNT(DISTINCT vv.id) * 2 + COUNT(DISTINCT l.id) * 3) as trend_score
+                        COUNT(DISTINCT l.user_id) as likes_count,
+                        (COUNT(DISTINCT vv.id) * 2 + COUNT(DISTINCT l.user_id) * 3) as trend_score
                  FROM videos v
                  LEFT JOIN users u ON v.user_id = u.id
                  LEFT JOIN video_views vv ON vv.video_id = v.id 
@@ -248,7 +248,7 @@ class VideoController
                 "SELECT v.*, u.username,
                  COUNT(DISTINCT vv.id) as total_views,
                  COUNT(DISTINCT l.id) as likes_count,
-                 (COUNT(DISTINCT vv.id) + COUNT(DISTINCT l.id) * 3) as popular_score
+                 (COUNT(DISTINCT vv.id) + COUNT(DISTINCT l.user_id) * 3) as popular_score
                  FROM videos v
                  LEFT JOIN users u ON v.user_id = u.id
                  LEFT JOIN video_views vv ON vv.video_id = v.id 
