@@ -423,7 +423,7 @@ const EmptyState = ({ searchTerm, isAuthenticated, navigateTo }) => {
                 <button onClick={() => navigateTo("upload")}
                         className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg flex items-center gap-2 hover:-translate-y-0.5 active:scale-95">
                     <Play className="h-5 w-5" />
-                    Partager une punchline
+                    Partagez une punchline
                 </button>
             ) : (
                 <button onClick={() => navigateTo("login")}
