@@ -77,7 +77,7 @@ const FloatingEmoji = ({ emoji, style }) => (
     </span>
 );
 
-const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
+const HeroBanner = ({ isAuthenticated, navigateTo, total, videoSrc }) => {
     const particles = useMemo(() =>
             Array.from({ length: 12 }, (_, i) => ({
                 emoji: FLOATING[i % FLOATING.length],
@@ -97,50 +97,29 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total }) => {
             <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-400 rounded-full opacity-10 blur-3xl" />
             <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-400 rounded-full opacity-10 blur-3xl" />
 
-            <div className="relative z-10 px-8 py-12 text-center">
-                <div className="inline-flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+            <div className="relative z-10 flex justify-center pt-5 px-4">
+                <div className="inline-flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full">
                     <Flame size={14} className="text-orange-300" />
                     {total > 0 ? `${total} punchlines disponibles` : 'Bienvenue sur LaughTube'}
                 </div>
+            </div>
 
-                <h1 className="text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
-                    Ton humour mérite une scène.{' '}
-                    <span className="text-yellow-400"> La voilà.</span>
-                </h1>
-
-                <p className="text-blue-100 text-lg mb-2 max-w-xl mx-auto font-medium">
-                    Un espace 100% dédié à l'humour, conçu pour propulser les créateurs de contenu humoristique.
-                </p>
-                <p className="text-white text-xl mb-8 max-w-xl mx-auto font-bold">
-                    Ici, <span className="text-yellow-400">le rire est la vedette</span>. Et toi avec.
-                </p>
-
-                <div className="flex items-center justify-center gap-4 flex-wrap">
-                    {isAuthenticated ? (
-                        <button
-                            onClick={() => navigateTo("upload")}
-                            className="flex items-center gap-2 bg-white text-blue-700 font-bold px-6 py-3 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
-                        >
-                            <Play size={18} fill="currentColor" />
-                            Partager une punchline
-                        </button>
+            <div className="relative z-10 p-4 pt-3">
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-white border-opacity-20 w-full" style={{ aspectRatio: '16/9' }}>
+                    {videoSrc ? (
+                        <video
+                            src={videoSrc}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover"
+                        />
                     ) : (
-                        <>
-                            <button
-                                onClick={() => navigateTo("register")}
-                                className="flex items-center gap-2 bg-white text-blue-700 font-bold px-6 py-3 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
-                            >
-                                <Star size={18} />
-                                Je veux rire 😂
-                            </button>
-                            <button
-                                onClick={() => navigateTo("register")}
-                                className="flex items-center gap-2 bg-yellow-400 text-blue-900 font-bold px-6 py-3 rounded-xl hover:bg-yellow-300 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
-                            >
-                                <Play size={18} fill="currentColor" />
-                                Je crée du contenu 🎤
-                            </button>
-                        </>
+                        <div className="w-full h-full bg-blue-600 bg-opacity-50 flex flex-col items-center justify-center gap-3 min-h-48">
+                            <div className="text-6xl animate-bounce">🎭</div>
+                            <p className="text-white text-sm font-semibold opacity-75">Vidéo promo à venir</p>
+                        </div>
                     )}
                 </div>
             </div>
@@ -395,6 +374,7 @@ const Home = () => {
                     isAuthenticated={isAuthenticated}
                     navigateTo={navigateTo}
                     total={videos.length}
+                    videoSrc="/uploads/Laugh Intro.mp4"
                 />
 
                 {!isAuthenticated && (
