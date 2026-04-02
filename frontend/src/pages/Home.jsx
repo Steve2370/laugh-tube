@@ -77,52 +77,35 @@ const FloatingEmoji = ({ emoji, style }) => (
     </span>
 );
 
-const HeroBanner = ({ isAuthenticated, navigateTo, total, videoSrc }) => {
-    const particles = useMemo(() =>
-            Array.from({ length: 12 }, (_, i) => ({
-                emoji: FLOATING[i % FLOATING.length],
-                style: {
-                    left: `${(i * 8.5) % 100}%`,
-                    top: `${10 + (i * 17) % 75}%`,
-                    animationDelay: `${(i * 0.3) % 2}s`,
-                    animationDuration: `${2 + (i % 3) * 0.5}s`,
-                    fontSize: `${1.2 + (i % 3) * 0.4}rem`,
-                }
-            }))
-        , []);
+const HeroBanner = ({ total, videoSrc }) => (
+    <div className="mb-6">
 
-    return (
-        <div className="relative overflow-hidden rounded-3xl mb-6 shadow-2xl bg-transparent">
-
-            <div className="relative z-10 flex justify-center pt-5 px-4">
-                <div className="inline-flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full">
-                    <Flame size={14} className="text-orange-300" />
-                    {total > 0 ? `${total} punchlines disponibles` : 'Bienvenue sur LaughTube'}
-                </div>
-            </div>
-
-            <div className="relative z-10 p-4 pt-3">
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-white border-opacity-20 w-full" style={{ aspectRatio: '16/9' }}>
-                    {videoSrc ? (
-                        <video
-                            src={videoSrc}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-full h-full object-cover"
-                        />
-                    ) : (
-                        <div className="w-full h-full bg-blue-600 bg-opacity-50 flex flex-col items-center justify-center gap-3 min-h-48">
-                            <div className="text-6xl animate-bounce">🎭</div>
-                            <p className="text-white text-sm font-semibold opacity-75">Vidéo promo à venir</p>
-                        </div>
-                    )}
-                </div>
+        <div className="flex justify-center mb-3">
+            <div className="inline-flex items-center gap-2 bg-gray-100 text-black text-sm font-medium px-4 py-1.5 rounded-full shadow-sm">
+                <Flame size={14} className="text-orange-400" />
+                {total > 0 ? `${total} punchlines disponibles` : 'Bienvenue sur LaughTube'}
             </div>
         </div>
-    );
-};
+
+        <div className="relative rounded-2xl overflow-hidden shadow-2xl w-full" style={{ aspectRatio: '16/9' }}>
+            {videoSrc ? (
+                <video
+                    src={videoSrc}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                />
+            ) : (
+                <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-3 min-h-48">
+                    <div className="text-6xl animate-bounce">🎭</div>
+                    <p className="text-gray-500 text-sm font-semibold">Vidéo promo à venir</p>
+                </div>
+            )}
+        </div>
+    </div>
+);
 
 const ValueSection = ({ navigateTo, isAuthenticated }) => (
     <div className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -368,10 +351,8 @@ const Home = () => {
 
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <HeroBanner
-                    isAuthenticated={isAuthenticated}
-                    navigateTo={navigateTo}
                     total={videos.length}
-                    videoSrc="/uploads/Laugh Intro.mp4"
+                    videoSrc="/uploads/laugh-intro.mp4"
                 />
 
                 {!isAuthenticated && (
