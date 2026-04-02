@@ -92,10 +92,7 @@ const HeroBanner = ({ isAuthenticated, navigateTo, total, videoSrc }) => {
         , []);
 
     return (
-        <div className="relative overflow-hidden rounded-3xl mb-6 bg-blue-500 shadow-2xl">
-            {particles.map((p, i) => <FloatingEmoji key={i} {...p} />)}
-            <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-400 rounded-full opacity-10 blur-3xl" />
-            <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-400 rounded-full opacity-10 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl mb-6 shadow-2xl bg-transparent">
 
             <div className="relative z-10 flex justify-center pt-5 px-4">
                 <div className="inline-flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full">
