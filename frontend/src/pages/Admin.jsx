@@ -46,6 +46,7 @@ export default function Admin() {
     const loadAll = useCallback(async () => {
         setLoading(true);
         setError(null);
+
         try {
             const [usersRes, videosRes, reportsRes] = await Promise.all([
                 apiService.requestV2('/admin/users'),
@@ -58,18 +59,20 @@ export default function Admin() {
         } catch (err) {
             console.error('Erreur chargement admin:', err);
             setError('Impossible de charger les données admin.');
+        } finally {
+            setLoading(false);
         }
 
         try {
             const messagesRes = await apiService.request('/admin/messages');
             setMessages(messagesRes.messages ?? []);
         } catch { setMessages([]); }
+
         try {
             const inboxRes = await apiService.request('/admin/contact');
             setInbox(inboxRes.inbox ?? []);
         } catch { setInbox([]); }
 
-        setLoading(false);
     }, []);
 
     useEffect(() => { loadAll(); }, [loadAll]);
