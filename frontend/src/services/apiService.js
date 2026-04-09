@@ -90,6 +90,12 @@ class ApiService {
     }
 
     async handleTokenExpired(endpoint, options) {
+        const token = localStorage.getItem('access_token');
+
+        if (token && token.includes('|')) {
+            throw new Error('Non autorisé');
+        }
+
         if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
                 this.failedQueue.push({ resolve, reject, endpoint, options });
