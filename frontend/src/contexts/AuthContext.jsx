@@ -12,6 +12,8 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = useCallback(async () => {
         try {
             const authenticated = apiService.isAuthenticated();
+            console.log('isAuthenticated:', authenticated);
+            console.log('token:', localStorage.getItem('access_token'));
             if (authenticated) {
                 const currentUser = await apiService.getMe();
                 setUser(currentUser);
