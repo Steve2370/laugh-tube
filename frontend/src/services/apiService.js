@@ -367,6 +367,14 @@ class ApiService {
         return response.data || response.videos || response;
     }
 
+    async getNotifications(limit = 20, offset = 0) {
+        try {
+            return await this.request(`/notifications?limit=${limit}&offset=${offset}`);
+        } catch {
+            return { notifications: [] };
+        }
+    }
+
     /**
      *
      * @param {number} id

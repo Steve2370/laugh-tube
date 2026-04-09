@@ -74,11 +74,15 @@ export default function Navbar() {
 
     const isAdmin = user?.role === 'admin' || user?.is_admin === true;
 
-    const profileImage = user?.avatar_url
-        ? `/uploads/profiles/${user.avatar_url}`
-        : user?.id
-            ? `/api/users/${user.id}/profile-image`
-            : null;
+    const getAvatarPath = (avatarUrl) => {
+        if (!avatarUrl || avatarUrl.includes('default.png')) return null;
+        if (avatarUrl.startsWith('http')) return avatarUrl;
+        if (avatarUrl.startsWith('/uploads/')) return avatarUrl;
+        return `/uploads/profiles/${avatarUrl}`;
+    };
+
+    const profileImage = getAvatarPath(user?.avatar_url)
+        || (user?.id ? `/api/users/${user.id}/profile-image` : null);
 
     return (
         <header
