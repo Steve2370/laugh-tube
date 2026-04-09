@@ -10,13 +10,21 @@ class ApiService {
     }
 
     migrateTokens() {
-        const token = localStorage.getItem('access_token');
-        if (token && !token.includes('|')) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('user');
+        const keysToCheck = ['access_token', 'authToken', 'token'];
+        const hasSanctumToken = keysToCheck.some(k => {
+            const t = localStorage.getItem(k);
+            return t && t.includes('|');
+        });
+
+        const hasOldToken = keysToCheck.some(k => {
+            const t = localStorage.getItem(k);
+            return t && !t.includes('|');
+        });
+
+        if (hasOldToken && !hasSanctumToken) {
+            ['access_token', 'authToken', 'token', 'refresh_token', 'user'].forEach(k =>
+                localStorage.removeItem(k)
+            );
             console.log('Anciens tokens JWT supprimés — reconnexion requise');
         }
     }
