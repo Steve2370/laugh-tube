@@ -15,15 +15,25 @@ class NotificationService {
 
     async getNotifications(limit = 20, offset = 0) {
         try {
-            const response = await apiService.request(
-                `/notifications?limit=${limit}&offset=${offset}`
-            );
+            const url = `/api/notifications?limit=${limit}&offset=${offset}`;
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                }
+            });
 
+            if (!response.ok) {
+                return { success: false, notifications: [], unreadCount: 0, total: 0 };
+            }
+
+            const data = await response.json();
             const result = {
                 success: true,
-                notifications: response.notifications || [],
-                unreadCount: response.unread_count || 0,
-                total: response.total || 0
+                notifications: data.notifications || [],
+                unreadCount: data.unread_count || 0,
+                total: data.total || 0
             };
 
             if (offset === 0) {
@@ -33,17 +43,10 @@ class NotificationService {
                     timestamp: Date.now()
                 };
             }
-
             return result;
-
         } catch (error) {
             console.error('NotificationService.getNotifications:', error);
-            return {
-                success: false,
-                notifications: [],
-                unreadCount: 0,
-                error: error.message
-            };
+            return { success: false, notifications: [], unreadCount: 0, error: error.message };
         }
     }
 
