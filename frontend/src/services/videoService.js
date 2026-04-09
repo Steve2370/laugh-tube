@@ -258,44 +258,28 @@ class VideoService {
     async getComments(videoId, options = {}) {
         try {
             const { limit = 20, offset = 0 } = options;
-
-            const response = await apiService.request(
+            const response = await apiService.requestV2(
                 `/videos/${videoId}/comments?limit=${limit}&offset=${offset}`
             );
-
             return {
                 success: true,
                 comments: response.comments || response.commentaires || [],
                 total: response.total || 0
             };
-
         } catch (error) {
             console.error('VideoService.getComments:', error);
-            return {
-                success: false,
-                comments: [],
-                total: 0
-            };
+            return { success: false, comments: [], total: 0 };
         }
     }
 
     async postComment(videoId, content) {
         try {
-            if (!videoId || !content) {
-                throw new Error('Vidéo ID et contenu requis');
-            }
-
-            if (content.length > 2000) {
-                throw new Error('Le commentaire ne peut pas dépasser 2000 caractères');
-            }
-
-            const response = await apiService.request(`/videos/${videoId}/comments`, {
+            if (!videoId || !content) throw new Error('Vidéo ID et contenu requis');
+            if (content.length > 2000) throw new Error('Le commentaire ne peut pas dépasser 2000 caractères');
+            return await apiService.requestV2(`/videos/${videoId}/comments`, {
                 method: 'POST',
                 body: JSON.stringify({ content: content.trim() })
             });
-
-            return response;
-
         } catch (error) {
             console.error('VideoService.postComment:', error);
             throw error;
@@ -304,14 +288,9 @@ class VideoService {
 
     async likeVideo(videoId) {
         try {
-            const response = await apiService.request(`/videos/${videoId}/like`, {
-                method: 'POST'
-            });
-
+            const response = await apiService.requestV2(`/videos/${videoId}/like`, { method: 'POST' });
             this._invalidateCache(`video_${videoId}`);
-
             return response;
-
         } catch (error) {
             console.error('VideoService.likeVideo:', error);
             throw error;
@@ -320,14 +299,9 @@ class VideoService {
 
     async dislikeVideo(videoId) {
         try {
-            const response = await apiService.request(`/videos/${videoId}/dislike`, {
-                method: 'POST'
-            });
-
+            const response = await apiService.requestV2(`/videos/${videoId}/dislike`, { method: 'POST' });
             this._invalidateCache(`video_${videoId}`);
-
             return response;
-
         } catch (error) {
             console.error('VideoService.dislikeVideo:', error);
             throw error;
@@ -336,21 +310,15 @@ class VideoService {
 
     async getReactions(videoId) {
         try {
-            const response = await apiService.request(`/videos/${videoId}/reactions`);
-
+            const response = await apiService.requestV2(`/videos/${videoId}/reactions`);
             return {
                 likes: response.likes || 0,
                 dislikes: response.dislikes || 0,
                 userReaction: response.user_reaction || response.userReaction || null
             };
-
         } catch (error) {
             console.error('VideoService.getReactions:', error);
-            return {
-                likes: 0,
-                dislikes: 0,
-                userReaction: null
-            };
+            return { likes: 0, dislikes: 0, userReaction: null };
         }
     }
 
@@ -375,8 +343,7 @@ class VideoService {
             const cacheKey = `trending_${limit}_${period}`;
             const cached = this._getFromCache(cacheKey);
             if (cached) return cached;
-
-            const response = await apiService.request(`/videos/trending?limit=${limit}&period=${period}`);
+            const response = await apiService.requestV2(`/videos/trending?limit=${limit}&period=${period}`);
             const result = { success: true, videos: response.videos ?? [] };
             this._setInCache(cacheKey, result);
             return result;
@@ -391,22 +358,22 @@ class VideoService {
             const cacheKey = `popular_${limit}`;
             const cached = this._getFromCache(cacheKey);
             if (cached) return cached;
-
-            const response = await apiService.request(`/videos/popular?limit=${limit}`);
-            const result = {success: true, videos: response.videos ?? []};
+            const response = await apiService.requestV2(`/videos/popular?limit=${limit}`);
+            const result = { success: true, videos: response.videos ?? [] };
             this._setInCache(cacheKey, result);
             return result;
         } catch (error) {
             console.error('VideoService.getPopular:', error);
-            return {success: false, videos: []};
+            return { success: false, videos: [] };
         }
     }
 
     async searchVideos(query, limit = 20) {
         try {
             if (!query?.trim()) return { success: true, videos: [] };
-
-            const response = await apiService.request(`/videos/search?query=${encodeURIComponent(query.trim())}&limit=${limit}`);
+            const response = await apiService.requestV2(
+                `/videos/search?q=${encodeURIComponent(query.trim())}&limit=${limit}`
+            );
             return { success: true, videos: response.videos ?? [] };
         } catch (error) {
             console.error('VideoService.searchVideos:', error);
@@ -419,14 +386,13 @@ class VideoService {
             const cacheKey = `recent_${limit}`;
             const cached = this._getFromCache(cacheKey);
             if (cached) return cached;
-
-            const response = await apiService.request(`/videos/recent?limit=${limit}`);
-            const result = {success: true, videos: response.videos ?? []};
+            const response = await apiService.requestV2(`/videos/recent?limit=${limit}`);
+            const result = { success: true, videos: response.videos ?? [] };
             this._setInCache(cacheKey, result);
             return result;
         } catch (error) {
             console.error('VideoService.getRecent:', error);
-            return {success: false, videos: []};
+            return { success: false, videos: [] };
         }
     }
 
