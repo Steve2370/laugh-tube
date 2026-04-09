@@ -45,7 +45,7 @@ services:
   laravel:
     build:
       context: ./laravel
-      dockerfile: ../backend/Dockerfile
+      dockerfile: Dockerfile
     container_name: laughtube_laravel
     restart: unless-stopped
     depends_on:
