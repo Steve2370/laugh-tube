@@ -3,6 +3,7 @@ const API_URL = window.location.origin;
 class ApiService {
     constructor() {
         this.baseURL = API_URL;
+        this.baseURLV2 = API_URL;
         this.isRefreshing = false;
         this.failedQueue = [];
     }
@@ -37,6 +38,32 @@ class ApiService {
             return this.handleResponse(response);
         } catch (error) {
             console.error(`Erreur requête ${endpoint}:`, error);
+            throw error;
+        }
+    }
+
+    async requestV2(endpoint, options = {}) {
+        const url = `${this.baseURLV2}/api/v2${endpoint}`;
+        const token = localStorage.getItem('access_token');
+
+        const headers = {
+            'Accept': 'application/json',
+            ...options.headers,
+        };
+
+        if (!(options.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
+
+        if (token && !options.skipAuth) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        try {
+            const response = await fetch(url, { ...options, headers });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`Erreur V2 requête ${endpoint}:`, error);
             throw error;
         }
     }
@@ -99,7 +126,7 @@ class ApiService {
      */
 
     async login(email, password) {
-        const response = await this.request('/login', {
+        const response = await this.requestV2('/login', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
             skipAuth: true,
@@ -107,18 +134,12 @@ class ApiService {
 
         const accessToken = response.token || response.data?.token ||
             response.access_token || response.data?.access_token;
-        const refreshToken = response.refresh_token || response.data?.refresh_token;
         const user = response.user || response.data?.user;
 
         if (accessToken) {
             localStorage.setItem('access_token', accessToken);
             localStorage.setItem('authToken', accessToken);
             localStorage.setItem('token', accessToken);
-            if (refreshToken) {
-                localStorage.setItem('refresh_token', refreshToken);
-            }
-        } else if (!response?.requires_2fa) {
-            console.error('Aucun token dans la réponse:', response);
         }
 
         if (user) {
@@ -136,23 +157,22 @@ class ApiService {
      * @returns {Promise<object>}
      */
     async register(username, email, password) {
-        const response = await this.request('/register', {
+        const response = await this.requestV2('/register', {
             method: 'POST',
-            body: JSON.stringify({ username, email, password }),
+            body: JSON.stringify({
+                username,
+                email,
+                password,
+                password_confirmation: password
+            }),
             skipAuth: true,
         });
 
-        const accessToken = response.token || response.data?.token ||
-            response.access_token || response.data?.access_token;
-        const refreshToken = response.refresh_token || response.data?.refresh_token;
-
+        const accessToken = response.token || response.data?.token;
         if (accessToken) {
             localStorage.setItem('access_token', accessToken);
-            if (refreshToken) {
-                localStorage.setItem('refresh_token', refreshToken);
-            }
-        } else {
-            console.error('Aucun token dans la réponse register:', response);
+            localStorage.setItem('authToken', accessToken);
+            localStorage.setItem('token', accessToken);
         }
 
         return response;
@@ -194,9 +214,8 @@ class ApiService {
     async logout() {
         const token = localStorage.getItem('access_token');
         if (token) {
-            fetch(`${this.baseURL}/api/auth/logout`, {
+            this.requestV2('/logout', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
             }).catch(() => {});
         }
         this.clearAuth();
@@ -220,12 +239,12 @@ class ApiService {
     }
 
     async getMe() {
-        const response = await this.request('/me');
+        const response = await this.requestV2('/me');
         return response.data || response.user || response;
     }
 
     async getPopularVideos(limit = 10) {
-        return await this.request(`/videos/popular?limit=${limit}`);
+        return await this.requestV2(`/videos/popular?limit=${limit}`);
     }
 
     clearAuth() {
@@ -414,14 +433,14 @@ class ApiService {
     }
 
     async likeVideo(videoId) {
-        const response = await this.request(`/videos/${videoId}/like`, {
+        const response = await this.requestV2(`/videos/${videoId}/like`, {
             method: 'POST'
         });
         return response.data || response;
     }
 
     async dislikeVideo(videoId) {
-        const response = await this.request(`/videos/${videoId}/dislike`, {
+        const response = await this.requestV2(`/videos/${videoId}/dislike`, {
             method: 'POST'
         });
         return response.data || response;
@@ -435,7 +454,7 @@ class ApiService {
     }
 
     async getVideoReactions(videoId) {
-        const response = await this.request(`/videos/${videoId}/reactions`);
+        const response = await this.requestV2(`/videos/${videoId}/reactions`);
         return response.data || response;
     }
 
@@ -451,7 +470,7 @@ class ApiService {
     }
 
     async getComments(videoId) {
-        const response = await this.request(`/videos/${videoId}/comments`);
+        const response = await this.requestV2(`/videos/${videoId}/comments`);
         return response.data || response.comments || response.commentaires || response;
     }
 
@@ -495,16 +514,12 @@ class ApiService {
      * @param {number} userId
      */
     async getUserProfile(userId) {
-        if (!userId) {
-            console.warn('getUserProfile appelé sans userId');
-            return { success: false, data: null, error: 'userId manquant' };
-        }
+        if (!userId) return { success: false, data: null, error: 'userId manquant' };
         try {
-            const response = await this.request(`/users/${userId}/profile`);
+            const response = await this.requestV2(`/users/${userId}/profile`);
             const data = response.data || response.profile || response;
             return { success: true, data };
         } catch (error) {
-            console.error('getUserProfile erreur:', error.message);
             return { success: false, data: null, error: error.message };
         }
     }
@@ -515,21 +530,21 @@ class ApiService {
     }
 
     async getUserVideos(userId) {
-        const response = await this.request(`/users/${userId}/videos`);
+        const response = await this.requestV2(`/users/${userId}/videos`);
         const raw = response.data || response.videos || response;
         const list = Array.isArray(raw) ? raw : [];
 
         return list.map(v => ({
             ...v,
-            views: v.views ?? v.nb_vues ?? v.view_count ?? v.views_count ?? 0,
-            likes: v.likes ?? v.nb_likes ?? v.likes_count ?? v.like_count ?? 0,
-            comments: v.comments ?? v.nb_commentaires ?? v.comments_count ?? v.comment_count ?? 0,
-            user_id: v.user_id ?? v.userId ?? v.author_id ?? v.authorId ?? null,
+            views: v.views ?? v.nb_vues ?? v.view_count ?? 0,
+            likes: v.likes ?? v.nb_likes ?? v.likes_count ?? 0,
+            comments: v.comments ?? v.nb_commentaires ?? v.comments_count ?? 0,
+            user_id: v.user_id ?? v.userId ?? null,
         }));
     }
 
     async updateProfile(data) {
-        return this.request('/profile', {
+        return this.requestV2('/profile', {
             method: 'PUT',
             body: JSON.stringify(data),
         });
