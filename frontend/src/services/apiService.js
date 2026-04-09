@@ -280,10 +280,9 @@ class ApiService {
     isAuthenticated() {
         const token = localStorage.getItem('access_token');
         if (!token) return false;
-
+        if (token.includes('|')) return true;
         const payload = this.decodeToken(token);
         if (!payload) return false;
-
         return payload.exp > Date.now() / 1000;
     }
 
