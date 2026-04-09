@@ -52,7 +52,6 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./laravel:/var/www/laravel
       - backend_uploads:/var/www/html/public/uploads
     networks:
       - laughtube_network
