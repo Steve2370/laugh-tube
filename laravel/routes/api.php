@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\LikeController;
@@ -39,6 +40,21 @@ Route::prefix('v2')->group(function () {
         Route::post('/videos/{id}/dislike', [LikeController::class, 'dislike']);
         Route::post('/videos/{id}/comments', [CommentController::class, 'store']);
         Route::delete('/videos/{id}/comments/{commentId}', [CommentController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+        Route::get('/stats', [AdminController::class, 'getStats']);
+
+        Route::get('/users', [AdminController::class, 'getUsers']);
+        Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+        Route::patch('/users/{id}/suspend', [AdminController::class, 'suspendUser']);
+        Route::patch('/users/{id}/unsuspend', [AdminController::class, 'unsuspendUser']);
+        Route::patch('/users/{id}/restore', [AdminController::class, 'restoreUser']);
+        Route::get('/videos', [AdminController::class, 'getVideos']);
+        Route::delete('/videos/{id}', [AdminController::class, 'deleteVideo']);
+
+        Route::get('/signalements', [AdminController::class, 'getSignalements']);
+        Route::patch('/signalements/{id}', [AdminController::class, 'updateSignalement']);
     });
 
 });
