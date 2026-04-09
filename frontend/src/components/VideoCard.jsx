@@ -163,7 +163,16 @@ const VideoCard = ({ video, onClick }) => {
         setLikesBurst(b => b + 1);
     };
 
-    const getAvatarUrl = () => (!imageError.avatar && authorData?.id) ? `/api/users/${authorData.id}/profile-image` : null;
+    const getAvatarUrl = () => {
+        if (imageError.avatar) return null;
+        if (authorData?.avatar_url && !authorData.avatar_url.includes('default.png')) {
+            const url = authorData.avatar_url;
+            if (url.startsWith('http')) return url;
+            if (url.startsWith('/uploads/')) return url;
+            return `/uploads/profiles/${url}`;
+        }
+        return authorData?.id ? `/api/users/${authorData.id}/profile-image` : null;
+    };
 
     return (
         <>
