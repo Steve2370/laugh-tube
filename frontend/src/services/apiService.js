@@ -6,6 +6,19 @@ class ApiService {
         this.baseURLV2 = API_URL;
         this.isRefreshing = false;
         this.failedQueue = [];
+        this.migrateTokens();
+    }
+
+    migrateTokens() {
+        const token = localStorage.getItem('access_token');
+        if (token && !token.includes('|')) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
+            console.log('Anciens tokens JWT supprimés — reconnexion requise');
+        }
     }
 
     /**
