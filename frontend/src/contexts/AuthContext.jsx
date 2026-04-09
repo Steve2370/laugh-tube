@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = useCallback(async () => {
         try {
-            await apiService.request('/auth/logout', { method: 'POST', skipAuth: false }).catch(() => {});
+            await apiService.requestV2('/logout', { method: 'POST' }).catch(() => {});
         } finally {
             apiService.clearAuth();
             setUser(null);
