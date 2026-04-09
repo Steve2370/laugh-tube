@@ -15,3 +15,10 @@ client/build/
 client/dist/
 
 node_modules/
+
+laravel/vendor/
+laravel/.env
+laravel/storage/logs/
+laravel/storage/framework/cache/
+laravel/storage/framework/sessions/
+laravel/storage/framework/views/
