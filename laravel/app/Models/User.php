@@ -15,26 +15,30 @@ class User extends Authenticatable
     protected $fillable = [
         'username',
         'email',
-        'password',
+        'password_hash',
         'role',
-        'is_active',
-        'email_verified_at',
-        'two_fa_enabled',
-        'profile_image',
         'bio',
+        'avatar_url',
+        'cover_url',
+        'email_verified',
+        'two_fa_enabled',
     ];
 
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password_hash',
         'two_fa_secret',
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'is_active' => 'boolean',
+        'email_verified' => 'boolean',
         'two_fa_enabled' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+    public function getAuthPassword(): string
+    {
+        return $this->password_hash;
+    }
 
     public function videos()
     {
