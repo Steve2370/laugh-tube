@@ -64,6 +64,9 @@ services:
       - DB_DATABASE=laughtube
       - DB_USERNAME=laughtube_user
       - "DB_PASSWORD=LaughTube206@#$"
+      - GOOGLE_CLIENT_ID=198207836705-nqt2kh6mv1nqgm05rg1osc76ff9cebv6.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
+      - GOOGLE_REDIRECT_URI=https://www.laughtube.ca/api/v2/auth/google/callback
 
   frontend:
     image: node:20-alpine
