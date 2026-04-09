@@ -35,8 +35,8 @@ export default function Admin() {
     const toast = useToast();
     const [activeTab, setActiveTab] = useState('reports');
 
-    const [users,   setUsers] = useState([]);
-    const [videos,  setVideos] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [videos, setVideos] = useState([]);
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error,   setError] = useState(null);
@@ -49,9 +49,9 @@ export default function Admin() {
 
         try {
             const [usersRes, videosRes, reportsRes] = await Promise.all([
-                apiService.requestV2('/admin/users'),
-                apiService.requestV2('/admin/videos'),
-                apiService.requestV2('/admin/signalements'),
+                apiService.requestV2('/admin/users').catch(e => { console.error('users V2:', e); throw e; }),
+                apiService.requestV2('/admin/videos').catch(e => { console.error('videos V2:', e); throw e; }),
+                apiService.requestV2('/admin/signalements').catch(e => { console.error('signalements V2:', e); throw e; }),
             ]);
             setUsers(usersRes.users ?? []);
             setVideos(videosRes.videos ?? []);
