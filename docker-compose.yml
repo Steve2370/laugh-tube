@@ -57,6 +57,13 @@ services:
       - laughtube_network
     environment:
       - APP_ENV=production
+      - APP_KEY=base64:VOTRE_APP_KEY
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=laughtube
+      - DB_USERNAME=laughtube_user
+      - DB_PASSWORD=LaughTube206@#$
 
   frontend:
     image: node:20-alpine
