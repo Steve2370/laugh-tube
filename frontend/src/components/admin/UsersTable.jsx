@@ -101,7 +101,16 @@ function UserRow({ user, onRefresh }) {
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm text-gray-900">{user.username}</span>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.hash = `#/chaine/${user.id}`;
+                            }}
+                            className="font-semibold text-sm text-gray-900 hover:text-blue-600 hover:underline transition-colors"
+                        >
+                            {user.username}
+                        </button>
                         {user.role === 'admin' && (
                             <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">Admin</span>
                         )}
