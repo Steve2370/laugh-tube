@@ -105,7 +105,8 @@ function UserRow({ user, onRefresh }) {
                             type="button"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                window.location.hash = `#/chaine/${user.id}`;
+                                localStorage.setItem("channelUser", JSON.stringify({ id: user.id, username: user.username }));
+                                window.location.hash = `#/chaine`;
                             }}
                             className="font-semibold text-sm text-gray-900 hover:text-blue-600 hover:underline transition-colors"
                         >

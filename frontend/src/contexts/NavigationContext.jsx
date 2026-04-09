@@ -5,8 +5,15 @@ const NavigationContext = createContext(null);
 const getPageFromHash = () => {
     const hash = window.location.hash || "";
     const withoutPrefix = hash.replace(/^#\//, "").trim();
-    const page = withoutPrefix.split("?")[0];
+    const page = withoutPrefix.split("?")[0].split("/")[0];
     return page || "home";
+};
+
+export const getIdFromHash = () => {
+    const hash = window.location.hash || "";
+    const withoutPrefix = hash.replace(/^#\//, "").trim();
+    const parts = withoutPrefix.split("?")[0].split("/");
+    return parts[1] || null;
 };
 
 const getQueryFromHash = () => {
