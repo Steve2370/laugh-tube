@@ -81,6 +81,19 @@ class VideoController extends Controller
         return response()->json(['video' => $this->formatVideo($video)]);
     }
 
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $video = Video::whereNull('deleted_at')->findOrFail($id);
+
+        if ($video->user_id !== $request->user()->id && $request->user()->role !== 'admin') {
+            return response()->json(['error' => 'Non autorisé'], 403);
+        }
+
+        $video->update(['deleted_at' => now()]);
+
+        return response()->json(['message' => 'Vidéo supprimée']);
+    }
+
     private function formatVideo(Video $video): array
     {
         return [
