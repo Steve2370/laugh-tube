@@ -93,7 +93,7 @@ class AdminController extends Controller
     public function getSignalements(): JsonResponse
     {
         $signalements = DB::table('signalements')
-            ->leftJoin('users', 'signalements.user_id', '=', 'users.id')
+            ->leftJoin('users', 'signalements.reporter_id', '=', 'users.id')
             ->leftJoin('videos', 'signalements.video_id', '=', 'videos.id')
             ->select(
                 'signalements.*',
@@ -109,12 +109,12 @@ class AdminController extends Controller
     public function updateSignalement(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
-            'status' => 'required|string|in:pending,resolved,rejected',
+            'statut' => 'required|string|in:pending,reviewed,dismissed',
         ]);
 
         DB::table('signalements')
             ->where('id', $id)
-            ->update(['status' => $validated['status']]);
+            ->update(['statut' => $validated['statut']]);
 
         return response()->json(['message' => 'Signalement mis à jour']);
     }

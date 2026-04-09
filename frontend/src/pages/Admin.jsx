@@ -39,7 +39,7 @@ export default function Admin() {
     const [videos,  setVideos] = useState([]);
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error,   setError]   = useState(null);
+    const [error,   setError] = useState(null);
     const [messages, setMessages] = useState([]);
     const [inbox, setInbox] = useState([]);
 
@@ -47,25 +47,29 @@ export default function Admin() {
         setLoading(true);
         setError(null);
         try {
-            const [usersRes, videosRes, reportsRes, messagesRes, inboxRes] = await Promise.all([
+            const [usersRes, videosRes, reportsRes] = await Promise.all([
                 apiService.requestV2('/admin/users'),
                 apiService.requestV2('/admin/videos'),
                 apiService.requestV2('/admin/signalements'),
-                apiService.request('/admin/messages'),
-                apiService.request('/admin/contact'),
             ]);
             setUsers(usersRes.users ?? []);
             setVideos(videosRes.videos ?? []);
             setReports(reportsRes.signalements ?? []);
-            setMessages(messagesRes.messages ?? []);
-            setInbox(inboxRes.inbox ?? []);
-
         } catch (err) {
             console.error('Erreur chargement admin:', err);
             setError('Impossible de charger les données admin.');
-        } finally {
-            setLoading(false);
         }
+
+        try {
+            const messagesRes = await apiService.request('/admin/messages');
+            setMessages(messagesRes.messages ?? []);
+        } catch { setMessages([]); }
+        try {
+            const inboxRes = await apiService.request('/admin/contact');
+            setInbox(inboxRes.inbox ?? []);
+        } catch { setInbox([]); }
+
+        setLoading(false);
     }, []);
 
     useEffect(() => { loadAll(); }, [loadAll]);
