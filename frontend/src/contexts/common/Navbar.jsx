@@ -75,7 +75,7 @@ export default function Navbar() {
     const isAdmin = user?.role === 'admin' || user?.is_admin === true;
 
     const profileImage = user?.avatar_url
-        ? (user.avatar_url.startsWith('http') ? user.avatar_url : `/uploads/${user.avatar_url}`)
+        ? `/uploads/${user.avatar_url}`
         : user?.id
             ? `/api/users/${user.id}/profile-image`
             : null;

@@ -35,8 +35,8 @@ export default function Admin() {
     const toast = useToast();
     const [activeTab, setActiveTab] = useState('reports');
 
-    const [users,   setUsers]   = useState([]);
-    const [videos,  setVideos]  = useState([]);
+    const [users,   setUsers] = useState([]);
+    const [videos,  setVideos] = useState([]);
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error,   setError]   = useState(null);
@@ -48,9 +48,9 @@ export default function Admin() {
         setError(null);
         try {
             const [usersRes, videosRes, reportsRes, messagesRes, inboxRes] = await Promise.all([
-                apiService.request('/admin/users'),
-                apiService.request('/admin/videos'),
-                apiService.request('/admin/signalements'),
+                apiService.requestV2('/admin/users'),
+                apiService.requestV2('/admin/videos'),
+                apiService.requestV2('/admin/signalements'),
                 apiService.request('/admin/messages'),
                 apiService.request('/admin/contact'),
             ]);
@@ -72,7 +72,7 @@ export default function Admin() {
 
     const handleDeleteUser = async (userId) => {
         try {
-            await apiService.request(`/admin/users/${userId}`, { method: 'DELETE' });
+            await apiService.requestV2(`/admin/users/${userId}`, { method: 'DELETE' });
             setUsers(prev => prev.filter(u => u.id !== userId));
             setVideos(prev => prev.filter(v => v.user_id !== userId));
             toast.success('Compte supprimé');
@@ -83,7 +83,7 @@ export default function Admin() {
 
     const handleDeleteVideo = async (videoId, reportId = null) => {
         try {
-            await apiService.request(`/admin/videos/${videoId}`, { method: 'DELETE' });
+            await apiService.requestV2(`/admin/videos/${videoId}`, { method: 'DELETE' });
             setVideos(prev => prev.filter(v => v.id !== videoId));
             if (reportId) {
                 setReports(prev => prev.map(r =>
@@ -98,7 +98,7 @@ export default function Admin() {
 
     const handleUpdateStatut = async (reportId, statut) => {
         try {
-            await apiService.request(`/admin/signalements/${reportId}`, {
+            await apiService.requestV2(`/admin/signalements/${reportId}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ statut }),
             });
