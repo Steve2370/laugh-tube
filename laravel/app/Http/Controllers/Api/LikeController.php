@@ -53,21 +53,27 @@ class LikeController extends Controller
         return response()->json(['message' => 'Vidéo dislikée', 'disliked' => true]);
     }
 
+    // GET /api/v2/videos/{id}/reactions
     public function reactions(Request $request, int $id): JsonResponse
     {
         $video = Video::whereNull('deleted_at')->findOrFail($id);
-        $userId = $request->user()?->id;
 
         $likes = Like::where('video_id', $id)->count();
         $dislikes = Dislike::where('video_id', $id)->count();
 
         $userReaction = null;
-        if ($userId) {
-            if (Like::where('video_id', $id)->where('user_id', $userId)->exists()) {
-                $userReaction = 'like';
-            } elseif (Dislike::where('video_id', $id)->where('user_id', $userId)->exists()) {
-                $userReaction = 'dislike';
+
+        try {
+            $user = $request->user('sanctum');
+            if ($user) {
+                if (Like::where('video_id', $id)->where('user_id', $user->id)->exists()) {
+                    $userReaction = 'like';
+                } elseif (Dislike::where('video_id', $id)->where('user_id', $user->id)->exists()) {
+                    $userReaction = 'dislike';
+                }
             }
+        } catch (\Exception $e) {
+
         }
 
         return response()->json([
