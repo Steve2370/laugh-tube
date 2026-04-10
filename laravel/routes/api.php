@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\LikeController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\VideoController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +41,11 @@ Route::prefix('v2')->group(function () {
         Route::post('/videos/{id}/dislike', [LikeController::class, 'dislike']);
         Route::post('/videos/{id}/comments', [CommentController::class, 'store']);
         Route::delete('/videos/{id}/comments/{commentId}', [CommentController::class, 'destroy']);
+
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
     });
 
     Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
