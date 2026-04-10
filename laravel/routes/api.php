@@ -62,6 +62,9 @@ Route::prefix('v2')->group(function () {
 
         Route::get('/signalements', [AdminController::class, 'getSignalements']);
         Route::patch('/signalements/{id}', [AdminController::class, 'updateSignalement']);
+
+        Route::get('/contact', [AdminController::class, 'getContact']);
+        Route::patch('/contact/{id}', [AdminController::class, 'updateContact']);
     });
 
 });

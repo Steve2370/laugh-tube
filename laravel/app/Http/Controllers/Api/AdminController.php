@@ -133,4 +133,26 @@ class AdminController extends Controller
             ],
         ]);
     }
+
+    public function getContact(): JsonResponse
+    {
+        $inbox = DB::table('contact_messages')
+            ->orderBy('sent_at', 'desc')
+            ->get();
+
+        return response()->json(['inbox' => $inbox]);
+    }
+
+    public function updateContact(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'statut' => 'required|string|in:unread,read,replied',
+        ]);
+
+        DB::table('contact_messages')
+            ->where('id', $id)
+            ->update(['statut' => $validated['statut']]);
+
+        return response()->json(['message' => 'Message mis à jour']);
+    }
 }
