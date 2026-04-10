@@ -66,6 +66,15 @@ const ParticleNetwork = () => {
         ro.observe(canvas);
         return () => { cancelAnimationFrame(animId); ro.disconnect(); };
     }, []);
+
+    useEffect(() => {
+        document.body.style.backgroundColor = 'transparent';
+        document.documentElement.style.backgroundColor = 'transparent';
+        return () => {
+            document.body.style.backgroundColor = '';
+            document.documentElement.style.backgroundColor = '';
+        };
+    }, []);
     return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }} />;
 };
 
