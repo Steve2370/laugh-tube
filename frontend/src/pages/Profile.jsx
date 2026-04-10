@@ -56,7 +56,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
             ? `/uploads/profiles/${authUser.cover_url}`
             : '/images/default-cover.svg'
         );
-    }, [authUser?.id, authUser?.bio]);
+    }, [authUser?.id, authUser?.bio, authUser?.avatar_url, authUser?.cover_url]);
 
 
     const handleAvatarChange = async (e) => {
