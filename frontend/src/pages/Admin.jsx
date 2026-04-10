@@ -64,8 +64,16 @@ export default function Admin() {
         }
 
         try {
-            const messagesRes = await apiService.request('/admin/messages');
-            setMessages(messagesRes.messages ?? []);
+            const token = localStorage.getItem('access_token');
+            const messagesRes = await fetch('/api/admin/messages', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            });
+            if (messagesRes.ok) {
+                const data = await messagesRes.json();
+                setMessages(data.messages ?? []);
+            } else {
+                setMessages([]);
+            }
         } catch { setMessages([]); }
 
         try {
