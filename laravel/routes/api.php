@@ -68,6 +68,9 @@ Route::prefix('v2')->group(function () {
 
         Route::get('/contact', [AdminController::class, 'getContact']);
         Route::patch('/contact/{id}', [AdminController::class, 'updateContact']);
+
+        Route::get('/messages', [AdminController::class, 'getMessages']);
+        Route::post('/messages', [AdminController::class, 'sendMessage']);
     });
 
 });

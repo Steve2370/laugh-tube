@@ -143,6 +143,43 @@ class AdminController extends Controller
         return response()->json(['inbox' => $inbox]);
     }
 
+    public function getMessages(): JsonResponse
+    {
+        $messages = DB::table('admin_messages')
+            ->join('users as admins', 'admin_messages.admin_id', '=', 'admins.id')
+            ->join('users as recipients', 'admin_messages.user_id', '=', 'recipients.id')
+            ->select(
+                'admin_messages.*',
+                'admins.username as admin_username',
+                'recipients.username as recipient_username',
+                'recipients.email as recipient_email'
+            )
+            ->orderBy('admin_messages.created_at', 'desc')
+            ->get();
+
+        return response()->json(['messages' => $messages]);
+    }
+
+    public function sendMessage(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        DB::table('admin_messages')->insert([
+            'admin_id' => $request->user()->id,
+            'user_id' => $validated['user_id'],
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Message envoyé']);
+    }
+
     public function updateContact(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([

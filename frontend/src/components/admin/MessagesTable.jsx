@@ -34,19 +34,15 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
         setLoading(true);
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch('/api/admin/messages', {
+            const response = await apiService.requestV2('/admin/messages', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     user_id: selectedUser.id,
                     subject: subject.trim(),
                     message: message.trim(),
                 }),
             });
+
             if (!response.ok) throw new Error("Erreur lors de l'envoi");
             toast.success(`Email envoyé à ${selectedUser.username}`);
             setSubject('');
