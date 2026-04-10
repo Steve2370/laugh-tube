@@ -314,7 +314,7 @@ const Home = () => {
                     height: '100%',
                     objectFit: 'cover',
                     zIndex: -2,
-                    filter: 'brightness(0.35)',
+                    filter: 'brightness(0.35)'
                 }}
             >
                 <source src="/uploads/bgLaugh.mp4" type="video/mp4" />
