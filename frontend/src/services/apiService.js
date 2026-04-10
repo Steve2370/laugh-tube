@@ -592,9 +592,12 @@ class ApiService {
         const token = localStorage.getItem('access_token');
         if (!token) throw new Error('Non authentifié');
 
-        const response = await fetch(`${this.baseURL}/api/users/me/avatar`, {
+        const response = await fetch(`${this.baseURLV2}/api/v2/users/me/avatar`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+            },
             body: formData,
         });
 
@@ -609,9 +612,12 @@ class ApiService {
         const token = localStorage.getItem('access_token');
         if (!token) throw new Error('Non authentifié');
 
-        const response = await fetch(`${this.baseURL}/api/users/me/cover`, {
+        const response = await fetch(`${this.baseURLV2}/api/v2/users/me/cover`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+            },
             body: formData,
         });
 
