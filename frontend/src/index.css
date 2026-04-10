@@ -89,9 +89,9 @@ body {
     overflow: hidden;
 }
 
-video {
-    background: #000;
-    max-width: 100%;
+video.bg-video {
+    max-width: none;
+    background: transparent;
 }
 
 ::-webkit-scrollbar {

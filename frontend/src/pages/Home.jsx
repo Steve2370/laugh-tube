@@ -302,14 +302,14 @@ const Home = () => {
         <div className="min-h-screen pt-20 relative" style={{ backgroundColor: 'transparent' }}>
 
             <video
+                className="bg-video"
                 autoPlay
                 loop
                 muted
                 playsInline
                 style={{
                     position: 'fixed',
-                    top: 0,
-                    left: 0,
+                    top: 0, left: 0,
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
