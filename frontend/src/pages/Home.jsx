@@ -340,14 +340,28 @@ const Home = () => {
     }
 
     return (
-        <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="min-h-screen pt-20 relative">
+            <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="fixed inset-0 w-full h-full object-cover -z-10"
+                style={{ filter: 'brightness(0.15)' }}
+            >
+                <source src="/bgLaugh.mp4" type="video/mp4" />
+            </video>
+
+            <div className="fixed inset-0 -z-10 bg-gradient-to-br from-gray-900/60 to-blue-900/40" />
+
             <style>{`
-                @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-                @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
-                .animate-shimmer { background-size:800px 100%; animation:shimmer 1.5s infinite linear; }
-                .scrollbar-hide::-webkit-scrollbar { display:none; }
-                .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
-            `}</style>
+            @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+            @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+            .animate-shimmer { background-size:800px 100%; animation:shimmer 1.5s infinite linear; }
+            .scrollbar-hide::-webkit-scrollbar { display:none; }
+            .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
+        `}</style>
+            <div className="max-w-7xl mx-auto px-4 py-8">
 
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <HeroBanner
