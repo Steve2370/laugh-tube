@@ -33,8 +33,7 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
 
         setLoading(true);
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await apiService.requestV2('/admin/messages', {
+            await apiService.requestV2('/admin/messages', {
                 method: 'POST',
                 body: JSON.stringify({
                     user_id: selectedUser.id,
@@ -42,9 +41,7 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
                     message: message.trim(),
                 }),
             });
-
-            if (!response.ok) throw new Error("Erreur lors de l'envoi");
-            toast.success(`Email envoyé à ${selectedUser.username}`);
+            toast.success(`Message envoyé à ${selectedUser.username}`);
             setSubject('');
             setMessage('');
             setSelectedUser(null);
