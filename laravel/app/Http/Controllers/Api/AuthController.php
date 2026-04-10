@@ -93,6 +93,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'avatar_url' => $user->avatar_url,
+                'cover_url' => $user->cover_url,
                 'bio' => $user->bio,
                 'email_verified' => $user->email_verified,
                 'created_at' => $user->created_at,

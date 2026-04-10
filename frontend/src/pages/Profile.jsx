@@ -197,17 +197,15 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 
     const handleBioSave = async () => {
         if (bioDraft === authUser?.bio) return;
-
         try {
-            setSavingBio(true);
-            await apiService.updateBio(bioDraft);
+            await apiService.requestV2('/profile', {
+                method: 'PUT',
+                body: JSON.stringify({ bio: bioDraft }),
+            });
             updateUser({ bio: bioDraft });
-            toast.success("Biographie mise à jour");
+            toast.success('Bio mise à jour');
         } catch (err) {
-            console.error('Erreur sauvegarde bio:', err);
-            toast.error("Erreur lors de la sauvegarde");
-        } finally {
-            setSavingBio(false);
+            toast.error('Erreur sauvegarde bio');
         }
     };
 
