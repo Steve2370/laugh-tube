@@ -282,7 +282,7 @@ const Home = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 to-blue-50">
+            <div className="min-h-screen pt-20">
                 <style>{`
                     @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
                     @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }

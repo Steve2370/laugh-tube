@@ -5,7 +5,7 @@ import NotificationContainer from '../common/NotificationContainer';
 
 const AppLayout = () => {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
             <Navbar />
             <main className="min-h-screen">
                 <PageRouter />
