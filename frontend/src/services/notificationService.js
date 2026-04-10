@@ -40,8 +40,8 @@ class NotificationService {
 
     async markAsRead(notificationId) {
         try {
-            await apiService.request(`/notifications/${notificationId}/read`, {
-                method: 'PUT'
+            await apiService.requestV2(`/notifications/${notificationId}/read`, {
+                method: 'PATCH'
             });
 
             this._updateCacheNotification(notificationId, { is_read: true });
@@ -60,8 +60,8 @@ class NotificationService {
 
     async markAllAsRead() {
         try {
-            await apiService.request('/notifications/mark-all-read', {
-                method: 'PUT'
+            await apiService.requestV2('/notifications/read-all', {
+                method: 'PATCH'
             });
             this.cache.notifications = this.cache.notifications.map(n => ({
                 ...n,
@@ -80,7 +80,7 @@ class NotificationService {
 
     async deleteNotification(notificationId) {
         try {
-            await apiService.request(`/notifications/${notificationId}`, {
+            await apiService.requestV2(`/notifications/${notificationId}`, {
                 method: 'DELETE'
             });
 
@@ -104,7 +104,7 @@ class NotificationService {
 
     async deleteAllRead() {
         try {
-            await apiService.request('/notifications/delete-read', {
+            await apiService.requestV2('/notifications/delete-read', {
                 method: 'DELETE'
             });
 

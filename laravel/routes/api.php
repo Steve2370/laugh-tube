@@ -46,6 +46,7 @@ Route::prefix('v2')->group(function () {
         Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
         Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+        Route::delete('/notifications/delete-read', [NotificationController::class, 'deleteAllRead']);
     });
 
     Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
