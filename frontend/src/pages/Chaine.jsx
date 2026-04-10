@@ -15,13 +15,17 @@ import {
 
 const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
     const getAvatarUrl = () => {
-        if (!channelUser?.id) return null;
-        return `/api/users/${channelUser.id}/profile-image`;
+        if (!channelUser?.avatar_url || channelUser.avatar_url.includes('default')) return null;
+        if (channelUser.avatar_url.startsWith('http')) return channelUser.avatar_url;
+        if (channelUser.avatar_url.startsWith('/')) return channelUser.avatar_url;
+        return `/uploads/profiles/${channelUser.avatar_url}`;
     };
 
     const getCoverUrl = () => {
-        if (!channelUser?.id) return null;
-        return `/api/users/${channelUser.id}/cover-image`;
+        if (!channelUser?.cover_url || channelUser.cover_url.includes('default')) return null;
+        if (channelUser.cover_url.startsWith('http')) return channelUser.cover_url;
+        if (channelUser.cover_url.startsWith('/')) return channelUser.cover_url;
+        return `/uploads/profiles/${channelUser.cover_url}`;
     };
 
     const formatSubscribers = (count) => {
@@ -192,7 +196,14 @@ const Chaine = () => {
                     ? userVideosResponse
                     : [];
 
-            setVideos(videosList);
+            const enrichedVideos = videosList.map(v => ({
+                ...v,
+                username: v.username || channelUserData.username,
+                auteur: v.auteur || channelUserData.username,
+                avatar_url: v.avatar_url || channelUserData.avatar_url || null,
+            }));
+
+            setVideos(enrichedVideos);
 
             try {
                 const profileResponse = await apiService.getUserProfile(channelUserData.id);
