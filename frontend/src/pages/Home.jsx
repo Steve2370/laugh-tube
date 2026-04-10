@@ -314,19 +314,11 @@ const Home = () => {
                     height: '100%',
                     objectFit: 'cover',
                     zIndex: -2,
-                    filter: 'brightness(0.35)'
+                    filter: 'brightness(0.6)'
                 }}
             >
                 <source src="/uploads/bgLaugh.mp4" type="video/mp4" />
             </video>
-
-            <div style={{
-                position: 'fixed',
-                top: 0, left: 0, right: 0, bottom: 0,
-                zIndex: -1,
-                background: 'linear-gradient(to bottom right, rgba(17,24,39,0.6), rgba(30,58,138,0.4))'
-            }} />
-
             <style>{`
                 @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
                 @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
