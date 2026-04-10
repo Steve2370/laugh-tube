@@ -69,7 +69,7 @@ export default function Admin() {
         } catch { setMessages([]); }
 
         try {
-            const inboxRes = await apiService.request('/admin/contact');
+            const inboxRes = await apiService.requestV2('/admin/contact');
             setInbox(inboxRes.inbox ?? []);
         } catch { setInbox([]); }
 
