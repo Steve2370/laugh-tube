@@ -349,7 +349,7 @@ const Home = () => {
                 className="fixed inset-0 w-full h-full object-cover -z-10"
                 style={{ filter: 'brightness(0.15)', opacity: 0.5 }}
             >
-                <source src="/bgLaugh.mp4" type="video/mp4" />
+                <source src="/uploads/bgLaugh.mp4" type="video/mp4" />
             </video>
 
             <div className="fixed inset-0 -z-10 bg-gradient-to-br from-gray-900/60 to-blue-900/40" />
