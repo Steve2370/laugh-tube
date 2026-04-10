@@ -290,7 +290,7 @@ const Home = () => {
     }
 
     return (
-        <div className="min-h-screen pt-20 relative">
+        <div className="min-h-screen pt-20 relative" style={{ backgroundColor: 'transparent' }}>
 
             <video
                 autoPlay
@@ -304,9 +304,8 @@ const Home = () => {
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    zIndex: -1,
+                    zIndex: -2,
                     filter: 'brightness(0.35)',
-                    opacity: 0.85,
                 }}
             >
                 <source src="/uploads/bgLaugh.mp4" type="video/mp4" />
@@ -316,7 +315,7 @@ const Home = () => {
                 position: 'fixed',
                 top: 0, left: 0, right: 0, bottom: 0,
                 zIndex: -1,
-                background: 'linear-gradient(to bottom right, rgba(17,24,39,0.5), rgba(30,58,138,0.3))'
+                background: 'linear-gradient(to bottom right, rgba(17,24,39,0.6), rgba(30,58,138,0.4))'
             }} />
 
             <style>{`
