@@ -89,7 +89,7 @@ class ProfileController extends Controller
                 'thumbnail' => $v->thumbnail,
                 'views' => $v->views,
                 'created_at' => $v->created_at,
-                'user_id'     => $v->user_id,
+                'user_id' => $v->user_id,
             ]);
 
         return response()->json(['videos' => $videos]);
