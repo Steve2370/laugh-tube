@@ -48,12 +48,12 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     useEffect(() => {
         if (!authUser?.id) return;
         setBioDraft(authUser.bio || '');
-        setAvatarPreview(authUser.avatar_url
-            ? `/api/users/${authUser.id}/profile-image`
+        setAvatarPreview(authUser.avatar_url && !authUser.avatar_url.includes('default')
+            ? `/uploads/profiles/${authUser.avatar_url}`
             : '/images/default-avatar.svg'
         );
-        setCoverPreview(authUser.cover_url
-            ? `/api/users/${authUser.id}/cover-image`
+        setCoverPreview(authUser.cover_url && !authUser.cover_url.includes('default')
+            ? `/uploads/profiles/${authUser.cover_url}`
             : '/images/default-cover.svg'
         );
     }, [authUser?.id, authUser?.bio]);
@@ -146,13 +146,10 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
             if (result?.cover_url) {
                 toast.success(result.message ?? "Couverture mise à jour");
 
-                const fullUrl = result.cover_url.startsWith('http')
-                    ? result.cover_url
-                    : `${window.location.origin}${result.cover_url}`;
-
+                const filename = result.cover_url.split('/').pop();
+                const fullUrl = `/uploads/profiles/${filename}`;
                 setCoverPreview(fullUrl);
-
-                updateUser({ cover_url: result.cover_url });
+                updateUser({ cover_url: filename });
 
                 URL.revokeObjectURL(previewUrl);
             } else {
@@ -162,9 +159,9 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
             console.error("Erreur cover:", err);
             toast.error("Erreur lors de la mise à jour");
             if (authUser?.cover_url) {
-                const coverUrl = authUser.cover_url.startsWith('http')
+                const coverUrl = authUser.cover_url.startsWith('/')
                     ? authUser.cover_url
-                    : `${window.location.origin}${authUser.cover_url}`;
+                    : `/uploads/profiles/${authUser.cover_url}`;
                 setCoverPreview(coverUrl);
             } else {
                 setCoverPreview('/images/default-cover.svg');
