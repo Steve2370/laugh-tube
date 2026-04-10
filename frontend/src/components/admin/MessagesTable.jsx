@@ -5,11 +5,11 @@ import { useToast } from '../../contexts/ToastContext.jsx';
 
 const MessagesTable = ({ users, messages, onMessageSent }) => {
     const toast = useToast();
-    const [search, setSearch]       = useState('');
+    const [search, setSearch] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
-    const [subject, setSubject]     = useState('');
-    const [message, setMessage]     = useState('');
-    const [loading, setLoading]     = useState(false);
+    const [subject, setSubject] = useState('');
+    const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [showUserList, setShowUserList] = useState(false);
 
@@ -33,14 +33,21 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
 
         setLoading(true);
         try {
-            await apiService.request('/admin/messages', {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('/api/admin/messages', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
                     user_id: selectedUser.id,
                     subject: subject.trim(),
                     message: message.trim(),
                 }),
             });
+            if (!response.ok) throw new Error("Erreur lors de l'envoi");
             toast.success(`Email envoyé à ${selectedUser.username}`);
             setSubject('');
             setMessage('');
