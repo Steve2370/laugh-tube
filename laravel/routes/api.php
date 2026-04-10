@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ProfileUploadController;
 use App\Http\Controllers\Api\VideoController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,8 @@ Route::prefix('v2')->group(function () {
 
         Route::put('/profile', [ProfileController::class, 'update']);
         Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
+        Route::post('/users/me/avatar', [ProfileUploadController::class, 'uploadAvatar']);
+        Route::post('/users/me/cover',  [ProfileUploadController::class, 'uploadCover']);
 
         Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
         Route::post('/videos/{id}/like', [LikeController::class, 'like']);
