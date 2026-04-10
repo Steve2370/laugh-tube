@@ -15,27 +15,15 @@ class NotificationService {
 
     async getNotifications(limit = 20, offset = 0) {
         try {
-            const url = `/api/notifications?limit=${limit}&offset=${offset}`;
-            const token = localStorage.getItem('access_token');
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                return { success: false, notifications: [], unreadCount: 0, total: 0 };
-            }
-
-            const data = await response.json();
+            const response = await apiService.requestV2(
+                `/notifications?limit=${limit}&offset=${offset}`
+            );
             const result = {
                 success: true,
-                notifications: data.notifications || [],
-                unreadCount: data.unread_count || 0,
-                total: data.total || 0
+                notifications: response.notifications || [],
+                unreadCount: response.unread_count || 0,
+                total: response.total || 0
             };
-
             if (offset === 0) {
                 this.cache = {
                     notifications: result.notifications,
