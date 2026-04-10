@@ -58,6 +58,16 @@ class NotificationController extends Controller
         return response()->json(['message' => 'Toutes les notifications marquées comme lues']);
     }
 
+    public function deleteAllRead(Request $request): JsonResponse
+    {
+        DB::table('notifications')
+            ->where('user_id', $request->user()->id)
+            ->where('is_read', true)
+            ->delete();
+
+        return response()->json(['message' => 'Notifications lues supprimées']);
+    }
+
     public function destroy(Request $request, int $id): JsonResponse
     {
         DB::table('notifications')
