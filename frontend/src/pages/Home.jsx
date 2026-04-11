@@ -316,7 +316,7 @@ const Home = () => {
                     zIndex: -2,
                 }}
             >
-                <source src="/uploads/bgLaugh.mp4" type="video/mp4" />
+                <source src="/uploads/LOL.mp4" type="video/mp4" />
             </video>
             <style>{`
                 @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
