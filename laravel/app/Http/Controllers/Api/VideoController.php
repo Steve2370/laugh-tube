@@ -129,7 +129,7 @@ class VideoController extends Controller
         $file = $request->file('video');
         $filename = uniqid() . '.' . $file->getClientOriginalExtension();
 
-        $uploadPath = '/var/www/html/uploads/videos/';
+        $uploadPath = '/var/www/html/public/uploads/videos/';
         $file->move($uploadPath, $filename);
 
         $video = DB::table('videos')->insertGetId([
