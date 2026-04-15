@@ -87,13 +87,17 @@ class VideoController extends Controller
 
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $video = Video::whereNull('deleted_at')->findOrFail($id);
-
+        $video = Video::withTrashed()->findOrFail($id);
         if ($video->user_id !== $request->user()->id && $request->user()->role !== 'admin') {
             return response()->json(['error' => 'Non autorisé'], 403);
         }
 
-        $video->update(['deleted_at' => now()]);
+        $uploadsPath = '/var/www/html/public/uploads/';
+        @unlink($uploadsPath . 'videos/' . $video->filename);
+        @unlink($uploadsPath . 'encoded/' . pathinfo($video->filename, PATHINFO_FILENAME) . '_encoded.mp4');
+        @unlink($uploadsPath . 'thumbnails/' . pathinfo($video->filename, PATHINFO_FILENAME) . '_thumb.jpg');
+        DB::table('encoding_queue')->where('video_id', $id)->delete();
+        $video->forceDelete();
 
         return response()->json(['message' => 'Vidéo supprimée']);
     }
