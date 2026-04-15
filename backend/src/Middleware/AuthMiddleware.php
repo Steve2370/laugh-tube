@@ -63,13 +63,56 @@ class AuthMiddleware
     {
         try {
             $secret = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? null;
-            if (!$secret) return null;
-
-            $payload = JWT::decode($token, new Key($secret, 'HS256'));
-            return json_decode(json_encode($payload), true);
+            if ($secret) {
+                $payload = JWT::decode($token, new Key($secret, 'HS256'));
+                return json_decode(json_encode($payload), true);
+            }
         } catch (\Throwable $e) {
-            return null;
         }
+
+        try {
+            if (str_contains($token, '|')) {
+                [$id, $plainText] = explode('|', $token, 2);
+
+                $dsn = sprintf(
+                    'pgsql:host=%s;port=%s;dbname=%s',
+                    $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?? 'postgres',
+                    $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?? '5432',
+                    $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?? 'laughtube'
+                );
+                $pdo = new \PDO($dsn,
+                    $_ENV['DB_USER'] ?? getenv('DB_USER') ?? 'laughtube_user',
+                    $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?? ''
+                );
+
+                $stmt = $pdo->prepare(
+                    "SELECT * FROM personal_access_tokens WHERE id = ? LIMIT 1"
+                );
+                $stmt->execute([(int)$id]);
+                $pat = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+                if ($pat && hash_equals($pat['token'], hash('sha256', $plainText))) {
+                    $stmt2 = $pdo->prepare(
+                        "SELECT id, username, email, role FROM users WHERE id = ? LIMIT 1"
+                    );
+                    $stmt2->execute([(int)$pat['tokenable_id']]);
+                    $user = $stmt2->fetch(\PDO::FETCH_ASSOC);
+
+                    if ($user) {
+                        return [
+                            'sub' => (int)$user['id'],
+                            'username' => $user['username'],
+                            'email' => $user['email'],
+                            'role' => $user['role'],
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log("Sanctum fallback error: " . $e->getMessage());
+        }
+
+        return null;
     }
 
     public function handle(): bool
