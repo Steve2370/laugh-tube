@@ -167,29 +167,112 @@ class AdminController extends Controller
 
         $user = User::find($validated['user_id']);
         if ($user) {
-            try {
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . config('services.resend.key'),
-                    'Content-Type' => 'application/json',
-                ])->post('https://api.resend.com/emails', [
-                    'from' => 'LaughTube <noreply@laughtube.ca>',
-                    'to' => [$user->email],
-                    'subject' => '[LaughTube] ' . $validated['subject'],
-                    'html' => nl2br(htmlspecialchars($validated['message'])),
-                    'reply_to' => 'legal@laughtube.ca',
-                ]);
-
-                if (!$response->successful()) {
-                    \Log::error('Resend error: ' . $response->body());
-                    return response()->json(['message' => 'Message sauvegardé mais erreur email: ' . $response->body()], 500);
-                }
-            } catch (\Exception $e) {
-                \Log::error('Email send failed: ' . $e->getMessage());
-                return response()->json(['message' => 'Erreur email: ' . $e->getMessage()], 500);
-            }
+            $this->sendResendEmail(
+                $user->email,
+                $user->username,
+                $validated['subject'],
+                $validated['message']
+            );
         }
 
         return response()->json(['message' => 'Message envoyé avec succès']);
+    }
+
+    public function sendMessageAll(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        $users = User::whereNull('deleted_at')->get();
+        $adminId = $request->user()->id;
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($users as $user) {
+            DB::table('admin_messages')->insert([
+                'admin_id' => $adminId,
+                'user_id' => $user->id,
+                'subject' => $validated['subject'],
+                'message' => $validated['message'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $success = $this->sendResendEmail(
+                $user->email,
+                $user->username,
+                $validated['subject'],
+                $validated['message']
+            );
+
+            $success ? $sent++ : $failed++;
+        }
+
+        return response()->json([
+            'message' => "Envoyé à {$sent} utilisateurs.",
+            'sent' => $sent,
+            'failed'  => $failed,
+        ]);
+    }
+
+    private function sendResendEmail(string $email, string $username, string $subject, string $message): bool
+    {
+        $messageHtml = nl2br(htmlspecialchars($message));
+        $siteUrl = 'https://www.laughtube.ca';
+        $logoUrl = $siteUrl . '/logo.png';
+        $logo = '<img src="' . $logoUrl . '" alt="LaughTube" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;">';
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
+  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+  .header{background:#ffffff;padding:24px;text-align:center;}
+  .badge{display:inline-block;background:#fff;color:#111;font-size:11px;font-weight:bold;padding:4px 12px;border-radius:20px;margin-top:12px;letter-spacing:1px;text-transform:uppercase;}
+  .content{padding:32px;}
+  .subject{font-size:20px;font-weight:bold;color:#111;margin-bottom:16px;padding-bottom:16px;border-bottom:2px solid #f0f0f0;}
+  .message-box{background:#f9f9f9;border-left:4px solid #111;padding:20px;border-radius:0 8px 8px 0;margin:20px 0;font-size:15px;line-height:1.7;}
+  .reply-box{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin-top:24px;font-size:13px;}
+  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    {$logo}
+    <div class="badge">Message de l'administration</div>
+  </div>
+  <div class="content">
+    <p>Bonjour <strong>{$username}</strong>,</p>
+    <p>L'équipe d'administration de LaughTube vous a envoyé le message suivant :</p>
+    <div class="subject">{$subject}</div>
+    <div class="message-box">{$messageHtml}</div>
+    <div class="reply-box">
+      <strong>Contacter le support :</strong><br>
+      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
+    </div>
+  </div>
+  <div class="footer">© 2026 LaughTube. Tous droits réservés. · <a href="{$siteUrl}" style="color:#999;">laughtube.ca</a></div>
+</div>
+</body></html>
+HTML;
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . config('services.resend.key'),
+            'Content-Type' => 'application/json',
+        ])->post('https://api.resend.com/emails', [
+            'from' => 'LaughTube <noreply@laughtube.ca>',
+            'to' => [$email],
+            'subject' => '[LaughTube] ' . $subject,
+            'html' => $html,
+            'reply_to' => 'legal@laughtube.ca',
+        ]);
+
+        return $response->successful();
     }
 
     public function updateContact(Request $request, int $id): JsonResponse

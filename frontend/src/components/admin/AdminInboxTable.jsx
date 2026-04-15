@@ -4,8 +4,8 @@ import apiService from '../../services/apiService.js';
 import { useToast } from '../../contexts/ToastContext.jsx';
 
 const STATUT_LABELS = {
-    unread:  { label: 'Non lu',  bg: 'bg-red-100 text-red-700' },
-    read:    { label: 'Lu',      bg: 'bg-gray-100 text-gray-600' },
+    unread:  { label: 'Non lu', bg: 'bg-red-100 text-red-700' },
+    read:    { label: 'Lu', bg: 'bg-gray-100 text-gray-600' },
     replied: { label: 'Répondu', bg: 'bg-green-100 text-green-700' },
 };
 
@@ -19,7 +19,7 @@ const AdminInboxTable = ({ inbox, onRefresh }) => {
     const handleMarkRead = async (msgId) => {
         setUpdatingId(msgId);
         try {
-            await apiService.request(`/admin/contact/${msgId}`, {
+            await apiService.requestV2(`/admin/contact/${msgId}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ statut: 'read' }),
             });
@@ -34,7 +34,7 @@ const AdminInboxTable = ({ inbox, onRefresh }) => {
     const handleMarkReplied = async (msgId) => {
         setUpdatingId(msgId);
         try {
-            await apiService.request(`/admin/contact/${msgId}`, {
+            await apiService.requestV2(`/admin/contact/${msgId}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ statut: 'replied' }),
             });
