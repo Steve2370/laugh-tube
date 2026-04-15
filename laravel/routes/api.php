@@ -44,6 +44,7 @@ Route::prefix('v2')->group(function () {
         Route::post('/videos/{id}/dislike', [LikeController::class, 'dislike']);
         Route::post('/videos/{id}/comments', [CommentController::class, 'store']);
         Route::delete('/videos/{id}/comments/{commentId}', [CommentController::class, 'destroy']);
+        Route::post('/videos/upload', [VideoController::class, 'upload']);
 
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
