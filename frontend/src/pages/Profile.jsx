@@ -39,6 +39,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const [coverPreview, setCoverPreview] = useState(null);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
+    const [confirmDeleteVideo, setConfirmDeleteVideo] = useState(null);
     const { user: authUser, updateUser } = useAuth();
     const user = authUser;
 
@@ -601,19 +602,20 @@ const Profile = () => {
     };
 
     const handleDeleteVideo = async (video) => {
-        const confirmed = window.confirm(
-            `Êtes-vous sûr de vouloir supprimer "${video.title}" ?\n\nCette action est irréversible.`
-        );
+        setConfirmDeleteVideo(video);
+    };
 
-        if (!confirmed) return;
-
+    const confirmDelete = async () => {
+        if (!confirmDeleteVideo) return;
         try {
-            await apiService.deleteVideo(video.id);
-            setVideos(prev => prev.filter(v => v.id !== video.id));
+            await apiService.deleteVideo(confirmDeleteVideo.id);
+            setVideos(prev => prev.filter(v => v.id !== confirmDeleteVideo.id));
             toast.success('Vidéo supprimée avec succès');
         } catch (err) {
             console.error('Erreur suppression:', err);
             toast.error('Erreur lors de la suppression');
+        } finally {
+            setConfirmDeleteVideo(null);
         }
     };
 
@@ -700,6 +702,32 @@ const Profile = () => {
                     </>
                 )}
             </div>
+
+            {confirmDeleteVideo && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Supprimer la vidéo ?</h3>
+                        <p className="text-sm text-gray-500 mb-1">
+                            <strong>{confirmDeleteVideo.title}</strong>
+                        </p>
+                        <p className="text-sm text-gray-500 mb-5">Cette action est irréversible.</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmDeleteVideo(null)}
+                                className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700"
+                            >
+                                Supprimer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
