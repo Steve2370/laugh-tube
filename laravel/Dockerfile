@@ -29,6 +29,8 @@ RUN mkdir -p storage/framework/cache/data \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
+RUN echo "upload_max_filesize=800M\npost_max_size=800M\nmemory_limit=1024M\nmax_execution_time=600" > /usr/local/etc/php/conf.d/uploads.ini
+
 EXPOSE 9000
 
 CMD ["php-fpm"]
