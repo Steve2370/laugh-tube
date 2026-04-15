@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
 export default function VideosTable({ videos, onDeleteVideo }) {
-    const [search, setSearch]         = useState('');
+    const [search, setSearch] = useState('');
     const [confirmDelete, setConfirm] = useState(null);
-    const [sortBy, setSortBy]         = useState('created_at');
-    const [sortDir, setSortDir]       = useState('desc');
+    const [sortBy, setSortBy] = useState('created_at');
+    const [sortDir, setSortDir] = useState('desc');
 
     const toggleSort = (col) => {
         if (sortBy === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
