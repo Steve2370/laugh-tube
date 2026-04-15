@@ -39,7 +39,6 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const [coverPreview, setCoverPreview] = useState(null);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
-    const [confirmDeleteVideo, setConfirmDeleteVideo] = useState(null);
     const { user: authUser, updateUser } = useAuth();
     const user = authUser;
 
@@ -545,6 +544,7 @@ const Profile = () => {
     const isOwnProfile = true;
     const targetUserId = user?.id;
     const [activeTab, setActiveTab] = useState('videos');
+    const [confirmDeleteVideo, setConfirmDeleteVideo] = useState(null);
     const [videos, setVideos] = useState([]);
     const [videosLoading, setVideosLoading] = useState(false);
     const [stats, setStats] = useState({
