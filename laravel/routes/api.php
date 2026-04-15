@@ -71,6 +71,7 @@ Route::prefix('v2')->group(function () {
 
         Route::get('/messages', [AdminController::class, 'getMessages']);
         Route::post('/messages', [AdminController::class, 'sendMessage']);
+        Route::post('/admin/messages/all', [AdminController::class, 'sendMessageAll']);
     });
 
 });
