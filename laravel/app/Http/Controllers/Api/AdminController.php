@@ -8,6 +8,7 @@ use App\Models\Video;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
 {
@@ -33,7 +34,6 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($id);
         $user->update(['deleted_at' => now()]);
-
         return response()->json(['message' => 'Utilisateur supprimé']);
     }
 
@@ -41,7 +41,6 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($id);
         $user->update(['deleted_at' => now()]);
-
         return response()->json(['message' => 'Utilisateur suspendu']);
     }
 
@@ -49,7 +48,6 @@ class AdminController extends Controller
     {
         $user = User::withTrashed()->findOrFail($id);
         $user->update(['deleted_at' => null]);
-
         return response()->json(['message' => 'Utilisateur réactivé']);
     }
 
@@ -57,7 +55,6 @@ class AdminController extends Controller
     {
         $user = User::withTrashed()->findOrFail($id);
         $user->update(['deleted_at' => null]);
-
         return response()->json(['message' => 'Utilisateur restauré']);
     }
 
@@ -86,7 +83,6 @@ class AdminController extends Controller
     {
         $video = Video::withTrashed()->findOrFail($id);
         $video->update(['deleted_at' => now()]);
-
         return response()->json(['message' => 'Vidéo supprimée']);
     }
 
@@ -95,11 +91,7 @@ class AdminController extends Controller
         $signalements = DB::table('signalements')
             ->leftJoin('users', 'signalements.reporter_id', '=', 'users.id')
             ->leftJoin('videos', 'signalements.video_id', '=', 'videos.id')
-            ->select(
-                'signalements.*',
-                'users.username as reporter_username',
-                'videos.title as video_title'
-            )
+            ->select('signalements.*', 'users.username as reporter_username', 'videos.title as video_title')
             ->orderBy('signalements.created_at', 'desc')
             ->get();
 
@@ -112,9 +104,7 @@ class AdminController extends Controller
             'statut' => 'required|string|in:pending,reviewed,dismissed',
         ]);
 
-        DB::table('signalements')
-            ->where('id', $id)
-            ->update(['statut' => $validated['statut']]);
+        DB::table('signalements')->where('id', $id)->update(['statut' => $validated['statut']]);
 
         return response()->json(['message' => 'Signalement mis à jour']);
     }
@@ -136,10 +126,7 @@ class AdminController extends Controller
 
     public function getContact(): JsonResponse
     {
-        $inbox = DB::table('contact_messages')
-            ->orderBy('sent_at', 'desc')
-            ->get();
-
+        $inbox = DB::table('contact_messages')->orderBy('sent_at', 'desc')->get();
         return response()->json(['inbox' => $inbox]);
     }
 
@@ -170,14 +157,29 @@ class AdminController extends Controller
 
         DB::table('admin_messages')->insert([
             'admin_id' => $request->user()->id,
-            'user_id' => $validated['user_id'],
-            'subject' => $validated['subject'],
-            'message' => $validated['message'],
+            'user_id'  => $validated['user_id'],
+            'subject'  => $validated['subject'],
+            'message'  => $validated['message'],
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return response()->json(['message' => 'Message envoyé']);
+        $user = User::find($validated['user_id']);
+        if ($user) {
+            try {
+                Mail::send([], [], function ($mail) use ($user, $validated) {
+                    $mail->to($user->email, $user->username)
+                        ->replyTo('legal@laughtube.ca', 'LaughTube')
+                        ->subject('[LaughTube] ' . $validated['subject'])
+                        ->html(nl2br(htmlspecialchars($validated['message'])));
+                });
+            } catch (\Exception $e) {
+                \Log::error('Email send failed: ' . $e->getMessage());
+                return response()->json(['message' => 'Message sauvegardé mais erreur email: ' . $e->getMessage()], 500);
+            }
+        }
+
+        return response()->json(['message' => 'Message envoyé avec succès']);
     }
 
     public function updateContact(Request $request, int $id): JsonResponse
@@ -186,9 +188,7 @@ class AdminController extends Controller
             'statut' => 'required|string|in:unread,read,replied',
         ]);
 
-        DB::table('contact_messages')
-            ->where('id', $id)
-            ->update(['statut' => $validated['statut']]);
+        DB::table('contact_messages')->where('id', $id)->update(['statut' => $validated['statut']]);
 
         return response()->json(['message' => 'Message mis à jour']);
     }
