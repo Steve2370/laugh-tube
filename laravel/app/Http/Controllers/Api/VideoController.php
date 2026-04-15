@@ -22,7 +22,7 @@ class VideoController extends Controller
 
     public function trending(Request $request): JsonResponse
     {
-        $limit  = min((int) $request->get('limit', 10), 50);
+        $limit = min((int) $request->get('limit', 10), 50);
         $period = min((int) $request->get('period', 7), 30);
 
         $videos = Video::with('user:id,username')
@@ -33,7 +33,10 @@ class VideoController extends Controller
                 'likes as recent_likes' => fn($q) =>
                 $q->where('created_at', '>=', now()->subDays($period)),
             ])
-            ->orderByRaw('(recent_views * 2 + recent_likes * 3) DESC')
+            ->orderByRaw('((SELECT COUNT(*) FROM video_views WHERE video_views.video_id = videos.id AND viewed_at >= ?) * 2 + (SELECT COUNT(*) FROM likes WHERE likes.video_id = videos.id AND likes.created_at >= ?) * 3) DESC', [
+                now()->subDays($period),
+                now()->subDays($period),
+            ])
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get()
@@ -49,7 +52,7 @@ class VideoController extends Controller
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
             ->withCount(['views', 'likes'])
-            ->orderByRaw('(views_count + likes_count * 3) DESC')
+            ->orderByRaw('((SELECT COUNT(*) FROM video_views WHERE video_views.video_id = videos.id) + (SELECT COUNT(*) FROM likes WHERE likes.video_id = videos.id) * 3) DESC')
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get()
