@@ -142,6 +142,14 @@ class VideoController extends Controller
             'updated_at' => now(),
         ]);
 
+        DB::table('encoding_queue')->insert([
+            'video_id' => $video,
+            'status' => 'pending',
+            'priority' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         return response()->json([
             'success' => true,
             'video_id' => $video,
