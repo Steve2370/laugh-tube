@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Video;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VideoController extends Controller
 {
@@ -115,5 +116,36 @@ class VideoController extends Controller
             'views_count' => $video->views_count  ?? null,
             'likes_count' => $video->likes_count  ?? null,
         ];
+    }
+
+    public function upload(Request $request): JsonResponse
+    {
+        $request->validate([
+            'video' => 'required|file|mimes:mp4,avi,mov,webm,quicktime|max:512000',
+            'title' => 'required|string|min:3|max:100',
+            'description' => 'nullable|string|max:5000',
+        ]);
+
+        $file = $request->file('video');
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+
+        $uploadPath = '/var/www/html/uploads/videos/';
+        $file->move($uploadPath, $filename);
+
+        $video = DB::table('videos')->insertGetId([
+            'user_id' => $request->user()->id,
+            'title' => $request->input('title'),
+            'description' => $request->input('description', ''),
+            'filename' => $filename,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'video_id' => $video,
+            'message' => 'Vidéo uploadée avec succès, encodage en cours...',
+        ]);
     }
 }
