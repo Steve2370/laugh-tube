@@ -8,6 +8,7 @@ use App\Models\Video;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
@@ -167,15 +168,24 @@ class AdminController extends Controller
         $user = User::find($validated['user_id']);
         if ($user) {
             try {
-                Mail::send([], [], function ($mail) use ($user, $validated) {
-                    $mail->to($user->email, $user->username)
-                        ->replyTo('legal@laughtube.ca', 'LaughTube')
-                        ->subject('[LaughTube] ' . $validated['subject'])
-                        ->html(nl2br(htmlspecialchars($validated['message'])));
-                });
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . config('services.resend.api_key'),
+                    'Content-Type' => 'application/json',
+                ])->post('https://api.resend.com/emails', [
+                    'from' => 'LaughTube <noreply@laughtube.ca>',
+                    'to' => [$user->email],
+                    'subject' => '[LaughTube] ' . $validated['subject'],
+                    'html' => nl2br(htmlspecialchars($validated['message'])),
+                    'reply_to' => 'legal@laughtube.ca',
+                ]);
+
+                if (!$response->successful()) {
+                    \Log::error('Resend error: ' . $response->body());
+                    return response()->json(['message' => 'Message sauvegardé mais erreur email: ' . $response->body()], 500);
+                }
             } catch (\Exception $e) {
                 \Log::error('Email send failed: ' . $e->getMessage());
-                return response()->json(['message' => 'Message sauvegardé mais erreur email: ' . $e->getMessage()], 500);
+                return response()->json(['message' => 'Erreur email: ' . $e->getMessage()], 500);
             }
         }
 
