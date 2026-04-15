@@ -438,7 +438,7 @@ class ApiService {
     }
 
     async deleteVideo(id) {
-        return this.request(`/videos/${id}`, { method: 'DELETE' });
+        return this.requestV2(`/videos/${id}`, { method: 'DELETE' });
     }
 
     /**
