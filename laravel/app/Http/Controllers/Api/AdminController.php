@@ -157,9 +157,9 @@ class AdminController extends Controller
 
         DB::table('admin_messages')->insert([
             'admin_id' => $request->user()->id,
-            'user_id'  => $validated['user_id'],
-            'subject'  => $validated['subject'],
-            'message'  => $validated['message'],
+            'user_id' => $validated['user_id'],
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
             'created_at' => now(),
             'updated_at' => now(),
         ]);
