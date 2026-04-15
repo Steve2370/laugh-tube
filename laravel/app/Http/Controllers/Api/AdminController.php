@@ -169,7 +169,7 @@ class AdminController extends Controller
         if ($user) {
             try {
                 $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . config('services.resend.api_key'),
+                    'Authorization' => 'Bearer ' . config('services.resend.key'),
                     'Content-Type' => 'application/json',
                 ])->post('https://api.resend.com/emails', [
                     'from' => 'LaughTube <noreply@laughtube.ca>',
