@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, MessageSquare, Search, User, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, MessageSquare, Search, User, Clock, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import apiService from '../../services/apiService.js';
 import { useToast } from '../../contexts/ToastContext.jsx';
 
@@ -7,6 +7,7 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
     const toast = useToast();
     const [search, setSearch] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
+    const [sendToAll, setSendToAll] = useState(false);
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
@@ -27,25 +28,37 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
     );
 
     const handleSend = async () => {
-        if (!selectedUser) { toast.error('Sélectionnez un utilisateur'); return; }
+        if (!sendToAll && !selectedUser) { toast.error('Sélectionnez un utilisateur'); return; }
         if (!subject.trim()) { toast.error('Sujet requis'); return; }
         if (!message.trim()) { toast.error('Message requis'); return; }
 
         setLoading(true);
         try {
-            await apiService.requestV2('/admin/messages', {
-                method: 'POST',
-                body: JSON.stringify({
-                    user_id: selectedUser.id,
-                    subject: subject.trim(),
-                    message: message.trim(),
-                }),
-            });
-            toast.success(`Message envoyé à ${selectedUser.username}`);
+            if (sendToAll) {
+                const res = await apiService.requestV2('/admin/messages/all', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        subject: subject.trim(),
+                        message: message.trim(),
+                    }),
+                });
+                toast.success(res.message || `Message envoyé à tous les utilisateurs`);
+            } else {
+                await apiService.requestV2('/admin/messages', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        user_id: selectedUser.id,
+                        subject: subject.trim(),
+                        message: message.trim(),
+                    }),
+                });
+                toast.success(`Message envoyé à ${selectedUser.username}`);
+            }
             setSubject('');
             setMessage('');
             setSelectedUser(null);
             setSearch('');
+            setSendToAll(false);
             if (onMessageSent) onMessageSent();
         } catch (err) {
             toast.error(err.message || "Erreur lors de l'envoi");
@@ -61,7 +74,6 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
 
     return (
         <div className="space-y-6">
-
             <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
                 <div className="bg-gray-900 px-6 py-4 flex items-center gap-3">
                     <MessageSquare size={20} className="text-white" />
@@ -70,77 +82,105 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
 
                 <div className="p-6 space-y-5">
 
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Destinataire
-                        </label>
-                        <div className="relative">
-                            <div className="flex items-center gap-2 border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-gray-900 transition-colors">
-                                <Search size={16} className="text-gray-400 flex-shrink-0" />
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher un utilisateur..."
-                                    value={selectedUser ? selectedUser.username : search}
-                                    onChange={(e) => {
-                                        setSearch(e.target.value);
-                                        setSelectedUser(null);
-                                        setShowUserList(true);
-                                    }}
-                                    onFocus={() => setShowUserList(true)}
-                                    className="flex-1 outline-none text-sm"
-                                />
-                                {selectedUser && (
-                                    <button
-                                        onClick={() => { setSelectedUser(null); setSearch(''); }}
-                                        className="text-gray-400 hover:text-gray-600 text-xs"
-                                    >✕</button>
+                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <button
+                            onClick={() => {
+                                setSendToAll(!sendToAll);
+                                setSelectedUser(null);
+                                setSearch('');
+                            }}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                sendToAll ? 'bg-gray-900' : 'bg-gray-300'
+                            }`}
+                        >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                sendToAll ? 'translate-x-6' : 'translate-x-1'
+                            }`} />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <Users size={16} className="text-gray-600" />
+                            <span className="text-sm font-semibold text-gray-700">
+                                Envoyer à tous les utilisateurs
+                            </span>
+                            {sendToAll && (
+                                <span className="text-xs bg-gray-900 text-white px-2 py-0.5 rounded-full">
+                                    {users.length} destinataires
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {!sendToAll && (
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Destinataire
+                            </label>
+                            <div className="relative">
+                                <div className="flex items-center gap-2 border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-gray-900 transition-colors">
+                                    <Search size={16} className="text-gray-400 flex-shrink-0" />
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher un utilisateur..."
+                                        value={selectedUser ? selectedUser.username : search}
+                                        onChange={(e) => {
+                                            setSearch(e.target.value);
+                                            setSelectedUser(null);
+                                            setShowUserList(true);
+                                        }}
+                                        onFocus={() => setShowUserList(true)}
+                                        className="flex-1 outline-none text-sm"
+                                    />
+                                    {selectedUser && (
+                                        <button
+                                            onClick={() => { setSelectedUser(null); setSearch(''); }}
+                                            className="text-gray-400 hover:text-gray-600 text-xs"
+                                        >✕</button>
+                                    )}
+                                </div>
+
+                                {showUserList && !selectedUser && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto">
+                                        {filteredUsers.length === 0 ? (
+                                            <p className="px-4 py-3 text-sm text-gray-500">Aucun utilisateur trouvé</p>
+                                        ) : (
+                                            filteredUsers.slice(0, 20).map(u => (
+                                                <button
+                                                    key={u.id}
+                                                    onClick={() => {
+                                                        setSelectedUser(u);
+                                                        setSearch('');
+                                                        setShowUserList(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                                >
+                                                    <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-white text-xs font-bold">
+                                                            {u.username.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-gray-900">{u.username}</p>
+                                                        <p className="text-xs text-gray-500">{u.email}</p>
+                                                    </div>
+                                                </button>
+                                            ))
+                                        )}
+                                    </div>
                                 )}
                             </div>
 
-                            {showUserList && !selectedUser && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto">
-                                    {filteredUsers.length === 0 ? (
-                                        <p className="px-4 py-3 text-sm text-gray-500">Aucun utilisateur trouvé</p>
-                                    ) : (
-                                        filteredUsers.slice(0, 20).map(u => (
-                                            <button
-                                                key={u.id}
-                                                onClick={() => {
-                                                    setSelectedUser(u);
-                                                    setSearch('');
-                                                    setShowUserList(false);
-                                                }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-                                            >
-                                                <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-white text-xs font-bold">
-                                                        {u.username.charAt(0).toUpperCase()}
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-semibold text-gray-900">{u.username}</p>
-                                                    <p className="text-xs text-gray-500">{u.email}</p>
-                                                </div>
-                                            </button>
-                                        ))
-                                    )}
+                            {selectedUser && (
+                                <div className="mt-2 flex items-center gap-2 bg-gray-900 text-white px-3 py-2 rounded-lg w-fit">
+                                    <User size={14} />
+                                    <span className="text-sm font-medium">{selectedUser.username}</span>
+                                    <span className="text-xs opacity-60">{selectedUser.email}</span>
                                 </div>
                             )}
                         </div>
-
-                        {selectedUser && (
-                            <div className="mt-2 flex items-center gap-2 bg-gray-900 text-white px-3 py-2 rounded-lg w-fit">
-                                <User size={14} />
-                                <span className="text-sm font-medium">{selectedUser.username}</span>
-                                <span className="text-xs opacity-60">{selectedUser.email}</span>
-                            </div>
-                        )}
-                    </div>
+                    )}
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Sujet
-                        </label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Sujet</label>
                         <input
                             type="text"
                             placeholder="Objet du message..."
@@ -163,9 +203,7 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Message
-                        </label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Message</label>
                         <textarea
                             placeholder="Rédigez votre message..."
                             value={message}
@@ -184,7 +222,7 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
 
                     <button
                         onClick={handleSend}
-                        disabled={loading || !selectedUser || !subject.trim() || !message.trim()}
+                        disabled={loading || (!sendToAll && !selectedUser) || !subject.trim() || !message.trim()}
                         className="flex items-center gap-2 bg-gray-900 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         {loading ? (
@@ -192,7 +230,12 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
                         ) : (
                             <Send size={16} />
                         )}
-                        {loading ? 'Envoi...' : 'Envoyer le message'}
+                        {loading
+                            ? 'Envoi en cours...'
+                            : sendToAll
+                                ? `Envoyer à tous (${users.length})`
+                                : 'Envoyer le message'
+                        }
                     </button>
                 </div>
             </div>
@@ -220,8 +263,8 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                    <span className="text-sm font-bold text-gray-900">{msg.user_username}</span>
-                                                    <span className="text-xs text-gray-400">{msg.user_email}</span>
+                                                    <span className="text-sm font-bold text-gray-900">{msg.recipient_username}</span>
+                                                    <span className="text-xs text-gray-400">{msg.recipient_email}</span>
                                                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                                                         par {msg.admin_username}
                                                     </span>
@@ -230,7 +273,7 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
                                                 <p className="text-sm text-gray-500 line-clamp-2">{msg.message}</p>
                                             </div>
                                             <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
-                                                {formatDate(msg.sent_at)}
+                                                {formatDate(msg.created_at)}
                                             </span>
                                         </div>
                                     </div>
