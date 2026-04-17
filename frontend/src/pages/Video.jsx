@@ -566,7 +566,7 @@ const Video = () => {
         if (!signalRaison) { toast.error('Choisissez une raison'); return; }
         setSignalLoading(true);
         try {
-            await apiService.request(`/videos/${videoId}/signaler`, {
+            await apiService.requestV2(`/videos/${videoId}/signaler`, {
                 method: 'POST',
                 body: JSON.stringify({ raison: signalRaison, description: signalDescription }),
             });
