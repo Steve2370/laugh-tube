@@ -49,7 +49,7 @@ class AdminController extends Controller
         }
         DB::table('videos')->where('user_id', $id)->delete();
         DB::table('personal_access_tokens')->where('tokenable_id', $id)->delete();
-        DB::table('abonnements')->where('user_id', $id)->orWhere('subscribed_to_id', $id)->delete();
+        DB::table('abonnements')->where('subscriber_id', $id)->orWhere('subscribed_to_id', $id)->delete();
         DB::table('likes')->where('user_id', $id)->delete();
         DB::table('commentaires')->where('user_id', $id)->delete();
         DB::table('signalements')->where('reporter_id', $id)->delete();

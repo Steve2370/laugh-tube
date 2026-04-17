@@ -160,4 +160,33 @@ class VideoController extends Controller
             'message' => 'Vidéo uploadée avec succès, encodage en cours...',
         ]);
     }
+
+    public function signaler(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'raison' => 'required|string|in:spam,inapproprie,haine,desinformation,droits,autre',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $existing = DB::table('signalements')
+            ->where('video_id', $id)
+            ->where('reporter_id', $request->user()->id)
+            ->first();
+
+        if ($existing) {
+            return response()->json(['error' => 'Vous avez déjà signalé cette vidéo'], 422);
+        }
+
+        DB::table('signalements')->insert([
+            'video_id' => $id,
+            'reporter_id' => $request->user()->id,
+            'raison' => $validated['raison'],
+            'description' => $validated['description'] ?? '',
+            'statut' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Signalement envoyé']);
+    }
 }
