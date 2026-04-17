@@ -189,4 +189,34 @@ class VideoController extends Controller
 
         return response()->json(['message' => 'Signalement envoyé']);
     }
+
+    public function signalerUser(Request $request, int $userId): JsonResponse
+    {
+        $validated = $request->validate([
+            'raison' => 'required|string|in:spam,inapproprie,haine,desinformation,droits,autre',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $existing = DB::table('signalements')
+            ->where('reported_user_id', $userId)
+            ->where('reporter_id', $request->user()->id)
+            ->first();
+
+        if ($existing) {
+            return response()->json(['error' => 'Vous avez déjà signalé ce compte'], 422);
+        }
+
+        DB::table('signalements')->insert([
+            'video_id' => null,
+            'reported_user_id' => $userId,
+            'reporter_id' => $request->user()->id,
+            'raison' => $validated['raison'],
+            'description' => $validated['description'] ?? '',
+            'statut' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Signalement envoyé']);
+    }
 }

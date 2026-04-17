@@ -95,6 +95,24 @@ class AdminController extends Controller
         return response()->json(['message' => 'Compte restauré']);
     }
 
+    public function getSignalements(): JsonResponse
+    {
+        $signalements = DB::table('signalements')
+            ->leftJoin('users as reporters', 'signalements.reporter_id', '=', 'reporters.id')
+            ->leftJoin('videos', 'signalements.video_id', '=', 'videos.id')
+            ->leftJoin('users as reported_users', 'signalements.reported_user_id', '=', 'reported_users.id')
+            ->select(
+                'signalements.*',
+                'reporters.username as reporter_username',
+                'videos.title as video_title',
+                'reported_users.username as reported_user_username'
+            )
+            ->orderBy('signalements.created_at', 'desc')
+            ->get();
+
+        return response()->json(['signalements' => $signalements]);
+    }
+
     public function getVideos(): JsonResponse
     {
         $videos = Video::with('user:id,username')
@@ -121,18 +139,6 @@ class AdminController extends Controller
         $video = Video::withTrashed()->findOrFail($id);
         $video->update(['deleted_at' => now()]);
         return response()->json(['message' => 'Vidéo supprimée']);
-    }
-
-    public function getSignalements(): JsonResponse
-    {
-        $signalements = DB::table('signalements')
-            ->leftJoin('users', 'signalements.reporter_id', '=', 'users.id')
-            ->leftJoin('videos', 'signalements.video_id', '=', 'videos.id')
-            ->select('signalements.*', 'users.username as reporter_username', 'videos.title as video_title')
-            ->orderBy('signalements.created_at', 'desc')
-            ->get();
-
-        return response()->json(['signalements' => $signalements]);
     }
 
     public function updateSignalement(Request $request, int $id): JsonResponse
