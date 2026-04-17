@@ -11,7 +11,7 @@ export function useSignalement(videoId) {
         setLoading(true);
         try {
             if (videoId) {
-                return await apiService.request(`/videos/${videoId}/signaler`, {
+                return await apiService.requestV2(`/videos/${videoId}/signaler`, {
                     method: 'POST',
                     body: JSON.stringify({raison, description}),
                 });
