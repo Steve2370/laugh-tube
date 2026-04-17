@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import apiService from '../services/apiService.js';
 
-export async function useSignalement(videoId, userId) {
+export function useSignalement(videoId, userId) {
     const [loading, setLoading] = useState(false);
 
     const signaler = async (raison, description = '') => {
@@ -16,14 +16,17 @@ export async function useSignalement(videoId, userId) {
                     body: JSON.stringify({raison, description}),
                 });
             }
-            return {success: true};
+            if (userId) {
+                return await apiService.requestV2(`/users/${userId}/signaler`, {
+                    method: 'POST',
+                    body: JSON.stringify({raison, description}),
+                });
+            }
+            return { success: true };
         } finally {
             setLoading(false);
         }
     };
 
-    return await apiService.requestV2(`/users/${userId}/signaler`, {
-        method: 'POST',
-        body: JSON.stringify({raison, description}),
-    });
+    return { signaler, loading };
 }
