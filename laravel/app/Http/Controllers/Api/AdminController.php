@@ -33,30 +33,65 @@ class AdminController extends Controller
 
     public function deleteUser(int $id): JsonResponse
     {
-        $user = User::findOrFail($id);
-        $user->update(['deleted_at' => now()]);
-        return response()->json(['message' => 'Utilisateur supprimé']);
+        $user = User::withTrashed()->findOrFail($id);
+
+        if ($user->role === 'admin') {
+            return response()->json(['error' => 'Impossible de supprimer un admin'], 403);
+        }
+
+        $videos = DB::table('videos')->where('user_id', $id)->get();
+        foreach ($videos as $video) {
+            $uploadsPath = '/var/www/html/public/uploads/';
+            @unlink($uploadsPath . 'videos/' . $video->filename);
+            @unlink($uploadsPath . 'encoded/' . pathinfo($video->filename, PATHINFO_FILENAME) . '_encoded.mp4');
+            @unlink($uploadsPath . 'thumbnails/' . pathinfo($video->filename, PATHINFO_FILENAME) . '_thumb.jpg');
+            DB::table('encoding_queue')->where('video_id', $video->id)->delete();
+        }
+        DB::table('videos')->where('user_id', $id)->delete();
+        DB::table('personal_access_tokens')->where('tokenable_id', $id)->delete();
+        DB::table('abonnements')->where('user_id', $id)->orWhere('subscribed_to_id', $id)->delete();
+        DB::table('likes')->where('user_id', $id)->delete();
+        DB::table('commentaires')->where('user_id', $id)->delete();
+        DB::table('signalements')->where('reporter_id', $id)->delete();
+        DB::table('admin_messages')->where('user_id', $id)->delete();
+
+        $user->forceDelete();
+
+        return response()->json(['message' => 'Compte supprimé définitivement']);
     }
 
     public function suspendUser(int $id): JsonResponse
     {
-        $user = User::findOrFail($id);
-        $user->update(['deleted_at' => now()]);
-        return response()->json(['message' => 'Utilisateur suspendu']);
+        $input = request()->json()->all();
+        $hours = max(1, min(8760, (int)($input['hours'] ?? 24)));
+        $until = now()->addHours($hours);
+
+        DB::table('users')
+            ->where('id', $id)
+            ->update(['account_locked_until' => $until]);
+
+        return response()->json([
+            'message' => "Compte suspendu jusqu'au " . $until->format('d/m/Y H:i'),
+            'until' => $until,
+        ]);
     }
 
     public function unsuspendUser(int $id): JsonResponse
     {
-        $user = User::withTrashed()->findOrFail($id);
-        $user->update(['deleted_at' => null]);
-        return response()->json(['message' => 'Utilisateur réactivé']);
+        DB::table('users')
+            ->where('id', $id)
+            ->update(['account_locked_until' => null, 'failed_login_attempts' => 0]);
+
+        return response()->json(['message' => 'Suspension levée']);
     }
 
     public function restoreUser(int $id): JsonResponse
     {
-        $user = User::withTrashed()->findOrFail($id);
-        $user->update(['deleted_at' => null]);
-        return response()->json(['message' => 'Utilisateur restauré']);
+        DB::table('users')
+            ->where('id', $id)
+            ->update(['deleted_at' => null, 'account_locked_until' => null, 'failed_login_attempts' => 0]);
+
+        return response()->json(['message' => 'Compte restauré']);
     }
 
     public function getVideos(): JsonResponse
