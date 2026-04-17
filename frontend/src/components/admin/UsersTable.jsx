@@ -32,9 +32,9 @@ function UserRow({ user, onRefresh }) {
     const isLocked     = user.failed_login_attempts >= 5 && !isSuspended;
 
     const getStatus = () => {
-        if (isDeleted)   return { label: 'Supprimé', bg: 'bg-gray-100 text-gray-600' };
+        if (isDeleted) return { label: 'Supprimé', bg: 'bg-gray-100 text-gray-600' };
         if (isSuspended) return { label: 'Suspendu', bg: 'bg-red-100 text-red-700' };
-        if (isLocked)    return { label: 'Verrouillé', bg: 'bg-orange-100 text-orange-700' };
+        if (isLocked) return { label: 'Verrouillé', bg: 'bg-orange-100 text-orange-700' };
         return { label: 'Actif', bg: 'bg-green-100 text-green-700' };
     };
 
@@ -43,7 +43,7 @@ function UserRow({ user, onRefresh }) {
     const handleSuspend = async () => {
         setLoading(true);
         try {
-            await apiService.request(`/admin/users/${user.id}/suspend`, {
+            await apiService.requestV2(`/admin/users/${user.id}/suspend`, {
                 method: 'PATCH',
                 body: JSON.stringify({ hours: suspendHours, reason: suspendReason }),
             });
@@ -60,7 +60,7 @@ function UserRow({ user, onRefresh }) {
     const handleUnsuspend = async () => {
         setLoading(true);
         try {
-            await apiService.request(`/admin/users/${user.id}/unsuspend`, { method: 'PATCH' });
+            await apiService.requestV2(`/admin/users/${user.id}/unsuspend`, { method: 'PATCH' });
             toast.success('Suspension levée');
             onRefresh();
         } catch (err) {
@@ -73,7 +73,7 @@ function UserRow({ user, onRefresh }) {
     const handleRestore = async () => {
         setLoading(true);
         try {
-            await apiService.request(`/admin/users/${user.id}/restore`, { method: 'PATCH' });
+            await apiService.requestV2(`/admin/users/${user.id}/restore`, { method: 'PATCH' });
             toast.success(`Compte de ${user.username} restauré`);
             onRefresh();
         } catch (err) {
@@ -222,7 +222,7 @@ function UserRow({ user, onRefresh }) {
                                             onClick={async () => {
                                                 setLoading(true);
                                                 try {
-                                                    await apiService.request(`/admin/users/${user.id}`, { method: 'DELETE' });
+                                                    await apiService.requestV2(`/admin/users/${user.id}`, { method: 'DELETE' });
                                                     toast.success('Compte supprimé');
                                                     onRefresh();
                                                 } catch (err) {
@@ -262,19 +262,19 @@ const UsersTable = ({ users, onDeleteUser, onRefresh }) => {
         const isSuspended = u.account_locked_until && new Date(u.account_locked_until) > now;
         const isLocked    = u.failed_login_attempts >= 5 && !isSuspended;
 
-        if (filter === 'active')    return matchSearch && !isDeleted && !isSuspended && !isLocked;
+        if (filter === 'active') return matchSearch && !isDeleted && !isSuspended && !isLocked;
         if (filter === 'suspended') return matchSearch && isSuspended;
-        if (filter === 'locked')    return matchSearch && isLocked;
-        if (filter === 'deleted')   return matchSearch && isDeleted;
+        if (filter === 'locked') return matchSearch && isLocked;
+        if (filter === 'deleted') return matchSearch && isDeleted;
         return matchSearch;
     });
 
     const counts = {
-        all:       users.length,
-        active:    users.filter(u => !u.deleted_at && !(u.account_locked_until && new Date(u.account_locked_until) > now) && u.failed_login_attempts < 5).length,
+        all: users.length,
+        active: users.filter(u => !u.deleted_at && !(u.account_locked_until && new Date(u.account_locked_until) > now) && u.failed_login_attempts < 5).length,
         suspended: users.filter(u => u.account_locked_until && new Date(u.account_locked_until) > now).length,
-        locked:    users.filter(u => u.failed_login_attempts >= 5 && !(u.account_locked_until && new Date(u.account_locked_until) > now)).length,
-        deleted:   users.filter(u => !!u.deleted_at).length,
+        locked: users.filter(u => u.failed_login_attempts >= 5 && !(u.account_locked_until && new Date(u.account_locked_until) > now)).length,
+        deleted: users.filter(u => !!u.deleted_at).length,
     };
 
     const FILTERS = [
