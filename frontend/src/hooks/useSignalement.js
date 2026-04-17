@@ -8,13 +8,15 @@ export function useSignalement(videoId) {
         if (!apiService.isAuthenticated()) {
             throw new Error('AUTH_REQUIRED');
         }
-
         setLoading(true);
         try {
-            return await apiService.request(`/videos/${videoId}/signaler`, {
-                method: 'POST',
-                body: JSON.stringify({raison, description}),
-            });
+            if (videoId) {
+                return await apiService.request(`/videos/${videoId}/signaler`, {
+                    method: 'POST',
+                    body: JSON.stringify({raison, description}),
+                });
+            }
+            return { success: true };
         } finally {
             setLoading(false);
         }
