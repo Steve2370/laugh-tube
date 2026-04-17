@@ -54,6 +54,7 @@ class AdminController extends Controller
         DB::table('commentaires')->where('user_id', $id)->delete();
         DB::table('signalements')->where('reporter_id', $id)->delete();
         DB::table('admin_messages')->where('user_id', $id)->delete();
+        DB::table('video_views')->where('user_id', $id)->delete();
 
         $user->forceDelete();
 
