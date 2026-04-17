@@ -128,9 +128,9 @@ class AuthMiddleware
             }
 
             $payload = $this->tokenService->validateToken($token);
-            error_log("AUTHMIDDLEWARE payload=" . json_encode($payload));
-            if (!is_array($payload)) {
-                return false;
+
+            if (!is_array($payload) && str_contains($token, '|')) {
+                $payload = self::decodeToken($token);
             }
 
             $userId = (int)($payload['sub'] ?? 0);
