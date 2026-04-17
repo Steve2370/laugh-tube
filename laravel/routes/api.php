@@ -63,6 +63,7 @@ Route::prefix('v2')->group(function () {
         Route::patch('/users/{id}/suspend', [AdminController::class, 'suspendUser']);
         Route::patch('/users/{id}/unsuspend', [AdminController::class, 'unsuspendUser']);
         Route::patch('/users/{id}/restore', [AdminController::class, 'restoreUser']);
+        Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
         Route::get('/videos', [AdminController::class, 'getVideos']);
         Route::delete('/videos/{id}', [AdminController::class, 'deleteVideo']);
 
