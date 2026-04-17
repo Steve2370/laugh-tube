@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 
 const STATUT_LABELS = {
-    pending:   { label: 'En attente', className: 'bg-yellow-100 text-yellow-700' },
-    reviewed:  { label: 'Traité',     className: 'bg-green-100 text-green-700' },
-    dismissed: { label: 'Ignoré',     className: 'bg-gray-100 text-gray-500' },
+    pending: { label: 'En attente', className: 'bg-yellow-100 text-yellow-700' },
+    reviewed: { label: 'Traité', className: 'bg-green-100 text-green-700' },
+    dismissed: { label: 'Ignoré', className: 'bg-gray-100 text-gray-500' },
 };
 
 const RAISON_LABELS = {
-    spam:             'Spam',
-    inapproprie:      'Inapproprié',
-    haine:            'Discours haineux',
-    desinformation:   'Désinformation',
-    droits:           'Droits d\'auteur',
-    autre:            'Autre',
+    spam: 'Spam',
+    inapproprie: 'Inapproprié',
+    haine: 'Discours haineux',
+    desinformation: 'Désinformation',
+    droits: 'Droits d\'auteur',
+    autre: 'Autre',
 };
 
 export default function ReportsTable({ reports, onUpdateStatut, onDeleteVideo }) {
@@ -25,19 +25,21 @@ export default function ReportsTable({ reports, onUpdateStatut, onDeleteVideo })
     const formatDate = (d) => d ? new Date(d).toLocaleString('fr-CA') : '—';
 
     const counts = {
-        all:       reports.length,
-        pending:   reports.filter(r => r.statut === 'pending').length,
-        reviewed:  reports.filter(r => r.statut === 'reviewed').length,
+        all: reports.length,
+        pending: reports.filter(r => r.statut === 'pending').length,
+        reviewed: reports.filter(r => r.statut === 'reviewed').length,
         dismissed: reports.filter(r => r.statut === 'dismissed').length,
     };
+
+    const isUserReport = (report) => !report.video_id && report.reported_user_id;
 
     return (
         <div>
             <div className="flex gap-2 mb-4 flex-wrap">
                 {[
-                    { key: 'all',       label: 'Tous' },
-                    { key: 'pending',   label: 'En attente' },
-                    { key: 'reviewed',  label: 'Traités' },
+                    { key: 'all', label: 'Tous' },
+                    { key: 'pending', label: 'En attente' },
+                    { key: 'reviewed', label: 'Traités' },
                     { key: 'dismissed', label: 'Ignorés' },
                 ].map(({ key, label }) => (
                     <button
@@ -60,7 +62,7 @@ export default function ReportsTable({ reports, onUpdateStatut, onDeleteVideo })
                     <thead>
                     <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         <th className="px-4 py-3">ID</th>
-                        <th className="px-4 py-3">Vidéo</th>
+                        <th className="px-4 py-3">Cible</th>
                         <th className="px-4 py-3">Signalé par</th>
                         <th className="px-4 py-3">Raison</th>
                         <th className="px-4 py-3">Description</th>
@@ -80,27 +82,42 @@ export default function ReportsTable({ reports, onUpdateStatut, onDeleteVideo })
                         <tr key={report.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-3 text-gray-400 font-mono">#{report.id}</td>
                             <td className="px-4 py-3">
-                                <div className="font-medium text-gray-800 max-w-xs line-clamp-1">
-                                    {report.video_title}
-                                </div>
-                                <div className="text-xs text-gray-400">par {report.video_author}</div>
+                                {isUserReport(report) ? (
+                                    <div>
+                                        <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium mb-1">
+                                            Compte
+                                        </span>
+                                        <div className="font-medium text-gray-800">
+                                            @{report.reported_user_username ?? `User #${report.reported_user_id}`}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium mb-1">
+                                            Vidéo
+                                        </span>
+                                        <div className="font-medium text-gray-800 max-w-xs line-clamp-1">
+                                            {report.video_title ?? '—'}
+                                        </div>
+                                    </div>
+                                )}
                             </td>
                             <td className="px-4 py-3 text-gray-600">
                                 {report.reporter_username ?? 'Anonyme'}
                             </td>
                             <td className="px-4 py-3">
-                                    <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                                        {RAISON_LABELS[report.raison] ?? report.raison}
-                                    </span>
+                                <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                    {RAISON_LABELS[report.raison] ?? report.raison}
+                                </span>
                             </td>
                             <td className="px-4 py-3 text-gray-500 max-w-xs">
                                 <span className="line-clamp-2 text-xs">{report.description || '—'}</span>
                             </td>
                             <td className="px-4 py-3">
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium
-                                        ${STATUT_LABELS[report.statut]?.className ?? 'bg-gray-100 text-gray-500'}`}>
-                                        {STATUT_LABELS[report.statut]?.label ?? report.statut}
-                                    </span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium
+                                    ${STATUT_LABELS[report.statut]?.className ?? 'bg-gray-100 text-gray-500'}`}>
+                                    {STATUT_LABELS[report.statut]?.label ?? report.statut}
+                                </span>
                             </td>
                             <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
                                 {formatDate(report.created_at)}
@@ -109,17 +126,23 @@ export default function ReportsTable({ reports, onUpdateStatut, onDeleteVideo })
                                 <div className="flex flex-col gap-1">
                                     {report.statut === 'pending' && (
                                         <>
+                                            {!isUserReport(report) && (
+                                                <button
+                                                    onClick={() => onDeleteVideo(report.video_id, report.id)}
+                                                    className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                                                >
+                                                    Supprimer vidéo
+                                                </button>
+                                            )}
                                             <button
-                                                onClick={() => onDeleteVideo(report.video_id, report.id)}
-                                                className="px-2 py-1 text-xs font-medium text-white bg-red-600
-                                                               rounded-lg hover:bg-red-700 transition-colors"
+                                                onClick={() => onUpdateStatut(report.id, 'reviewed')}
+                                                className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
                                             >
-                                                Supprimer vidéo
+                                                Marquer traité
                                             </button>
                                             <button
                                                 onClick={() => onUpdateStatut(report.id, 'dismissed')}
-                                                className="px-2 py-1 text-xs font-medium text-gray-600 border
-                                                               border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                                className="px-2 py-1 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                                             >
                                                 Ignorer
                                             </button>
@@ -128,8 +151,7 @@ export default function ReportsTable({ reports, onUpdateStatut, onDeleteVideo })
                                     {report.statut !== 'pending' && (
                                         <button
                                             onClick={() => onUpdateStatut(report.id, 'pending')}
-                                            className="px-2 py-1 text-xs font-medium text-blue-600 border
-                                                           border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                                            className="px-2 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
                                         >
                                             Réouvrir
                                         </button>
