@@ -4,6 +4,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import Chaine from "../../pages/Chaine.jsx";
 import Admin from "../../pages/Admin.jsx";
 import AdminRoute from "../../components/admin/AdminRoute.jsx";
+import GoogleCallback from "../../pages/GoogleCallback.jsx";
 
 const Home = lazy(() => import('../../pages/Home'));
 const Search = lazy(() => import('../../pages/Search'));
@@ -18,6 +19,7 @@ const Contact = lazy(() => import('../../pages/Contact'));
 const ForgotPassword = lazy(() => import('../../pages/ForgotPassword'));
 const ResetPassword  = lazy(() => import('../../pages/ResetPassword'));
 const Notifications  = lazy(() => import('../../pages/Notification.jsx'));
+const GoogleCallback = lazy(() => import('../../pages/GoogleCallback'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -30,6 +32,8 @@ const PageRouter = () => {
                 return <Login/>;
             case 'register':
                 return <Register/>;
+            case 'auth':
+                return <GoogleCallback />;
             case 'cgu':
                 return <CGU />;
             case 'upload':
