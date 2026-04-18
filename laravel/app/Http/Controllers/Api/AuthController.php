@@ -113,6 +113,7 @@ class AuthController extends Controller
 
     public function handleGoogleCallback()
     {
+        \Log::info('Google callback params', request()->all());
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
