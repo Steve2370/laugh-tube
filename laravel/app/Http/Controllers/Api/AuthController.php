@@ -111,7 +111,7 @@ class AuthController extends Controller
         return response()->json(['url' => $url]);
     }
 
-    public function handleGoogleCallback(): JsonResponse
+    public function handleGoogleCallback()
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
@@ -137,21 +137,10 @@ class AuthController extends Controller
             $user->tokens()->delete();
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            return response()->json([
-                'message' => 'Connexion réussie',
-                'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                ],
-            ]);
+            return redirect('https://www.laughtube.ca/#/auth/google/callback?token=' . $token . '&user_id=' . $user->id);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Erreur Google : ' . $e->getMessage(),
-            ], 500);
+            return redirect('https://www.laughtube.ca/#/login?error=' . urlencode($e->getMessage()));
         }
     }
 
