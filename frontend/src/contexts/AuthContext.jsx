@@ -114,6 +114,11 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
     }, []);
 
+    const loginWithToken = useCallback(async (token) => {
+        apiService.setToken(token);
+        await checkAuth();
+    }, [checkAuth]);
+
     const changePassword = useCallback(async (currentPassword, newPassword) => {
         try {
             setLoading(true);
@@ -175,6 +180,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         loading,
         error,
+        loginWithToken,
         login,
         verify2FA,
         register,
