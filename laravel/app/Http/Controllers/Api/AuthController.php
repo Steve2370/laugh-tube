@@ -116,9 +116,13 @@ class AuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
-            $user = User::where('email', strtolower($googleUser->getEmail()))->first();
+            $user = User::withTrashed()->where('email', strtolower($googleUser->getEmail()))->first();
 
-            if (!$user) {
+            if ($user) {
+                if ($user->trashed()) {
+                    $user->restore();
+                }
+            } else {
                 $username = $this->generateUsername($googleUser->getName());
                 $user = User::create([
                     'username' => $username,
