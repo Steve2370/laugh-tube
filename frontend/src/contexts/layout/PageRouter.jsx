@@ -19,7 +19,6 @@ const Contact = lazy(() => import('../../pages/Contact'));
 const ForgotPassword = lazy(() => import('../../pages/ForgotPassword'));
 const ResetPassword  = lazy(() => import('../../pages/ResetPassword'));
 const Notifications  = lazy(() => import('../../pages/Notification.jsx'));
-const GoogleCallback = lazy(() => import('../../pages/GoogleCallback'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
