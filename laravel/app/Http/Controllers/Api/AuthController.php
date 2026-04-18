@@ -115,39 +115,26 @@ class AuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
-            $user = User::where('email', $googleUser->getEmail())->first();
 
-            if ($user) {
-                $user->tokens()->delete();
-                $token = $user->createToken('auth_token')->plainTextToken;
+            $user = User::where('email', strtolower($googleUser->getEmail()))->first();
 
-                return response()->json([
-                    'message' => 'Connexion réussie',
-                    'token' => $token,
-                    'user' => [
-                        'id' => $user->id,
-                        'username' => $user->username,
-                        'email' => $user->email,
-                        'role' => $user->role,
-                    ],
+            if (!$user) {
+                $username = $this->generateUsername($googleUser->getName());
+                $user = User::create([
+                    'username' => $username,
+                    'email' => strtolower($googleUser->getEmail()),
+                    'password_hash' => Hash::make(str()->random(32)),
+                    'avatar_url' => $googleUser->getAvatar(),
+                    'email_verified' => true,
+                    'role' => 'membre',
                 ]);
             }
 
-            $username = $this->generateUsername($googleUser->getName());
-
-            $user = User::create([
-                'username' => $username,
-                'email' => $googleUser->getEmail(),
-                'password_hash' => Hash::make(str()->random(32)),
-                'avatar_url' => $googleUser->getAvatar(),
-                'email_verified' => true,
-                'role' => 'membre',
-            ]);
-
+            $user->tokens()->delete();
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
-                'message' => 'Compte créé avec succès',
+                'message' => 'Connexion réussie',
                 'token' => $token,
                 'user' => [
                     'id' => $user->id,
@@ -155,7 +142,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'role' => $user->role,
                 ],
-            ], 201);
+            ]);
 
         } catch (\Exception $e) {
             return response()->json([
