@@ -115,7 +115,9 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const loginWithToken = useCallback(async (token) => {
-        apiService.setToken(token);
+        localStorage.setItem('access_token', token);
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('token', token);
         await checkAuth();
     }, [checkAuth]);
 
