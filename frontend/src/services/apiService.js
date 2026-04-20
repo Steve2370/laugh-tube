@@ -515,31 +515,31 @@ class ApiService {
     }
 
     async toggleCommentLike(commentId) {
-        return this.request(`/comments/${commentId}/like`, {
+        return this.requestV2(`/comments/${commentId}/like`, {
             method: 'POST'
         });
     }
 
     async getCommentLikeStatus(commentId) {
-        return this.request(`/comments/${commentId}/like-status`);
+        return this.requestV2(`/comments/${commentId}/like-status`);
     }
 
     async postReply(commentId, content) {
         if (!commentId) throw new Error('ID du commentaire manquant');
         const trimmed = (content || '').trim();
         if (trimmed.length === 0) throw new Error('La réponse ne peut pas être vide');
-        return this.request(`/comments/${commentId}/replies`, {
+        return this.requestV2(`/comments/${commentId}/replies`, {
             method: 'POST',
             body: JSON.stringify({ content: trimmed })
         });
     }
 
     async getReplies(commentId) {
-        return this.request(`/comments/${commentId}/replies`);
+        return this.requestV2(`/comments/${commentId}/replies`);
     }
 
     async getReplyLikeStatus(replyId) {
-        const response = await this.request(`/replies/${replyId}/like-status`);
+        const response = await this.requestV2(`/replies/${replyId}/like-status`);
         return response.data || response;
     }
 
@@ -559,7 +559,7 @@ class ApiService {
     }
 
     async getUserStats(userId) {
-        const response = await this.request(`/users/${userId}/stats`);
+        const response = await this.requestV2(`/users/${userId}/stats`);
         return response.data || response.stats || response;
     }
 
