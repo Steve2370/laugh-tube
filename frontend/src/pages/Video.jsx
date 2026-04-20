@@ -432,6 +432,14 @@ const Video = () => {
         : null;
 
     useEffect(() => {
+        const hash = window.location.hash;
+        const match = hash.match(/#\/video\/(\d+)/);
+
+        if (match) {
+            setVideoId(parseInt(match[1]));
+            return;
+        }
+
         const storedVideo = localStorage.getItem('currentVideo');
         if (storedVideo) {
             const videoData = JSON.parse(storedVideo);
@@ -586,7 +594,7 @@ const Video = () => {
     };
 
     const handleShare = async () => {
-        const url = window.location.href;
+        const url = `${window.location.origin}/#/video/${video.id}`;
         setShareAnim(true);
         setTimeout(() => setShareAnim(false), 600);
         try {
