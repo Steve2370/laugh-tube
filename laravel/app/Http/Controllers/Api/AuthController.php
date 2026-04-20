@@ -28,7 +28,7 @@ class AuthController extends Controller
             'role' => 'membre',
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addHour())->plainTextToken;
 
         return response()->json([
             'message' => 'Compte créé avec succès',
@@ -61,7 +61,7 @@ class AuthController extends Controller
         }
 
         $user->tokens()->delete();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addHour())->plainTextToken;
 
         return response()->json([
             'message' => 'Connexion réussie',
@@ -113,7 +113,6 @@ class AuthController extends Controller
 
     public function handleGoogleCallback()
     {
-        \Log::info('Google callback params', request()->all());
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
@@ -136,7 +135,7 @@ class AuthController extends Controller
             }
 
             $user->tokens()->delete();
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken('auth_token', ['*'], now()->addHour())->plainTextToken;
 
             return redirect('https://www.laughtube.ca/#/auth/google/callback?token=' . $token . '&user_id=' . $user->id);
 
