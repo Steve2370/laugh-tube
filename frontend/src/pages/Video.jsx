@@ -424,9 +424,9 @@ const Video = () => {
     const [signalDone, setSignalDone] = useState(false);
     const [likeBurst, setLikeBurst] = useState(0);
     const [shareAnim, setShareAnim] = useState(false);
-    const animLikes    = useAnimatedCount(reactionsCount.likes);
+    const animLikes = useAnimatedCount(reactionsCount.likes);
     const animDislikes = useAnimatedCount(reactionsCount.dislikes);
-    const animViews    = useAnimatedCount(viewsCount);
+    const animViews = useAnimatedCount(viewsCount);
     const videoSrc = video?.filename
         ? `/uploads/videos/${video.filename}`
         : null;

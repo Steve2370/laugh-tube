@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
     ChevronDown,
     LayoutDashboard,
+    LogIn,
     LogOut,
     MessageSquare,
     Search,
@@ -285,6 +286,13 @@ export default function Navbar() {
                             </>
                         ) : (
                             <>
+                                <button
+                                    onClick={() => navigateTo("login")}
+                                    className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-all duration-300 text-sm font-semibold"
+                                >
+                                    <LogIn size={16} />
+                                    <span className="hidden lg:inline">Se connecter</span>
+                                </button>
                                 <button
                                     onClick={() => navigateTo("contact")}
                                     className="flex items-center gap-2 text-black hover:text-gray-600 hover:bg-gray-200 hover:bg-opacity-50 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium"
