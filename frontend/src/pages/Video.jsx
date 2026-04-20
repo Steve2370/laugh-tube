@@ -432,8 +432,10 @@ const Video = () => {
         : null;
 
     useEffect(() => {
+        console.log('Hash actuel:', window.location.hash);
         const hash = window.location.hash;
         const match = hash.match(/#\/video\/(\d+)/);
+        console.log('Match:', match);
 
         if (match) {
             setVideoId(parseInt(match[1]));
