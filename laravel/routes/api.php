@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\CommentInteractionController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
@@ -53,6 +54,14 @@ Route::prefix('v2')->group(function () {
         Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
         Route::delete('/notifications/delete-read', [NotificationController::class, 'deleteAllRead']);
+
+        Route::post('/comments/{commentId}/like', [CommentInteractionController::class, 'toggleCommentLike']);
+        Route::get('/comments/{commentId}/like-status', [CommentInteractionController::class, 'getCommentLikeStatus']);
+        Route::get('/comments/{commentId}/replies', [CommentInteractionController::class, 'getReplies']);
+        Route::post('/comments/{commentId}/replies', [CommentInteractionController::class, 'postReply']);
+        Route::post('/replies/{replyId}/like', [CommentInteractionController::class, 'toggleReplyLike']);
+        Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
+
     });
 
     Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
