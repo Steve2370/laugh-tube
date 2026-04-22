@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Commentaire;
 use App\Models\Video;
@@ -45,6 +46,17 @@ class CommentController extends Controller
         ]);
 
         $comment->load('user:id,username,avatar_url');
+
+        NotificationHelper::send([
+            'user_id' => $video->user_id,
+            'actor_id' => $request->user()->id,
+            'actor_name' => $request->user()->username,
+            'type' => 'comment',
+            'video_id' => $id,
+            'video_title' => $video->title,
+            'comment_id' => $comment->id,
+            'comment_preview' => substr($comment->content, 0, 100),
+        ]);
 
         return response()->json([
             'message' => 'Commentaire ajouté',
