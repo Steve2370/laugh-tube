@@ -182,7 +182,7 @@ class UserService {
                 throw new Error('ID du créateur requis');
             }
 
-            const response = await apiService.request(`/users/${creatorId}/subscribe`, {
+            const response = await apiService.requestV2(`/users/${creatorId}/subscribe`, {
                 method: 'POST'
             });
 
@@ -204,7 +204,7 @@ class UserService {
                 throw new Error('ID du créateur requis');
             }
 
-            const response = await apiService.request(`/users/${creatorId}/unsubscribe`, {
+            const response = await apiService.requestV2(`/users/${creatorId}/unsubscribe`, {
                 method: 'DELETE'
             });
 
