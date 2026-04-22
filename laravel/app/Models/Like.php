@@ -17,6 +17,14 @@ class Like extends Model
         'video_id',
     ];
 
+    public function delete()
+    {
+        return $this->newQuery()
+            ->where('user_id', $this->user_id)
+            ->where('video_id', $this->video_id)
+            ->delete();
+    }
+
     public function video()
     {
         return $this->belongsTo(Video::class);

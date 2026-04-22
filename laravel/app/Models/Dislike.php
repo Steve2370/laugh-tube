@@ -17,8 +17,21 @@ class Dislike extends Model
         'video_id',
     ];
 
+    public function delete()
+    {
+        return $this->newQuery()
+            ->where('user_id', $this->user_id)
+            ->where('video_id', $this->video_id)
+            ->delete();
+    }
+
     public function video()
     {
         return $this->belongsTo(Video::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
