@@ -32,6 +32,8 @@ Route::prefix('v2')->group(function () {
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
+    Route::get('/users/{id}/subscribers-count', [AbonnementController::class, 'count']);
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
@@ -56,6 +58,10 @@ Route::prefix('v2')->group(function () {
         Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
         Route::delete('/notifications/delete-read', [NotificationController::class, 'deleteAllRead']);
 
+        Route::post('/users/{id}/subscribe', [AbonnementController::class, 'subscribe']);
+        Route::delete('/users/{id}/unsubscribe', [AbonnementController::class, 'unsubscribe']);
+        Route::get('/users/{id}/subscribe-status', [AbonnementController::class, 'status']);
+
         Route::post('/comments/{commentId}/like', [CommentInteractionController::class, 'toggleCommentLike']);
         Route::get('/comments/{commentId}/like-status', [CommentInteractionController::class, 'getCommentLikeStatus']);
         Route::get('/comments/{commentId}/replies', [CommentInteractionController::class, 'getReplies']);
@@ -74,9 +80,6 @@ Route::prefix('v2')->group(function () {
         Route::patch('/users/{id}/unsuspend', [AdminController::class, 'unsuspendUser']);
         Route::patch('/users/{id}/restore', [AdminController::class, 'restoreUser']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
-        Route::post('/users/{id}/subscribe', [AbonnementController::class, 'subscribe']);
-        Route::delete('/users/{id}/unsubscribe', [AbonnementController::class, 'unsubscribe']);
-        Route::get('/users/{id}/subscribe-status', [AbonnementController::class, 'status']);
         Route::get('/videos', [AdminController::class, 'getVideos']);
         Route::delete('/videos/{id}', [AdminController::class, 'deleteVideo']);
 
