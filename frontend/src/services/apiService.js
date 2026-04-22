@@ -651,7 +651,7 @@ class ApiService {
     }
 
     async getSubscribersCount(userId) {
-        const response = await this.request(`/users/${userId}/subscribers-count`);
+        const response = await this.requestV2(`/users/${userId}/subscribers-count`);
         return response;
     }
 
