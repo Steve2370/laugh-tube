@@ -28,11 +28,11 @@ export function useAbonnement(targetUserId) {
         setError(null);
 
         try {
-            const countResponse = await apiService.request(`/users/${targetUserId}/subscribers-count`);
+            const countResponse = await apiService.requestV2(`/users/${targetUserId}/subscribers-count`);
             setSubscribersCount(countResponse.count ?? countResponse.subscribers_count ?? 0);
 
             if (isAuthRef.current && userIdRef.current) {
-                const statusResponse = await apiService.request(`/users/${targetUserId}/subscribe-status`);
+                const statusResponse = await apiService.requestV2(`/users/${targetUserId}/subscribe-status`);
                 setIsSubscribed(!!statusResponse.is_subscribed);
             } else {
                 setIsSubscribed(false);
@@ -52,11 +52,11 @@ export function useAbonnement(targetUserId) {
 
         try {
             if (isSubscribed) {
-                await apiService.request(`/users/${targetUserId}/unsubscribe`, { method: 'DELETE' });
+                await apiService.requestV2(`/users/${targetUserId}/unsubscribe`, { method: 'DELETE' });
                 setIsSubscribed(false);
                 setSubscribersCount((prev) => Math.max(0, prev - 1));
             } else {
-                await apiService.request(`/users/${targetUserId}/subscribe`, { method: 'POST' });
+                await apiService.requestV2(`/users/${targetUserId}/subscribe`, { method: 'POST' });
                 setIsSubscribed(true);
                 setSubscribersCount((prev) => prev + 1);
             }
