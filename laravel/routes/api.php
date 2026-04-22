@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AbonnementController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
@@ -73,6 +74,9 @@ Route::prefix('v2')->group(function () {
         Route::patch('/users/{id}/unsuspend', [AdminController::class, 'unsuspendUser']);
         Route::patch('/users/{id}/restore', [AdminController::class, 'restoreUser']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
+        Route::post('/users/{id}/subscribe', [AbonnementController::class, 'subscribe']);
+        Route::delete('/users/{id}/unsubscribe', [AbonnementController::class, 'unsubscribe']);
+        Route::get('/users/{id}/subscribe-status', [AbonnementController::class, 'status']);
         Route::get('/videos', [AdminController::class, 'getVideos']);
         Route::delete('/videos/{id}', [AdminController::class, 'deleteVideo']);
 
