@@ -375,7 +375,7 @@ class ApiService {
 
     async getNotifications(limit = 20, offset = 0) {
         try {
-            return await this.request(`/notifications?limit=${limit}&offset=${offset}`);
+            return await this.requestV2(`/notifications?limit=${limit}&offset=${offset}`);
         } catch {
             return { notifications: [] };
         }

@@ -8,6 +8,7 @@ export const useNotifications = () => {
     const [error, setError] = useState(null);
 
     const loadNotifications = useCallback(async (limit = 20, offset = 0) => {
+        console.log('loadNotifications appelé, auth:', apiService.isAuthenticated());
         try {
             setLoading(true);
             setError(null);
