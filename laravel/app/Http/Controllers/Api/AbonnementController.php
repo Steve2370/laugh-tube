@@ -67,6 +67,12 @@ class AbonnementController extends Controller
         ]);
     }
 
+    public function count(int $targetUserId): JsonResponse
+    {
+        $count = DB::table('abonnements')->where('subscribed_to_id', $targetUserId)->count();
+        return response()->json(['subscribers_count' => $count]);
+    }
+
     public function status(Request $request, int $targetUserId): JsonResponse
     {
         $currentUserId = $request->user()?->id;
