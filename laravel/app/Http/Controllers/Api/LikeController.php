@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Like;
 use App\Models\Dislike;
@@ -28,6 +29,15 @@ class LikeController extends Controller
         Dislike::where('user_id', $userId)->where('video_id', $id)->delete();
 
         Like::create(['user_id' => $userId, 'video_id' => $id]);
+
+        NotificationHelper::send([
+            'user_id' => $video->user_id,
+            'actor_id' => $userId,
+            'actor_name' => $request->user()->username,
+            'type' => 'like',
+            'video_id' => $id,
+            'video_title' => $video->title,
+        ]);
 
         return response()->json(['message' => 'Vidéo likée', 'liked' => true]);
     }
