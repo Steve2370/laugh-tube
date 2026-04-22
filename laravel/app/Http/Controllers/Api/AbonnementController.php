@@ -82,7 +82,7 @@ class AbonnementController extends Controller
             ->where('subscribed_to_id', $targetUserId)
             ->exists() : false;
 
-        $count = DB::table('abonnements')->where('abonnement_id', $targetUserId)->count();
+        $count = DB::table('abonnements')->where('subscribed_to_id', $targetUserId)->count();
 
         return response()->json([
             'success' => true,
