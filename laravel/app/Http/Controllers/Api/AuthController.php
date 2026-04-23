@@ -135,7 +135,7 @@ class AuthController extends Controller
             $token = $user->createToken('auth_token', ['*'], now()->addHour())->plainTextToken;
 
             $state = $request->get('state', '');
-            if (str_contains($state, 'mobile') || $request->get('mobile') === '1') {
+            if (str_contains($state, 'ios') || str_contains($state, 'mobile') || $request->get('mobile') === '1') {
                 return redirect('laughtube://auth/callback?token=' . $token . '&user_id=' . $user->id);
             }
 
