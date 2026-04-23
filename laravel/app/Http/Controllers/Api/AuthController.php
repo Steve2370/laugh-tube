@@ -111,13 +111,11 @@ class AuthController extends Controller
         return response()->json(['url' => $url]);
     }
 
-    public function handleGoogleCallback()
+    public function handleGoogleCallback(Request $request)
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
-
             $user = User::withTrashed()->where('email', strtolower($googleUser->getEmail()))->first();
-
             if ($user) {
                 if ($user->trashed()) {
                     $user->restore();
@@ -133,12 +131,15 @@ class AuthController extends Controller
                     'role' => 'membre',
                 ]);
             }
-
             $user->tokens()->delete();
             $token = $user->createToken('auth_token', ['*'], now()->addHour())->plainTextToken;
 
-            return redirect('https://www.laughtube.ca/#/auth/google/callback?token=' . $token . '&user_id=' . $user->id);
+            $state = $request->get('state', '');
+            if (str_contains($state, 'mobile') || $request->get('mobile') === '1') {
+                return redirect('laughtube://auth/callback?token=' . $token . '&user_id=' . $user->id);
+            }
 
+            return redirect('https://www.laughtube.ca/#/auth/google/callback?token=' . $token . '&user_id=' . $user->id);
         } catch (\Exception $e) {
             return redirect('https://www.laughtube.ca/#/login?error=' . urlencode($e->getMessage()));
         }
