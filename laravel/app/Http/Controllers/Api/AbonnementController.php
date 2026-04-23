@@ -90,4 +90,17 @@ class AbonnementController extends Controller
             'subscribers_count' => $count,
         ]);
     }
+
+    public function mySubscribers(Request $request): JsonResponse
+    {
+        $subscribers = DB::table('abonnements')
+            ->join('users', 'abonnements.subscriber_id', '=', 'users.id')
+            ->where('abonnements.channel_id', $request->user()->id)
+            ->whereNull('users.deleted_at')
+            ->select('users.id', 'users.username', 'users.avatar_url')
+            ->orderBy('users.username')
+            ->get();
+
+        return response()->json(['subscribers' => $subscribers]);
+    }
 }

@@ -34,17 +34,14 @@ class CommentController extends Controller
     public function store(Request $request, int $id): JsonResponse
     {
         $video = Video::whereNull('deleted_at')->findOrFail($id);
-
         $validated = $request->validate([
             'content' => 'required|string|min:1|max:2000',
         ]);
-
         $comment = Commentaire::create([
             'video_id' => $id,
             'user_id' => $request->user()->id,
             'content' => trim($validated['content']),
         ]);
-
         $comment->load('user:id,username,avatar_url');
 
         NotificationHelper::send([
@@ -57,6 +54,27 @@ class CommentController extends Controller
             'comment_id' => $comment->id,
             'comment_preview' => substr($comment->content, 0, 100),
         ]);
+
+        preg_match_all('/@(\w+)/', $comment->content, $matches);
+        $mentionedUsernames = array_unique($matches[1]);
+
+        foreach ($mentionedUsernames as $username) {
+            $mentionedUser = \App\Models\User::where('username', $username)->first();
+            if (!$mentionedUser) continue;
+            if ($mentionedUser->id === $request->user()->id) continue;
+            if ($mentionedUser->id === $video->user_id) continue;
+
+            NotificationHelper::send([
+                'user_id' => $mentionedUser->id,
+                'actor_id' => $request->user()->id,
+                'actor_name' => $request->user()->username,
+                'type' => 'mention',
+                'video_id' => $id,
+                'video_title' => $video->title,
+                'comment_id' => $comment->id,
+                'comment_preview' => substr($comment->content, 0, 100),
+            ]);
+        }
 
         return response()->json([
             'message' => 'Commentaire ajouté',
