@@ -103,4 +103,22 @@ class AbonnementController extends Controller
 
         return response()->json(['subscribers' => $subscribers]);
     }
+
+    public function mySubscriptions(Request $request): JsonResponse
+    {
+        $subscriptions = DB::table('abonnements')
+            ->join('users', 'abonnements.subscribed_to_id', '=', 'users.id')
+            ->where('abonnements.subscriber_id', $request->user()->id)
+            ->whereNull('users.deleted_at')
+            ->leftJoin('videos', function($join) {
+                $join->on('videos.user_id', '=', 'users.id')
+                    ->whereNull('videos.deleted_at');
+            })
+            ->select('users.id', 'users.username', 'users.avatar_url', DB::raw('COUNT(DISTINCT videos.id) as video_count'))
+            ->groupBy('users.id', 'users.username', 'users.avatar_url')
+            ->orderBy('users.username')
+            ->get();
+
+        return response()->json(['subscriptions' => $subscriptions]);
+    }
 }

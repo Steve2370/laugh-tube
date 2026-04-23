@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Commentaire;
+use App\Models\User;
 use App\Models\Video;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
 {
@@ -59,7 +61,30 @@ class CommentController extends Controller
         $mentionedUsernames = array_unique($matches[1]);
 
         foreach ($mentionedUsernames as $username) {
-            $mentionedUser = \App\Models\User::where('username', $username)->first();
+            if (strtolower($username) === 'all') {
+                $subscribers = DB::table('abonnements')
+                    ->where('subscribed_to_id', $request->user()->id)
+                    ->pluck('subscriber_id');
+
+                foreach ($subscribers as $subscriberId) {
+                    if ($subscriberId === $request->user()->id) continue;
+                    if ($subscriberId === $video->user_id) continue;
+
+                    NotificationHelper::send([
+                        'user_id' => $subscriberId,
+                        'actor_id' => $request->user()->id,
+                        'actor_name' => $request->user()->username,
+                        'type' => 'mention',
+                        'video_id' => $id,
+                        'video_title' => $video->title,
+                        'comment_id' => $comment->id,
+                        'comment_preview' => substr($comment->content, 0, 100),
+                    ]);
+                }
+                continue;
+            }
+
+            $mentionedUser = User::where('username', $username)->first();
             if (!$mentionedUser) continue;
             if ($mentionedUser->id === $request->user()->id) continue;
             if ($mentionedUser->id === $video->user_id) continue;

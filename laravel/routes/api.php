@@ -45,6 +45,7 @@ Route::prefix('v2')->group(function () {
         Route::post('/users/me/avatar', [ProfileUploadController::class, 'uploadAvatar']);
         Route::post('/users/me/cover',  [ProfileUploadController::class, 'uploadCover']);
         Route::get('/users/me/subscribers', [AbonnementController::class, 'mySubscribers']);
+        Route::get('/users/me/subscriptions', [AbonnementController::class, 'mySubscriptions']);
 
         Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
         Route::post('/videos/{id}/like', [LikeController::class, 'like']);
