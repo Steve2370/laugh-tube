@@ -95,7 +95,7 @@ class AbonnementController extends Controller
     {
         $subscribers = DB::table('abonnements')
             ->join('users', 'abonnements.subscriber_id', '=', 'users.id')
-            ->where('abonnements.channel_id', $request->user()->id)
+            ->where('abonnements.subscribed_to_id', $request->user()->id)
             ->whereNull('users.deleted_at')
             ->select('users.id', 'users.username', 'users.avatar_url')
             ->orderBy('users.username')
