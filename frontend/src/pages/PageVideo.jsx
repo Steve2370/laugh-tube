@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ThumbsUp, ThumbsDown, Share2, Send, User, MessageCircle, Calendar, X, Eye, Users } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, Send, User, MessageCircle, Calendar, X, Eye, Users, Trash2 } from 'lucide-react';
 
 function PageVideo() {
     const { selectedVideo, user, setCurrentPage, addNotification, apiService } = useAppContext();
@@ -225,6 +225,19 @@ function PageVideo() {
             addNotification('Erreur lors de l\'ajout du commentaire', 'error');
         } finally {
             setCommentLoading(false);
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        if (!window.confirm('Supprimer ce commentaire ?')) return;
+        try {
+            await apiService.request(`/videos/${selectedVideo.id}/comments/${commentId}`, {
+                method: 'DELETE'
+            });
+            setComments(prev => prev.filter(c => c.id !== commentId));
+            addNotification('Commentaire supprimé', 'success');
+        } catch (error) {
+            addNotification('Erreur lors de la suppression', 'error');
         }
     };
 
@@ -489,14 +502,28 @@ function PageVideo() {
                                             )}
                                         </div>
                                         <div className="flex-1">
-                                            <div className="flex items-center space-x-2 mb-1">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <div className="flex items-center space-x-2">
                                                 <span className="font-medium text-gray-900">
                                                     {comment.username || 'Utilisateur inconnu'}
                                                 </span>
-                                                <div className="flex items-center text-xs text-gray-500">
-                                                    <Calendar size={12} className="mr-1" />
-                                                    {comment.created_at ? new Date(comment.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                                                    <div className="flex items-center text-xs text-gray-500">
+                                                        <Calendar size={12} className="mr-1" />
+                                                        {comment.created_at
+                                                            ? new Date(comment.created_at).toLocaleDateString('fr-FR')
+                                                            : 'Date inconnue'}
+                                                    </div>
                                                 </div>
+
+                                                {user && (user.id === comment.user_id || user.id === videoData?.user_id) && (
+                                                    <button
+                                                        onClick={() => handleDeleteComment(comment.id)}
+                                                        className="text-red-400 hover:text-red-600 transition-colors p-1 rounded"
+                                                        title="Supprimer le commentaire"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
                                             </div>
                                             <p className="text-gray-700">{comment.content || 'Contenu vide'}</p>
                                         </div>

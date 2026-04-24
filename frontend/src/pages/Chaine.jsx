@@ -5,6 +5,7 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
 import BoutonSignaler from '../components/BoutonSignaler.jsx';
+import BoutonBloquer from '../components/BoutonBloquer.jsx';
 import VideoCard from '../components/VideoCard.jsx';
 import {
     ArrowLeft,
@@ -73,6 +74,7 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
 
                     <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 mb-1">
                         <BoutonSignaler videoId={null} userId={channelUser.id} />
+                        <BoutonBloquer userId={channelUser.id} />
                         <BoutonAbonne targetUserId={channelUser.id} />
                     </div>
                 </div>
