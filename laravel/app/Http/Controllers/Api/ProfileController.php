@@ -94,4 +94,12 @@ class ProfileController extends Controller
 
         return response()->json(['videos' => $videos]);
     }
+
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $user->tokens()->delete();
+        $user->delete();
+        return response()->json(['success' => true, 'message' => 'Compte supprimé']);
+    }
 }
