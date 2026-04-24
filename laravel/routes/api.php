@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AbonnementController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BlockController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CommentInteractionController;
 use App\Http\Controllers\Api\LikeController;
@@ -53,6 +54,12 @@ Route::prefix('v2')->group(function () {
         Route::post('/videos/{id}/comments', [CommentController::class, 'store']);
         Route::delete('/videos/{id}/comments/{commentId}', [CommentController::class, 'destroy']);
         Route::post('/videos/upload', [VideoController::class, 'upload']);
+
+        Route::post('/users/{id}/block', [BlockController::class, 'block']);
+        Route::delete('/users/{id}/unblock', [BlockController::class, 'unblock']);
+        Route::get('/users/{id}/block-status', [BlockController::class, 'status']);
+        Route::get('/users/me/blocked', [BlockController::class, 'myBlocked']);
+        Route::delete('/users/me', [ProfileController::class, 'deleteAccount']);
 
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
