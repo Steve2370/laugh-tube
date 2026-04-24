@@ -98,8 +98,10 @@ class ProfileController extends Controller
     public function deleteAccount(Request $request): JsonResponse
     {
         $user = $request->user();
+        $userId = $user->id;
         $user->tokens()->delete();
-        $user->delete();
-        return response()->json(['success' => true, 'message' => 'Compte supprimé']);
+        \DB::table('users')->where('id', $userId)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Compte supprimé définitivement']);
     }
 }
