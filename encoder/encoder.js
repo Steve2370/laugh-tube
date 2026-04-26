@@ -145,12 +145,14 @@ class VideoEncoder {
                         started_at = NOW()
                     FROM next_job nj
                              JOIN videos v ON v.id = nj.video_id
+                             JOIN users u ON u.id = v.user_id
                     WHERE eq.id = nj.id
                     RETURNING
                         eq.id AS queue_id,
                         eq.video_id,
                         v.filename,
-                        v.title AS title
+                        v.title AS title,
+                        u.username AS username
                 `);
 
                 if (result.rows.length === 0) {
@@ -206,7 +208,25 @@ class VideoEncoder {
         try {
             logInfo(`Worker ${this.workerId} - Encodage en cours...`);
 
-            const encodeCmd = `ffmpeg -y -i "${inputPath}" \
+            const username = job.username || 'LaughTube';
+            const logoPath = path.join(__dirname, 'logo.png');
+            const watermarkText = `@${username}`;
+
+            const encodeCmd = `ffmpeg -y -i "${inputPath}" -i "${logoPath}" \
+                -filter_complex "\
+                [1:v]scale=40:40[logo];\
+                [0:v][logo]overlay=\
+                    x='if(lt(mod(t\\,16)\\,4)\\,W-w-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-w-10)))':\
+                    y='if(lt(mod(t\\,16)\\,4)\\,10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,H-h-10\\,H-h-10)))'[v_logo];\
+                [v_logo]drawtext=\
+                    text='${watermarkText}':\
+                    fontsize=12:\
+                    fontcolor=white@0.8:\
+                    x='if(lt(mod(t\\,16)\\,4)\\,W-tw-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-tw-10)))':\
+                    y='if(lt(mod(t\\,16)\\,4)\\,52\\,if(lt(mod(t\\,16)\\,8)\\,52\\,if(lt(mod(t\\,16)\\,12)\\,H-30\\,H-30)))':\
+                    shadowcolor=black@0.5:\
+                    shadowx=1:shadowy=1[v_out]" \
+                -map "[v_out]" -map 0:a? \
                 -c:v libx264 \
                 -preset ${CONFIG.encoder.videoPreset} \
                 -crf ${CONFIG.encoder.videoCRF} \
