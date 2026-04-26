@@ -215,15 +215,15 @@ class VideoEncoder {
                 -filter_complex "\
                 [1:v]scale=200:-1[logo];\
                 [0:v][logo]overlay=\
-                x='if(lt(mod(t\\,16)\\,4)\\,W-w-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-w-10)))':\
-                y='if(lt(mod(t\\,16)\\,4)\\,10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,H-h-30\\,H-h-30)))'[v_logo];\
+                x='if(lt(mod(t\\,16)\\,8)\\,10\\,W-w-10)':\
+                y='if(lt(mod(t\\,16)\\,8)\\,10\\,H-h-30)'[v_logo];\
                 [v_logo]drawtext=\
                 text='@${username}':\
                 fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf:\
                 fontsize=18:\
                 fontcolor=white:\
-                x='if(lt(mod(t\\,16)\\,4)\\,W-200-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-200-10)))':\
-                y='if(lt(mod(t\\,16)\\,4)\\,58\\,if(lt(mod(t\\,16)\\,8)\\,58\\,if(lt(mod(t\\,16)\\,12)\\,H-30\\,H-30)))':\
+                x='if(lt(mod(t\\,16)\\,8)\\,10\\,W-200-10)':\
+                y='if(lt(mod(t\\,16)\\,8)\\,58\\,H-30)':\
                 shadowcolor=black:\
                 shadowx=1:shadowy=1[out]" \
                     -map "[out]" -map 0:a? \
