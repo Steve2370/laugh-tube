@@ -214,7 +214,7 @@ class VideoEncoder {
 
             const encodeCmd = `ffmpeg -y -i "${inputPath}" -i "${logoPath}" \
                 -filter_complex "\
-                [1:v]scale=120:120[logo];\
+                [1:v]scale=160:160[logo];\
                 [0:v][logo]overlay=\
                     x='if(lt(mod(t\\,16)\\,4)\\,W-w-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-w-10)))':\
                     y='if(lt(mod(t\\,16)\\,4)\\,10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,H-h-10\\,H-h-10)))'[v_logo];\
