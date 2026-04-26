@@ -1,17 +1,18 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache ffmpeg \
-     && ffmpeg -version
+RUN apk add --no-cache ffmpeg ttf-dejavu fontconfig \
+    && fc-cache -f \
+    && ffmpeg -version
 
- RUN mkdir -p /app/uploads/videos \
-              /app/uploads/encoded \
-              /app/uploads/thumbnails
+RUN mkdir -p /app/uploads/videos \
+             /app/uploads/encoded \
+             /app/uploads/thumbnails
 
- WORKDIR /app
+WORKDIR /app
 
- COPY package*.json ./
- RUN npm install
+COPY package*.json ./
+RUN npm install
 
- COPY . .
+COPY . .
 
- CMD ["npm", "start"]
+CMD ["npm", "start"]
