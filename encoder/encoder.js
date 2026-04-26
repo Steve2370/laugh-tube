@@ -209,37 +209,37 @@ class VideoEncoder {
             logInfo(`Worker ${this.workerId} - Encodage en cours...`);
 
             const username = job.username || 'LaughTube';
-            const logoPath = path.join(__dirname, 'logo.png');
-            const watermarkText = `@${username}`;
+            const watermarkPath = path.join(__dirname, 'watermark.png');
 
-            const encodeCmd = `ffmpeg -y -i "${inputPath}" -i "${logoPath}" \
+            const encodeCmd = `ffmpeg -y -i "${inputPath}" -i "${watermarkPath}" \
                 -filter_complex "\
-                [1:v]scale=160:160[logo];\
+                [1:v]scale=200:-1[logo];\
                 [0:v][logo]overlay=\
-                    x='if(lt(mod(t\\,16)\\,4)\\,W-w-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-w-10)))':\
-                    y='if(lt(mod(t\\,16)\\,4)\\,10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,H-h-10\\,H-h-10)))'[v_logo];\
+                x='if(lt(mod(t\\,16)\\,4)\\,W-w-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-w-10)))':\
+                y='if(lt(mod(t\\,16)\\,4)\\,10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,H-h-30\\,H-h-30)))'[v_logo];\
                 [v_logo]drawtext=\
-                    text='${watermarkText}':\
-                    fontsize=12:\
-                    fontcolor=white@0.8:\
-                    x='if(lt(mod(t\\,16)\\,4)\\,W-tw-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-tw-10)))':\
-                    y='if(lt(mod(t\\,16)\\,4)\\,52\\,if(lt(mod(t\\,16)\\,8)\\,52\\,if(lt(mod(t\\,16)\\,12)\\,H-30\\,H-30)))':\
-                    shadowcolor=black@0.5:\
-                    shadowx=1:shadowy=1[v_out]" \
-                -map "[v_out]" -map 0:a? \
-                -c:v libx264 \
-                -preset ${CONFIG.encoder.videoPreset} \
-                -crf ${CONFIG.encoder.videoCRF} \
-                -profile:v high \
-                -level 4.0 \
-                -pix_fmt yuv420p \
-                -movflags +faststart \
-                -c:a aac \
-                -b:a ${CONFIG.encoder.audioBitrate} \
-                -ar 44100 \
-                -ac 2 \
-                -max_muxing_queue_size 1024 \
-                "${outputPath}" 2>&1`;
+                text='@${username}':\
+                fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf:\
+                fontsize=18:\
+                fontcolor=white:\
+                x='if(lt(mod(t\\,16)\\,4)\\,W-200-10\\,if(lt(mod(t\\,16)\\,8)\\,10\\,if(lt(mod(t\\,16)\\,12)\\,10\\,W-200-10)))':\
+                y='if(lt(mod(t\\,16)\\,4)\\,58\\,if(lt(mod(t\\,16)\\,8)\\,58\\,if(lt(mod(t\\,16)\\,12)\\,H-30\\,H-30)))':\
+                shadowcolor=black:\
+                shadowx=1:shadowy=1[out]" \
+                    -map "[out]" -map 0:a? \
+                    -c:v libx264 \
+                    -preset ${CONFIG.encoder.videoPreset} \
+                    -crf ${CONFIG.encoder.videoCRF} \
+                    -profile:v high \
+                    -level 4.0 \
+                    -pix_fmt yuv420p \
+                    -movflags +faststart \
+                    -c:a aac \
+                    -b:a ${CONFIG.encoder.audioBitrate} \
+                    -ar 44100 \
+                    -ac 2 \
+                    -max_muxing_queue_size 1024 \
+                    "${outputPath}" 2>&1`;
 
             await execCommand(encodeCmd);
 
