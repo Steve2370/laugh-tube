@@ -104,4 +104,31 @@ class ProfileController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Compte supprimé définitivement']);
     }
+
+    public function stats(int $id): JsonResponse
+    {
+        $totalVideos = Video::where('user_id', $id)->whereNull('deleted_at')->count();
+        $totalViews = Video::where('user_id', $id)->whereNull('deleted_at')->sum('views');
+        $totalLikes = \DB::table('likes')
+            ->join('videos', 'likes.video_id', '=', 'videos.id')
+            ->where('videos.user_id', $id)
+            ->whereNull('videos.deleted_at')
+            ->count();
+        $totalComments = \DB::table('commentaires')
+            ->join('videos', 'commentaires.video_id', '=', 'videos.id')
+            ->where('videos.user_id', $id)
+            ->whereNull('videos.deleted_at')
+            ->count();
+
+        return response()->json([
+            'stats' => [
+                'stats' => [
+                    'total_videos' => $totalVideos,
+                    'total_views' => $totalViews,
+                    'total_likes' => $totalLikes,
+                    'total_commentaires' => $totalComments,
+                ]
+            ]
+        ]);
+    }
 }
