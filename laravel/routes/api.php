@@ -26,6 +26,7 @@ Route::prefix('v2')->group(function () {
     Route::get('/videos/{id}/comments', [CommentController::class, 'index']);
 
     Route::get('/users/{id}/profile', [ProfileController::class, 'show']);
+    Route::get('/users/{id}/stats', [ProfileController::class, 'stats']);
     Route::get('/users/{id}/videos', [ProfileController::class, 'videos']);
 
     Route::post('/register', [AuthController::class, 'register']);
@@ -60,7 +61,6 @@ Route::prefix('v2')->group(function () {
         Route::get('/users/{id}/block-status', [BlockController::class, 'status']);
         Route::get('/users/me/blocked', [BlockController::class, 'myBlocked']);
         Route::delete('/users/me', [ProfileController::class, 'deleteAccount']);
-        Route::get('/users/{id}/stats', [ProfileController::class, 'stats']);
 
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
