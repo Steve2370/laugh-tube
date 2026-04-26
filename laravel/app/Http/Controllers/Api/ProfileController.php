@@ -14,9 +14,9 @@ class ProfileController extends Controller
     public function show(int $id): JsonResponse
     {
         $user = User::whereNull('deleted_at')->findOrFail($id);
-
         $videoCount = Video::where('user_id', $id)->whereNull('deleted_at')->count();
         $totalViews = Video::where('user_id', $id)->whereNull('deleted_at')->sum('views');
+        $subscribersCount = \DB::table('abonnements')->where('subscribed_to_id', $id)->count();
 
         return response()->json([
             'profile' => [
@@ -29,6 +29,7 @@ class ProfileController extends Controller
                 'created_at' => $user->created_at,
                 'video_count' => $videoCount,
                 'total_views' => $totalViews,
+                'subscribers_count' => $subscribersCount,
             ],
         ]);
     }
