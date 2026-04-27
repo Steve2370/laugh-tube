@@ -278,9 +278,11 @@ $uri = normalizeUri($rawUri);
 if (preg_match('#^/og/video/(\d+)$#', $uri, $m) && ($method === 'GET' || $method === 'HEAD')) {
     $videoId = (int)$m[1];
     try {
-        $stmt = $pdo->prepare("SELECT v.id, v.title, v.description, v.thumbnail, u.username FROM videos v JOIN users u ON u.id = v.user_id WHERE v.id = ? AND v.encoded = TRUE");
-        $stmt->execute([$videoId]);
-        $video = $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $db->query(
+            "SELECT v.id, v.title, v.description, v.thumbnail, u.username FROM videos v JOIN users u ON u.id = v.user_id WHERE v.id = ? AND v.encoded = TRUE",
+            [$videoId]
+        );
+        $video = is_array($result) ? ($result[0] ?? null) : null;
         if ($video) {
             $title = htmlspecialchars($video['title'] . ' - LaughTube');
             $desc = htmlspecialchars($video['description'] ?? 'Regarde cette vidéo sur LaughTube 😂');
@@ -295,7 +297,7 @@ if (preg_match('#^/og/video/(\d+)$#', $uri, $m) && ($method === 'GET' || $method
         }
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'Server error']);
+        echo json_encode(['error' => $e->getMessage()]);
     }
     exit;
 }
