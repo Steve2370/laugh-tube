@@ -279,7 +279,7 @@ error_log("API Call: $method $rawUri => normalized: $uri");
 
 foreach ($dangerousPatterns as $pattern) {
 
-    if (preg_match('#^/video/(\d+)$#', $uri, $m) && ($method === 'GET' || $method === 'HEAD')) {
+    if (preg_match('#^/og/video/(\d+)$#', $uri, $m) && ($method === 'GET' || $method === 'HEAD')) {
         $videoId = (int)$m[1];
         try {
             $stmt = $pdo->prepare("
@@ -290,7 +290,6 @@ foreach ($dangerousPatterns as $pattern) {
         ");
             $stmt->execute([$videoId]);
             $video = $stmt->fetch(PDO::FETCH_ASSOC);
-
             if ($video) {
                 $title = htmlspecialchars($video['title'] . ' - LaughTube');
                 $desc = htmlspecialchars($video['description'] ?? 'Regarde cette vidéo sur LaughTube 😂');
@@ -299,7 +298,7 @@ foreach ($dangerousPatterns as $pattern) {
                     : "https://laughtube.ca/images/default-cover.svg";
                 $url = "https://www.laughtube.ca/video/{$videoId}";
                 $username = htmlspecialchars($video['username']);
-
+                header('Content-Type: text/html; charset=UTF-8');
                 echo "<!DOCTYPE html>
 <html lang='fr'>
 <head>
@@ -307,8 +306,6 @@ foreach ($dangerousPatterns as $pattern) {
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <title>{$title}</title>
     <meta name='description' content='{$desc}'>
-    
-    <!-- Open Graph -->
     <meta property='og:type' content='video.other'>
     <meta property='og:url' content='{$url}'>
     <meta property='og:title' content='{$title}'>
@@ -318,20 +315,11 @@ foreach ($dangerousPatterns as $pattern) {
     <meta property='og:image:height' content='720'>
     <meta property='og:site_name' content='LaughTube'>
     <meta property='og:locale' content='fr_CA'>
-    
-    <!-- Twitter Card -->
     <meta name='twitter:card' content='summary_large_image'>
     <meta name='twitter:title' content='{$title}'>
     <meta name='twitter:description' content='{$desc}'>
     <meta name='twitter:image' content='{$thumb}'>
-    
-    <!-- Redirect vers React après que les bots ont lu les métadonnées -->
-    <script>
-        // Si c'est un vrai user (pas un bot), redirige vers le SPA
-        if (!/bot|crawler|spider|facebook|twitter|whatsapp|telegram|slack|discord/i.test(navigator.userAgent)) {
-            window.location.href = '/#/video?id={$videoId}';
-        }
-    </script>
+    <script>window.location.href = '/#/video?id={$videoId}';</script>
 </head>
 <body>
     <h1>{$title}</h1>
@@ -343,11 +331,11 @@ foreach ($dangerousPatterns as $pattern) {
 </html>";
             } else {
                 http_response_code(404);
-                echo "Vidéo introuvable";
+                echo json_encode(['error' => 'Vidéo introuvable']);
             }
         } catch (Exception $e) {
             http_response_code(500);
-            echo "Erreur serveur";
+            echo json_encode(['error' => 'Erreur serveur']);
         }
         exit;
     }
