@@ -20,6 +20,8 @@ const ForgotPassword = lazy(() => import('../../pages/ForgotPassword'));
 const ResetPassword  = lazy(() => import('../../pages/ResetPassword'));
 const Notifications  = lazy(() => import('../../pages/Notification.jsx'));
 const Classement = lazy(() => import('../../pages/Classement'));
+const StandUp = lazy(() => import('../../pages/StandUp'));
+
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -64,6 +66,8 @@ const PageRouter = () => {
                 );
             case 'classement':
                 return <Classement />;
+            case 'standup':
+                return <StandUp />;
             default:
                 return <Home/>;
         }
