@@ -237,10 +237,6 @@ const Classement = () => {
                                 ))}
                             </div>
                         </div>
-
-                        <div className="mt-4 text-center text-xs text-gray-400">
-                            Score = vues + (likes × 3) · Se réinitialise chaque mois
-                        </div>
                     </>
                 )}
             </div>
