@@ -115,23 +115,20 @@ export default function Navbar() {
                     </span>
                 ))}
             </div>
-            <nav className="container mx-auto px-4 py-2">
-                <div className="flex items-center gap-4">
-                    <div className="flex-shrink-0">
-                        <button
-                            onClick={() => navigateTo("home")}
-                            className="text-black flex items-center"
-                        >
+            <nav className="container mx-auto px-6 py-2">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex-shrink-0 pl-2">
+                        <button onClick={() => navigateTo("home")} className="text-black flex items-center">
                             <img
                                 src="/Laugh Tale Version2.png"
                                 alt="Laugh Tube Logo"
-                                className="h-12 w-auto scale-125 object-contain"
+                                className="h-12 w-auto object-contain"
                             />
                         </button>
                     </div>
 
-                    <div className="flex justify-center">
-                        <div className="flex-1 max-w-md mx-auto">
+                    <div className="flex-1 flex justify-center">
+                        <div className="w-full max-w-sm">
                             <form onSubmit={handleSearch} className="relative w-full">
                                 <div className="relative">
                                     <input
@@ -141,10 +138,7 @@ export default function Navbar() {
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-gray-300 border-opacity-30 rounded-full text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-300"
                                     />
-                                    <Search
-                                        size={18}
-                                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black"
-                                    />
+                                    <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black" />
                                 </div>
                             </form>
                         </div>

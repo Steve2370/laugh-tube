@@ -90,6 +90,8 @@ class ProfileController extends Controller
                 'views' => $v->views,
                 'created_at' => $v->created_at,
                 'user_id' => $v->user_id,
+                'likes' => \DB::table('likes')->where('video_id', $v->id)->count(),
+                'likes_count' => \DB::table('likes')->where('video_id', $v->id)->count(),
             ]);
 
         return response()->json(['videos' => $videos]);
