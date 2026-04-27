@@ -3,7 +3,7 @@ import { useVideos } from "../hooks/useVideos";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
 import VideoCard from "../components/VideoCard";
-import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap, CheckCircle2 } from "lucide-react";
+import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap, CheckCircle2, Mic, Radio, Users } from "lucide-react";
 
 const ParticleNetwork = () => {
     const canvasRef = useRef(null);
@@ -332,6 +332,8 @@ const Home = () => {
                     videoSrc="/uploads/laugh-intro.mp4?v=1"
                 />
 
+                <StandUpSection isAuthenticated={isAuthenticated} navigateTo={navigateTo} />
+
                 {!isAuthenticated && (
                     <ValueSection navigateTo={navigateTo} isAuthenticated={isAuthenticated} />
                 )}
@@ -356,6 +358,104 @@ const Home = () => {
                             </div>
                         </div>
                     </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const StandUpSection = ({ isAuthenticated, navigateTo }) => {
+    const [lives, setLives] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        apiService.requestV2('/lives')
+            .then(r => setLives(r.lives || []))
+            .catch(() => setLives([]))
+            .finally(() => setLoading(false));
+    }, []);
+
+    const handleJoinLive = (live) => {
+        if (!isAuthenticated) {
+            window.location.hash = '#/login';
+            return;
+        }
+        localStorage.setItem('currentLive', JSON.stringify(live));
+        window.location.hash = '#/standup';
+    };
+
+    return (
+        <div className="mb-8">
+            <div className="bg-gradient-to-r from-red-600 to-red-500 rounded-2xl p-5 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center">
+                            <Mic size={20} className="text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-white font-black text-lg">Stand-Up Live</h2>
+                            <p className="text-red-100 text-xs">Performances en direct</p>
+                        </div>
+                    </div>
+                    {isAuthenticated && (
+                        <button
+                            onClick={() => navigateTo('standup')}
+                            className="flex items-center gap-2 bg-white text-red-600 font-bold px-4 py-2 rounded-xl hover:bg-red-50 transition-all text-sm active:scale-95"
+                        >
+                            <Radio size={15} />
+                            Lancer un Stand-Up
+                        </button>
+                    )}
+                </div>
+
+                {loading ? (
+                    <div className="flex gap-3">
+                        {[1,2].map(i => (
+                            <div key={i} className="h-16 w-48 bg-white bg-opacity-10 rounded-xl animate-pulse" />
+                        ))}
+                    </div>
+                ) : lives.length === 0 ? (
+                    <div className="bg-white bg-opacity-10 rounded-xl px-4 py-3 flex items-center gap-3">
+                        <span className="text-2xl">🎤</span>
+                        <div>
+                            <p className="text-white text-sm font-semibold">Aucun live en ce moment</p>
+                            <p className="text-red-100 text-xs">
+                                {isAuthenticated ? 'Sois le premier à te lancer !' : 'Connecte-toi pour lancer un live'}
+                            </p>
+                        </div>
+                        {!isAuthenticated && (
+                            <button
+                                onClick={() => navigateTo('login')}
+                                className="ml-auto bg-white text-red-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-red-50 transition-all"
+                            >
+                                Se connecter
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+                        {lives.map(live => (
+                            <button
+                                key={live.id}
+                                onClick={() => handleJoinLive(live)}
+                                className="flex-shrink-0 bg-white bg-opacity-15 hover:bg-opacity-25 rounded-xl px-4 py-3 flex items-center gap-3 transition-all text-left active:scale-95"
+                            >
+                                <div className="relative">
+                                    <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white font-bold text-sm">
+                                        {live.username?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-red-500 animate-pulse" />
+                                </div>
+                                <div>
+                                    <p className="text-white font-semibold text-sm">{live.username}</p>
+                                    <div className="flex items-center gap-1 text-red-100 text-xs">
+                                        <Users size={11} />
+                                        <span>En direct</span>
+                                    </div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
