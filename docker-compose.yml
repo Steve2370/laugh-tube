@@ -68,6 +68,9 @@ services:
       - GOOGLE_CLIENT_SECRET=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
       - GOOGLE_REDIRECT_URI=https://www.laughtube.ca/api/v2/auth/google/callback
       - SESSION_DRIVER=array
+      - LIVEKIT_HOST=livekit:7880
+      - LIVEKIT_API_KEY=87d3037fcbeb6c500595d75572e380e1
+      - LIVEKIT_API_SECRET=3d2428926499fa6023d904a93b3d854dbfa7f9bc70e4bbe919ee1c5682915c54
 
   frontend:
     image: node:20-alpine
@@ -105,6 +108,20 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: laughtube_livekit
+    restart: unless-stopped
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    volumes:
+      - ./docker/livekit/livekit.yaml:/etc/livekit.yaml
+    command: --config /etc/livekit.yaml
+    networks:
+      - laughtube_network
 
   nginx:
     image: nginx:alpine
