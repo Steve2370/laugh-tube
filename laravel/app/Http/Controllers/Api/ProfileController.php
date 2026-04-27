@@ -37,19 +37,18 @@ class ProfileController extends Controller
     public function update(Request $request): JsonResponse
     {
         $user = $request->user();
-
         $validated = $request->validate([
             'username' => 'sometimes|string|min:3|max:50|unique:users,username,' . $user->id,
             'bio' => 'sometimes|nullable|string|max:500',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
         ]);
-
         $user->update($validated);
-
         return response()->json([
             'message' => 'Profil mis à jour',
             'user' => [
                 'id' => $user->id,
                 'username' => $user->username,
+                'email' => $user->email,
                 'bio' => $user->bio,
                 'avatar_url' => $user->avatar_url,
             ],

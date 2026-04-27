@@ -278,6 +278,80 @@ $uri = normalizeUri($rawUri);
 error_log("API Call: $method $rawUri => normalized: $uri");
 
 foreach ($dangerousPatterns as $pattern) {
+
+    if (preg_match('#^/video/(\d+)$#', $uri, $m) && ($method === 'GET' || $method === 'HEAD')) {
+        $videoId = (int)$m[1];
+        try {
+            $stmt = $pdo->prepare("
+            SELECT v.id, v.title, v.description, v.thumbnail, u.username
+            FROM videos v
+            JOIN users u ON u.id = v.user_id
+            WHERE v.id = ? AND v.encoded = TRUE
+        ");
+            $stmt->execute([$videoId]);
+            $video = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($video) {
+                $title = htmlspecialchars($video['title'] . ' - LaughTube');
+                $desc = htmlspecialchars($video['description'] ?? 'Regarde cette vidéo sur LaughTube 😂');
+                $thumb = $video['thumbnail']
+                    ? "https://laughtube.ca/uploads/thumbnails/{$video['thumbnail']}"
+                    : "https://laughtube.ca/images/default-cover.svg";
+                $url = "https://www.laughtube.ca/video/{$videoId}";
+                $username = htmlspecialchars($video['username']);
+
+                echo "<!DOCTYPE html>
+<html lang='fr'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>{$title}</title>
+    <meta name='description' content='{$desc}'>
+    
+    <!-- Open Graph -->
+    <meta property='og:type' content='video.other'>
+    <meta property='og:url' content='{$url}'>
+    <meta property='og:title' content='{$title}'>
+    <meta property='og:description' content='{$desc}'>
+    <meta property='og:image' content='{$thumb}'>
+    <meta property='og:image:width' content='1280'>
+    <meta property='og:image:height' content='720'>
+    <meta property='og:site_name' content='LaughTube'>
+    <meta property='og:locale' content='fr_CA'>
+    
+    <!-- Twitter Card -->
+    <meta name='twitter:card' content='summary_large_image'>
+    <meta name='twitter:title' content='{$title}'>
+    <meta name='twitter:description' content='{$desc}'>
+    <meta name='twitter:image' content='{$thumb}'>
+    
+    <!-- Redirect vers React après que les bots ont lu les métadonnées -->
+    <script>
+        // Si c'est un vrai user (pas un bot), redirige vers le SPA
+        if (!/bot|crawler|spider|facebook|twitter|whatsapp|telegram|slack|discord/i.test(navigator.userAgent)) {
+            window.location.href = '/#/video?id={$videoId}';
+        }
+    </script>
+</head>
+<body>
+    <h1>{$title}</h1>
+    <p>Par @{$username}</p>
+    <p>{$desc}</p>
+    <img src='{$thumb}' alt='{$title}'>
+    <a href='{$url}'>Voir sur LaughTube</a>
+</body>
+</html>";
+            } else {
+                http_response_code(404);
+                echo "Vidéo introuvable";
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo "Erreur serveur";
+        }
+        exit;
+    }
+
     if (preg_match($pattern, $uri) || preg_match($pattern, $_SERVER['QUERY_STRING'] ?? '')) {
         http_response_code(403);
         echo json_encode(['error' => 'Requête bloquée']);
