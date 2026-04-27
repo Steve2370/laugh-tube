@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ClassementController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CommentInteractionController;
 use App\Http\Controllers\Api\LikeController;
+use App\Http\Controllers\Api\LiveController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProfileUploadController;
@@ -25,6 +26,8 @@ Route::prefix('v2')->group(function () {
     Route::get('/videos/{id}', [VideoController::class, 'show']);
     Route::get('/videos/{id}/reactions', [LikeController::class, 'reactions']);
     Route::get('/videos/{id}/comments', [CommentController::class, 'index']);
+
+    Route::get('/lives', [LiveController::class, 'index']);
 
     Route::get('/users/{id}/profile', [ProfileController::class, 'show']);
     Route::get('/users/{id}/stats', [ProfileController::class, 'stats']);
@@ -91,6 +94,10 @@ Route::prefix('v2')->group(function () {
         Route::post('/videos/{id}/signaler', [VideoController::class, 'signaler']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
 
+        Route::post('/lives/start', [LiveController::class, 'start']);
+        Route::post('/lives/{id}/stop', [LiveController::class, 'stop']);
+        Route::post('/lives/{id}/join', [LiveController::class, 'join']);
+
         Route::put('/profile', [ProfileController::class, 'update']);
         Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
         Route::post('/users/me/avatar', [ProfileUploadController::class, 'uploadAvatar']);
@@ -129,6 +136,8 @@ Route::prefix('v2')->group(function () {
         Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
 
     });
+
+    Route::post('/lives/{id}/join-public', [LiveController::class, 'joinPublic']);
 
     Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
         Route::get('/stats', [AdminController::class, 'getStats']);
