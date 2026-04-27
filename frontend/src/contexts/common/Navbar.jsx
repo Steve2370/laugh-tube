@@ -7,6 +7,7 @@ import {
     MessageSquare,
     Search,
     Settings,
+    Trophy,
     Upload,
     User,
 } from "lucide-react";
@@ -299,6 +300,14 @@ export default function Navbar() {
                                 >
                                     <MessageSquare size={16} />
                                     <span className="hidden lg:inline">Contact</span>
+                                </button>
+
+                                <button
+                                    onClick={() => navigateTo("classement")}
+                                    className="flex items-center gap-2 text-black hover:text-gray-600 hover:bg-gray-200 hover:bg-opacity-50 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium"
+                                >
+                                    <Trophy size={16} />
+                                    <span className="hidden lg:inline">Classement</span>
                                 </button>
                             </>
                         )}

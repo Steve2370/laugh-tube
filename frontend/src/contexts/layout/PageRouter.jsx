@@ -19,6 +19,7 @@ const Contact = lazy(() => import('../../pages/Contact'));
 const ForgotPassword = lazy(() => import('../../pages/ForgotPassword'));
 const ResetPassword  = lazy(() => import('../../pages/ResetPassword'));
 const Notifications  = lazy(() => import('../../pages/Notification.jsx'));
+const Classement = lazy(() => import('../../pages/Classement'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -61,6 +62,8 @@ const PageRouter = () => {
                         <Admin/>
                     </AdminRoute>
                 );
+            case 'classement':
+                return <Classement />;
             default:
                 return <Home/>;
         }

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AbonnementController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlockController;
+use App\Http\Controllers\Api\ClassementController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CommentInteractionController;
 use App\Http\Controllers\Api\LikeController;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v2')->group(function () {
 
     Route::get('/ping', fn() => response()->json(['status' => 'ok', 'version' => 'laravel']));
-
+    Route::get('/classement', [ClassementController::class, 'index']);
     Route::get('/videos', [VideoController::class, 'index']);
     Route::get('/videos/trending', [VideoController::class, 'trending']);
     Route::get('/videos/popular', [VideoController::class, 'popular']);
