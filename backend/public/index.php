@@ -275,6 +275,31 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $rawUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $uri = normalizeUri($rawUri);
 
+if (preg_match('#^/og/video/(\d+)$#', $uri, $m) && ($method === 'GET' || $method === 'HEAD')) {
+    $videoId = (int)$m[1];
+    try {
+        $stmt = $pdo->prepare("SELECT v.id, v.title, v.description, v.thumbnail, u.username FROM videos v JOIN users u ON u.id = v.user_id WHERE v.id = ? AND v.encoded = TRUE");
+        $stmt->execute([$videoId]);
+        $video = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($video) {
+            $title = htmlspecialchars($video['title'] . ' - LaughTube');
+            $desc = htmlspecialchars($video['description'] ?? 'Regarde cette vidéo sur LaughTube 😂');
+            $thumb = $video['thumbnail'] ? "https://laughtube.ca/uploads/thumbnails/{$video['thumbnail']}" : "https://laughtube.ca/images/default-cover.svg";
+            $url = "https://www.laughtube.ca/#/video?id={$videoId}";
+            $username = htmlspecialchars($video['username']);
+            header('Content-Type: text/html; charset=UTF-8');
+            echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>{$title}</title><meta name='description' content='{$desc}'><meta property='og:type' content='video.other'><meta property='og:url' content='{$url}'><meta property='og:title' content='{$title}'><meta property='og:description' content='{$desc}'><meta property='og:image' content='{$thumb}'><meta property='og:image:width' content='1280'><meta property='og:image:height' content='720'><meta property='og:site_name' content='LaughTube'><meta name='twitter:card' content='summary_large_image'><meta name='twitter:title' content='{$title}'><meta name='twitter:description' content='{$desc}'><meta name='twitter:image' content='{$thumb}'><script>window.location.href='{$url}';</script></head><body><h1>{$title}</h1><p>Par @{$username}</p><img src='{$thumb}'><a href='{$url}'>Voir sur LaughTube</a></body></html>";
+        } else {
+            http_response_code(404);
+            echo json_encode(['error' => 'Video not found']);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Server error']);
+    }
+    exit;
+}
+
 error_log("API Call: $method $rawUri => normalized: $uri");
 
 foreach ($dangerousPatterns as $pattern) {
