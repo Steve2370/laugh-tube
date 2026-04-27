@@ -3,8 +3,8 @@ import { useVideos } from "../hooks/useVideos";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
 import VideoCard from "../components/VideoCard";
+import apiService from "../services/apiService";
 import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap, CheckCircle2, Mic, Radio, Users } from "lucide-react";
-
 const ParticleNetwork = () => {
     const canvasRef = useRef(null);
     useEffect(() => {
