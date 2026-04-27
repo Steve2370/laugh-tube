@@ -333,6 +333,7 @@ const Home = () => {
                 />
 
                 <StandUpSection isAuthenticated={isAuthenticated} navigateTo={navigateTo} />
+                <BattleRoomSection isAuthenticated={isAuthenticated} navigateTo={navigateTo} />
 
                 {!isAuthenticated && (
                     <ValueSection navigateTo={navigateTo} isAuthenticated={isAuthenticated} />
@@ -461,6 +462,33 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
         </div>
     );
 };
+
+const BattleRoomSection = ({ isAuthenticated, navigateTo }) => (
+    <div className="mb-8">
+        <div className="bg-gradient-to-r from-purple-700 to-indigo-700 rounded-2xl p-5 shadow-lg">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center text-xl">
+                        ⚔️
+                    </div>
+                    <div>
+                        <h2 className="text-white font-black text-lg">Battle Room</h2>
+                        <p className="text-purple-200 text-xs">Défie un humoriste en duel</p>
+                    </div>
+                </div>
+                <span className="bg-white bg-opacity-20 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                    Bientôt disponible
+                </span>
+            </div>
+            <div className="mt-4 bg-white bg-opacity-10 rounded-xl px-4 py-3 flex items-center gap-3">
+                <span className="text-2xl">⚔️</span>
+                <p className="text-purple-100 text-sm">
+                    Provoque un autre humoriste en duel, programmez votre battle et laissez le public voter en temps réel.
+                </p>
+            </div>
+        </div>
+    </div>
+);
 
 const EmptyState = ({ searchTerm, isAuthenticated, navigateTo }) => {
     if (searchTerm) return (
