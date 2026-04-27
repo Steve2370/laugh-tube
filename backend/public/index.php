@@ -319,7 +319,7 @@ foreach ($dangerousPatterns as $pattern) {
             $video = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($video) {
                 $title = htmlspecialchars($video['title'] . ' - LaughTube');
-                $desc = htmlspecialchars($video['description'] ?? 'Regarde cette vidéo sur LaughTube 😂');
+                $desc = htmlspecialchars($video['description'] ?? 'Regarde cette vidéo sur LaughTube');
                 $thumb = $video['thumbnail']
                     ? "https://laughtube.ca/uploads/thumbnails/{$video['thumbnail']}"
                     : "https://laughtube.ca/images/default-cover.svg";
