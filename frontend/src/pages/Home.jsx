@@ -387,7 +387,7 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
 
     return (
         <div className="mb-8">
-            <div className="bg-gradient-to-r from-red-600 to-red-500 rounded-2xl p-5 shadow-lg">
+            <div className="bg-blue-500 rounded-2xl p-5 shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center">
@@ -395,13 +395,13 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
                         </div>
                         <div>
                             <h2 className="text-white font-black text-lg">Stand-Up Live</h2>
-                            <p className="text-red-100 text-xs">Performances en direct</p>
+                            <p className="text-blue-100 text-xs">Performances en direct</p>
                         </div>
                     </div>
                     {isAuthenticated && (
                         <button
                             onClick={() => navigateTo('standup')}
-                            className="flex items-center gap-2 bg-white text-red-600 font-bold px-4 py-2 rounded-xl hover:bg-red-50 transition-all text-sm active:scale-95"
+                            className="flex items-center gap-2 bg-white text-blue-600 font-bold px-4 py-2 rounded-xl hover:bg-blue-50 transition-all text-sm active:scale-95"
                         >
                             <Radio size={15} />
                             Lancer un Stand-Up
@@ -417,17 +417,17 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
                     </div>
                 ) : lives.length === 0 ? (
                     <div className="bg-white bg-opacity-10 rounded-xl px-4 py-3 flex items-center gap-3">
-                        <span className="text-2xl">🎤</span>
+                        <Mic size={20} className="text-blue-100 flex-shrink-0" />
                         <div>
                             <p className="text-white text-sm font-semibold">Aucun live en ce moment</p>
-                            <p className="text-red-100 text-xs">
+                            <p className="text-blue-100 text-xs">
                                 {isAuthenticated ? 'Sois le premier à te lancer !' : 'Connecte-toi pour lancer un live'}
                             </p>
                         </div>
                         {!isAuthenticated && (
                             <button
                                 onClick={() => navigateTo('login')}
-                                className="ml-auto bg-white text-red-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-red-50 transition-all"
+                                className="ml-auto bg-white text-blue-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-blue-50 transition-all"
                             >
                                 Se connecter
                             </button>
@@ -445,11 +445,11 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
                                     <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white font-bold text-sm">
                                         {live.username?.charAt(0).toUpperCase()}
                                     </div>
-                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-red-500 animate-pulse" />
+                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-blue-500 animate-pulse" />
                                 </div>
                                 <div>
                                     <p className="text-white font-semibold text-sm">{live.username}</p>
-                                    <div className="flex items-center gap-1 text-red-100 text-xs">
+                                    <div className="flex items-center gap-1 text-blue-100 text-xs">
                                         <Users size={11} />
                                         <span>En direct</span>
                                     </div>
@@ -465,7 +465,7 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
 
 const BattleRoomSection = ({ isAuthenticated, navigateTo }) => (
     <div className="mb-8">
-        <div className="bg-gradient-to-r from-red-700 to-red-600 rounded-2xl p-5 shadow-lg">
+        <div className="bg-blue-500 rounded-2xl p-5 shadow-lg">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center">
@@ -473,16 +473,18 @@ const BattleRoomSection = ({ isAuthenticated, navigateTo }) => (
                     </div>
                     <div>
                         <h2 className="text-white font-black text-lg">Battle Room</h2>
-                        <p className="text-red-100 text-xs">Défie un humoriste en duel</p>
+                        <p className="text-blue-100 text-xs">Défie un humoriste en duel</p>
                     </div>
                 </div>
                 <span className="bg-white bg-opacity-20 text-white text-xs font-bold px-3 py-1.5 rounded-full">
                     Bientôt disponible
                 </span>
             </div>
-            <div>
-                <h2 className="text-white font-black text-lg">Battle Room</h2>
-                <p className="text-red-200 text-xs">Défie un humoriste en duel</p>
+            <div className="bg-white bg-opacity-10 rounded-xl px-4 py-3 flex items-center gap-3">
+                <Zap size={18} className="text-blue-200 flex-shrink-0" />
+                <p className="text-blue-100 text-sm">
+                    Provoque un autre humoriste en duel, programmez votre battle et laissez le public voter en temps réel.
+                </p>
             </div>
         </div>
     </div>
