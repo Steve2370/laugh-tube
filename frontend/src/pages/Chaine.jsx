@@ -200,6 +200,7 @@ const Chaine = () => {
 
             const enrichedVideos = videosList.map(v => ({
                 ...v,
+                user_id: v.user_id || channelUserData.id,
                 username: v.username || channelUserData.username,
                 auteur: v.auteur || channelUserData.username,
                 avatar_url: v.avatar_url || channelUserData.avatar_url || null,

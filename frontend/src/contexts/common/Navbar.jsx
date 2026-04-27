@@ -115,9 +115,9 @@ export default function Navbar() {
                     </span>
                 ))}
             </div>
-            <nav className="container mx-auto px-6 py-2">
-                <div className="grid grid-cols-3 items-center gap-8">
-                    <div className="flex justify-start">
+            <nav className="container mx-auto px-4 py-2">
+                <div className="flex items-center gap-4">
+                    <div className="flex-shrink-0">
                         <button
                             onClick={() => navigateTo("home")}
                             className="text-black flex items-center"
@@ -131,7 +131,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex justify-center">
-                        <div className="w-full max-w-md -ml-10">
+                        <div className="flex-1 max-w-md mx-auto">
                             <form onSubmit={handleSearch} className="relative w-full">
                                 <div className="relative">
                                     <input
@@ -150,7 +150,7 @@ export default function Navbar() {
                         </div>
                     </div>
 
-                    <div className="flex justify-end items-center space-x-3">
+                    <div className="flex-shrink-0 flex items-center gap-1">
                         {isAuthenticated && user ? (
                             <>
                                 <NotificationDropdown />
@@ -289,9 +289,9 @@ export default function Navbar() {
                             <>
                                 <button
                                     onClick={() => navigateTo("login")}
-                                    className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-all duration-300 text-sm font-semibold"
+                                    className="flex items-center gap-1.5 bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 transition-all duration-300 text-sm font-semibold whitespace-nowrap"
                                 >
-                                    <LogIn size={16} />
+                                    <LogIn size={15} />
                                     <span className="hidden lg:inline">Se connecter</span>
                                 </button>
                                 <button
