@@ -36,6 +36,54 @@ Route::prefix('v2')->group(function () {
 
     Route::get('/users/{id}/subscribers-count', [AbonnementController::class, 'count']);
 
+    Route::get('/og/video/{id}', function($id) {
+        $video = \DB::table('videos')
+            ->join('users', 'users.id', '=', 'videos.user_id')
+            ->where('videos.id', $id)
+            ->where('videos.encoded', true)
+            ->select('videos.id', 'videos.title', 'videos.description', 'videos.thumbnail', 'users.username')
+            ->first();
+
+        if (!$video) {
+            return response()->json(['error' => 'Video not found'], 404);
+        }
+
+        $title = htmlspecialchars($video->title . ' - LaughTube');
+        $desc = htmlspecialchars($video->description ?? 'Regarde cette vidéo sur LaughTube 😂');
+        $thumb = $video->thumbnail
+            ? "https://laughtube.ca/uploads/thumbnails/{$video->thumbnail}"
+            : "https://laughtube.ca/images/default-cover.svg";
+        $url = "https://www.laughtube.ca/#/video?id={$id}";
+        $username = htmlspecialchars($video->username);
+
+        $html = "<!DOCTYPE html><html lang='fr'><head>
+        <meta charset='UTF-8'>
+        <title>{$title}</title>
+        <meta name='description' content='{$desc}'>
+        <meta property='og:type' content='video.other'>
+        <meta property='og:url' content='{$url}'>
+        <meta property='og:title' content='{$title}'>
+        <meta property='og:description' content='{$desc}'>
+        <meta property='og:image' content='{$thumb}'>
+        <meta property='og:image:width' content='1280'>
+        <meta property='og:image:height' content='720'>
+        <meta property='og:site_name' content='LaughTube'>
+        <meta name='twitter:card' content='summary_large_image'>
+        <meta name='twitter:title' content='{$title}'>
+        <meta name='twitter:description' content='{$desc}'>
+        <meta name='twitter:image' content='{$thumb}'>
+        <script>window.location.href='{$url}';</script>
+    </head>
+    <body>
+        <h1>{$title}</h1>
+        <p>Par @{$username}</p>
+        <img src='{$thumb}'>
+        <a href='{$url}'>Voir sur LaughTube</a>
+    </body></html>";
+
+        return response($html, 200)->header('Content-Type', 'text/html');
+    });
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
