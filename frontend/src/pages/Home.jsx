@@ -486,9 +486,12 @@ const BattleRoomSection = ({ isAuthenticated, navigateTo }) => (
                         <p className="text-blue-100 text-xs">Défie un humoriste en duel</p>
                     </div>
                 </div>
-                <span className="bg-white bg-opacity-20 text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                    Bientôt disponible
-                </span>
+                <button
+                    onClick={() => navigateTo('battleroom')}
+                    className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-all"
+                >
+                    Voir les battles →
+                </button>
             </div>
             <div className="bg-white bg-opacity-10 rounded-xl px-4 py-3 flex items-center gap-3">
                 <Zap size={18} className="text-blue-200 flex-shrink-0" />
