@@ -30,7 +30,6 @@ class LiveController extends Controller
         $user = $request->user();
         $roomName = 'standup-' . $user->id . '-' . time();
 
-        // Enregistre le live en DB
         $liveId = DB::table('lives')->insertGetId([
             'user_id' => $user->id,
             'room_name' => $roomName,
