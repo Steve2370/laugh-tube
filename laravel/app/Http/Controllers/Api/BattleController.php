@@ -107,7 +107,8 @@ class BattleController extends Controller
     public function schedule(Request $request, int $battleId): JsonResponse
     {
         $request->validate(['scheduled_at' => 'required|string']);
-        $scheduledAt = date('Y-m-d H:i:s', strtotime($request->scheduled_at));
+        $scheduledAt = str_replace('T', ' ', $request->scheduled_at);
+        if (strlen($scheduledAt) === 16) $scheduledAt .= ':00';
 
         $user = $request->user();
         $battle = DB::table('battles')->where('id', $battleId)
@@ -309,7 +310,14 @@ class BattleController extends Controller
     public function stop(Request $request, int $battleId): JsonResponse
     {
         $user = $request->user();
-        $battle = DB::table('battles')->where('id', $battleId)->where('challenger_id', $user->id)->where('status', 'live')->first();
+        $battle = DB::table('battles')
+            ->where('id', $battleId)
+            ->where(function($q) use ($user) {
+                $q->where('challenger_id', $user->id)
+                    ->orWhere('challenged_id', $user->id);
+            })
+            ->where('status', 'live')
+            ->first();
 
         if (!$battle) {
             return response()->json(['error' => 'Battle introuvable'], 404);
@@ -326,10 +334,7 @@ class BattleController extends Controller
             'updated_at' => now(),
         ]);
 
-        return response()->json([
-            'message' => 'Battle terminée',
-            'winner_id' => $winnerId,
-        ]);
+        return response()->json(['message' => 'Battle terminée', 'winner_id' => $winnerId]);
     }
 
     /**
