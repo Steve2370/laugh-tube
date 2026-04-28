@@ -364,7 +364,13 @@ const StandUp = () => {
     }
 
     return (
-        <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 via-white to-blue-50">
+        <div className="min-h-screen pt-20 relative" style={{ backgroundColor: 'transparent' }}>
+            <video
+                autoPlay loop muted playsInline
+                style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -2, filter: 'brightness(0.4)' }}
+            >
+                <source src="/uploads/StandUp.mp4" type="video/mp4" />
+            </video>
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -372,8 +378,8 @@ const StandUp = () => {
                             <Mic size={28} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Stand-Up Live</h1>
-                            <p className="text-sm text-gray-500 mt-0.5">Performances en direct</p>
+                            <h1 className="text-3xl font-bold text-white-900">Stand-Up Live</h1>
+                            <p className="text-sm text-white-500 mt-0.5">Performances en direct</p>
                         </div>
                     </div>
                     {isAuthenticated && (
