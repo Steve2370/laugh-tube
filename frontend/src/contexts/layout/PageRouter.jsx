@@ -21,6 +21,7 @@ const ResetPassword  = lazy(() => import('../../pages/ResetPassword'));
 const Notifications  = lazy(() => import('../../pages/Notification.jsx'));
 const Classement = lazy(() => import('../../pages/Classement'));
 const StandUp = lazy(() => import('../../pages/StandUp'));
+const BattleRoom = lazy(() => import('../../pages/BattleRoom'));
 
 
 const PageRouter = () => {
@@ -68,6 +69,8 @@ const PageRouter = () => {
                 return <Classement />;
             case 'standup':
                 return <StandUp />;
+            case 'battleroom':
+                return <BattleRoom />;
             default:
                 return <Home/>;
         }
