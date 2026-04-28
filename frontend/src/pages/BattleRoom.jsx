@@ -152,6 +152,16 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
         setCommentInput('');
     }, [commentInput, localParticipant, send, userAvatar]);
 
+    const ParticipantCount = () => {
+        const participants = useParticipants();
+        return (
+            <div className="flex items-center gap-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                <Users size={12} />
+                <span>{participants.length}</span>
+            </div>
+        );
+    };
+
     const VOTE_EMOJIS = [
         { emoji: '🔥', points: 3, label: 'Feu' },
         { emoji: '😂', points: 2, label: 'Rires' },
@@ -236,14 +246,16 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                 </div>
             </div>
 
-            {/* Barre de score en haut */}
             <div className="absolute top-0 left-0 right-0 z-30 px-4" style={{ paddingTop: '72px' }}>
                 <div className="bg-black bg-opacity-60 rounded-2xl p-3">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-white font-bold text-xs">{battle.challenger_username}</span>
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                            <span className="text-white text-xs font-bold">EN DIRECT</span>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                <span className="text-white text-xs font-bold">EN DIRECT</span>
+                            </div>
+                            <ParticipantCount />
                         </div>
                         <span className="text-white font-bold text-xs">{battle.challenged_username}</span>
                     </div>
