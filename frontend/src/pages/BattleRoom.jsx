@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import EmojiPickerLib from 'emoji-picker-react';
 import { Swords, Clock, Trophy, Users, Play, X, Calendar, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
@@ -54,7 +55,42 @@ const Countdown = ({ scheduledAt }) => {
     return <span className="font-mono font-bold text-lg">{timeLeft}</span>;
 };
 
-const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
+const BattleEmojiPicker = ({ onSend }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
+
+    return (
+        <div className="relative" ref={ref}>
+            {open && (
+                <div className="absolute bottom-12 right-0" style={{ zIndex: 100 }}>
+                    <EmojiPickerLib
+                        onEmojiClick={(emojiData) => { onSend(emojiData.emoji); setOpen(false); }}
+                        theme="dark"
+                        height={350}
+                        width={300}
+                        lazyLoadEmojis={true}
+                    />
+                </div>
+            )}
+            <button
+                onClick={() => setOpen(!open)}
+                className="w-10 h-10 flex items-center justify-center bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full text-xl transition-all"
+            >
+                😊
+            </button>
+        </div>
+    );
+};
+
+const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop }) => {
     const [scores, setScores] = useState({
         challenger: battle.challenger_score || 0,
         challenged: battle.challenged_score || 0,
@@ -105,11 +141,16 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
 
     const sendComment = useCallback(() => {
         if (!commentInput.trim()) return;
-        const data = { type: 'comment', text: commentInput.trim(), username: localParticipant?.name || 'Anonyme' };
+        const data = {
+            type: 'comment',
+            text: commentInput.trim(),
+            username: localParticipant?.name || 'Anonyme',
+            avatar: userAvatar || null
+        };
         try { send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true }); } catch {}
         setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
         setCommentInput('');
-    }, [commentInput, localParticipant, send]);
+    }, [commentInput, localParticipant, send, userAvatar]);
 
     const VOTE_EMOJIS = [
         { emoji: '🔥', points: 3, label: 'Feu' },
@@ -219,7 +260,14 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
 
             <div className="absolute left-4 right-4 flex flex-col gap-1 z-10" style={{ bottom: '90px', maxHeight: '150px', overflow: 'hidden' }}>
                 {comments.slice(-6).map(c => (
-                    <div key={c.id} className="flex items-start gap-2">
+                    <div key={c.id} className="flex items-center gap-2">
+                        {c.avatar ? (
+                            <img src={c.avatar} alt={c.username} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                            <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                {c.username?.charAt(0).toUpperCase()}
+                            </div>
+                        )}
                         <span className="text-yellow-400 font-bold text-xs shrink-0">{c.username}</span>
                         <span className="text-white text-xs">{c.text}</span>
                     </div>
@@ -236,14 +284,17 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
                     placeholder="Commenter..."
                     className="flex-1 bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-gray-300 px-4 py-2.5 rounded-full text-sm focus:outline-none"
                 />
+                <BattleEmojiPicker onSend={(emoji) => {
+                    const data = { type: 'comment', text: emoji, username: localParticipant?.name || 'Anonyme', avatar: null };
+                    try { send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true }); } catch {}
+                    setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
+                }} />
                 <button onClick={sendComment} className="bg-blue-500 text-white font-bold px-4 py-2.5 rounded-full text-sm">
                     Envoyer
                 </button>
-                {isParticipant && (
-                    <button onClick={onStop} className="bg-red-600 text-white font-bold px-4 py-2.5 rounded-full text-sm flex items-center gap-1">
-                        <X size={14} /> Terminer
-                    </button>
-                )}
+                <button onClick={onStop} className="bg-red-600 text-white font-bold px-4 py-2.5 rounded-full text-sm flex items-center gap-1">
+                    <X size={14} /> {isParticipant ? 'Terminer' : 'Quitter'}
+                </button>
             </div>
         </div>
     );
@@ -357,7 +408,7 @@ const BattleRoom = () => {
     const handleSchedule = async (battleId) => {
         if (!scheduleDate) return;
         try {
-            const formatted = new Date(scheduleDate).toISOString().slice(0, 19).replace('T', ' ');
+            const formatted = scheduleDate + ':00';
             await apiService.requestV2(`/battles/${battleId}/schedule`, {
                 method: 'POST',
                 body: JSON.stringify({ scheduled_at: formatted }),
@@ -394,6 +445,7 @@ const BattleRoom = () => {
                     battle={currentBattle}
                     isParticipant={isParticipant}
                     userId={user?.id}
+                    userAvatar={user?.avatar_url ? (user.avatar_url.startsWith('http') ? user.avatar_url : `/uploads/profiles/${user.avatar_url}`) : null}
                     onStop={handleStop}
                 />
             </LiveKitRoom>
