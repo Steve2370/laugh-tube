@@ -8,9 +8,29 @@ import {
     LiveKitRoom,
     VideoConference,
     useParticipants,
+    useTracks,
+    VideoTrack,
+    useDataChannel,
+    useLocalParticipant,
 } from '@livekit/components-react';
+import { Track } from 'livekit-client';
 
 const LIVEKIT_URL = 'wss://laughtube.ca/livekit';
+
+const FloatingEmoji = ({ emoji, id }) => {
+    return (
+        <div
+            key={id}
+            className="absolute bottom-24 pointer-events-none text-3xl animate-bounce"
+            style={{
+                left: `${10 + Math.random() * 60}%`,
+                animation: 'floatUp 3s ease-out forwards',
+            }}
+        >
+            {emoji}
+        </div>
+    );
+};
 
 const ParticipantCount = () => {
     const participants = useParticipants();
@@ -127,48 +147,20 @@ const StandUp = () => {
 
     if (token) {
         return (
-            <div className="min-h-screen pt-16 bg-gray-950">
-                <div className="max-w-5xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <button onClick={isStreaming ? handleStopLive : handleLeave}
-                                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all">
-                                <ArrowLeft size={20} />
-                            </button>
-                            <div className="flex items-center gap-2">
-                                <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-                                <span className="text-white font-bold text-sm">
-                                    {isStreaming ? `${user?.username} — En direct` : `${currentLive?.username} — En direct`}
-                                </span>
-                            </div>
-                        </div>
-                        {isStreaming ? (
-                            <button onClick={handleStopLive}
-                                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all">
-                                <StopCircle size={16} />
-                                Terminer le live
-                            </button>
-                        ) : (
-                            <button onClick={handleLeave}
-                                    className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all">
-                                Quitter
-                            </button>
-                        )}
-                    </div>
-
-                    <LiveKitRoom
-                        serverUrl={LIVEKIT_URL}
-                        token={token}
-                        connect={true}
-                        video={isStreaming}
-                        audio={isStreaming}
-                        className="rounded-2xl overflow-hidden"
-                        style={{ height: '70vh' }}
-                    >
-                        <VideoConference />
-                    </LiveKitRoom>
-                </div>
-            </div>
+            <LiveKitRoom
+                serverUrl={LIVEKIT_URL}
+                token={token}
+                connect={true}
+                video={isStreaming}
+                audio={isStreaming}
+                style={{ height: '100vh', background: '#000' }}
+            >
+                <TikTokLiveView
+                    isStreaming={isStreaming}
+                    streamerName={isStreaming ? user?.username : currentLive?.username}
+                    onStop={isStreaming ? handleStopLive : handleLeave}
+                />
+            </LiveKitRoom>
         );
     }
 
@@ -278,6 +270,148 @@ const StandUp = () => {
                             ))}
                         </div>
                     )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const TikTokLiveView = ({ isStreaming, streamerName, onStop }) => {
+    const [comments, setComments] = useState([]);
+    const [emojis, setEmojis] = useState([]);
+    const [commentInput, setCommentInput] = useState('');
+    const commentsEndRef = useRef(null);
+    const { localParticipant } = useLocalParticipant();
+
+    const tracks = useTracks([
+        { source: Track.Source.Camera, withPlaceholder: true },
+    ]);
+
+    const streamerTrack = tracks.find(t => t.participant?.isHost || tracks[0]);
+
+    const { send } = useDataChannel('chat', (msg) => {
+        try {
+            const data = JSON.parse(new TextDecoder().decode(msg.payload));
+            if (data.type === 'comment') {
+                setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() }]);
+                commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            } else if (data.type === 'emoji') {
+                const id = Date.now() + Math.random();
+                setEmojis(prev => [...prev, { emoji: data.emoji, id }]);
+                setTimeout(() => setEmojis(prev => prev.filter(e => e.id !== id)), 3000);
+            }
+        } catch {}
+    });
+
+    const sendComment = () => {
+        if (!commentInput.trim()) return;
+        const data = { type: 'comment', text: commentInput.trim(), username: localParticipant?.name || 'Anonyme' };
+        send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
+        setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() }]);
+        setCommentInput('');
+    };
+
+    const sendEmoji = (emoji) => {
+        const data = { type: 'emoji', emoji };
+        send(new TextEncoder().encode(JSON.stringify(data)), { reliable: false });
+        const id = Date.now() + Math.random();
+        setEmojis(prev => [...prev, { emoji, id }]);
+        setTimeout(() => setEmojis(prev => prev.filter(e => e.id !== id)), 3000);
+    };
+
+    return (
+        <div className="relative w-full h-screen bg-black overflow-hidden">
+            <style>{`
+                @keyframes floatUp {
+                    0% { transform: translateY(0) scale(1); opacity: 1; }
+                    100% { transform: translateY(-300px) scale(1.5); opacity: 0; }
+                }
+                .float-emoji { animation: floatUp 3s ease-out forwards; }
+            `}</style>
+
+            {streamerTrack && streamerTrack.publication?.track ? (
+                <VideoTrack
+                    trackRef={streamerTrack}
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+            ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-white text-center">
+                        <Mic size={64} className="mx-auto mb-4 opacity-50" />
+                        <p className="text-lg opacity-50">Connexion en cours...</p>
+                    </div>
+                </div>
+            )}
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-70 pointer-events-none" />
+
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-10">
+                <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                    <span className="text-white font-bold text-sm">{streamerName} — EN DIRECT</span>
+                </div>
+                <button
+                    onClick={onStop}
+                    className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-sm transition-all"
+                >
+                    <StopCircle size={14} />
+                    {isStreaming ? 'Terminer' : 'Quitter'}
+                </button>
+            </div>
+
+            <div className="absolute inset-0 pointer-events-none z-20">
+                {emojis.map(e => (
+                    <div
+                        key={e.id}
+                        className="absolute bottom-32 text-3xl float-emoji"
+                        style={{ left: `${10 + Math.random() * 60}%` }}
+                    >
+                        {e.emoji}
+                    </div>
+                ))}
+            </div>
+
+            <div className="absolute bottom-32 left-4 right-4 z-10 max-h-48 overflow-hidden flex flex-col gap-1">
+                {comments.slice(-8).map(c => (
+                    <div key={c.id} className="flex items-start gap-2">
+                        <span className="text-yellow-400 font-bold text-xs shrink-0">{c.username}</span>
+                        <span className="text-white text-xs">{c.text}</span>
+                    </div>
+                ))}
+                <div ref={commentsEndRef} />
+            </div>
+
+            {/* Barre bas — emojis + input */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 p-4 flex flex-col gap-2">
+                {/* Emojis rapides */}
+                <div className="flex gap-3 justify-center">
+                    {['❤️','😂','🔥','👏','💯'].map(emoji => (
+                        <button
+                            key={emoji}
+                            onClick={() => sendEmoji(emoji)}
+                            className="text-2xl hover:scale-125 transition-transform active:scale-95"
+                        >
+                            {emoji}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Input commentaire */}
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={commentInput}
+                        onChange={e => setCommentInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && sendComment()}
+                        placeholder="Ajouter un commentaire..."
+                        className="flex-1 bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-gray-300 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:bg-opacity-30"
+                    />
+                    <button
+                        onClick={sendComment}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2.5 rounded-full text-sm transition-all"
+                    >
+                        Envoyer
+                    </button>
                 </div>
             </div>
         </div>
