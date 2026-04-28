@@ -11,6 +11,7 @@
     "@livekit/components-react": "^2.9.20",
     "@livekit/components-styles": "^1.2.0",
     "axios": "^1.13.2",
+    "emoji-picker-react": "^4.19.1",
     "livekit-client": "^2.18.7",
     "lucide-react": "^0.562.0",
     "react": "^18.2.0",
