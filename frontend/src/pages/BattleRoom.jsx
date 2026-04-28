@@ -292,7 +292,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop }) =
                 <button onClick={sendComment} className="bg-blue-500 text-white font-bold px-4 py-2.5 rounded-full text-sm">
                     Envoyer
                 </button>
-                <button onClick={onStop} className="bg-red-600 text-white font-bold px-4 py-2.5 rounded-full text-sm flex items-center gap-1">
+                <button onClick={isParticipant ? onStop : onLeave} className="bg-red-600 text-white font-bold px-4 py-2.5 rounded-full text-sm flex items-center gap-1">
                     <X size={14} /> {isParticipant ? 'Terminer' : 'Quitter'}
                 </button>
             </div>
@@ -430,6 +430,11 @@ const BattleRoom = () => {
         refused: { text: 'Refusé', color: 'bg-red-100 text-red-400' },
     }[status] || { text: status, color: 'bg-gray-100 text-gray-600' });
 
+    const handleLeave = () => {
+        setToken(null);
+        setCurrentBattle(null);
+    };
+
     if (token && currentBattle) {
         const isParticipant = user?.id === currentBattle.challenger_id || user?.id === currentBattle.challenged_id;
         return (
@@ -447,6 +452,7 @@ const BattleRoom = () => {
                     userId={user?.id}
                     userAvatar={user?.avatar_url ? (user.avatar_url.startsWith('http') ? user.avatar_url : `/uploads/profiles/${user.avatar_url}`) : null}
                     onStop={handleStop}
+                    onLeave={handleLeave}
                 />
             </LiveKitRoom>
         );
