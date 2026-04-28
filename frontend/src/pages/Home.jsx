@@ -332,8 +332,10 @@ const Home = () => {
                     videoSrc="/uploads/laugh-intro.mp4?v=1"
                 />
 
-                <StandUpSection isAuthenticated={isAuthenticated} navigateTo={navigateTo} />
-                <BattleRoomSection isAuthenticated={isAuthenticated} navigateTo={navigateTo} />
+                <div className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <StandUpSection isAuthenticated={isAuthenticated} navigateTo={navigateTo} />
+                    <BattleRoomSection isAuthenticated={isAuthenticated} navigateTo={navigateTo} />
+                </div>
 
                 {!isAuthenticated && (
                     <ValueSection navigateTo={navigateTo} isAuthenticated={isAuthenticated} />
@@ -386,8 +388,8 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
     };
 
     return (
-        <div className="mb-8">
-            <div className="bg-blue-500 rounded-2xl p-5 shadow-lg">
+        <div className="h-full">
+            <div className="bg-blue-500 rounded-2xl p-5 shadow-lg h-full">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center">
@@ -464,8 +466,8 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
 };
 
 const BattleRoomSection = ({ isAuthenticated, navigateTo }) => (
-    <div className="mb-8">
-        <div className="bg-blue-500 rounded-2xl p-5 shadow-lg">
+    <div className="h-full">
+        <div className="bg-blue-500 rounded-2xl p-5 shadow-lg h-full">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center">
