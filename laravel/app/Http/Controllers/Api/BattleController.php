@@ -122,7 +122,7 @@ class BattleController extends Controller
         }
 
         DB::table('battles')->where('id', $battleId)->update([
-            'scheduledAt' => $request->scheduledAt,
+            'scheduled_at' => $request->scheduledAt,
             'status' => 'scheduled',
             'updated_at' => now(),
         ]);

@@ -393,7 +393,13 @@ const BattleRoom = () => {
     }
 
     return (
-        <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="min-h-screen pt-20 relative" style={{ backgroundColor: 'transparent' }}>
+            <video
+                autoPlay loop muted playsInline
+                style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -2, filter: 'brightness(0.4)' }}
+            >
+                <source src="/uploads/Battle.mp4" type="video/mp4" />
+            </video>
             <div className="max-w-4xl mx-auto px-4 py-8">
 
                 {/* Header */}
