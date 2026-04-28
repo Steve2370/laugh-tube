@@ -443,12 +443,20 @@ const StandUpSection = ({ isAuthenticated, navigateTo }) => {
                                 onClick={() => handleJoinLive(live)}
                                 className="flex-shrink-0 bg-white bg-opacity-15 hover:bg-opacity-25 rounded-xl px-4 py-3 flex items-center gap-3 transition-all text-left active:scale-95"
                             >
-                                <div className="relative">
-                                    <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white font-bold text-sm">
-                                        {live.username?.charAt(0).toUpperCase()}
+                                    <div className="relative">
+                                        {live.avatar_url ? (
+                                            <img
+                                                src={live.avatar_url.startsWith('http') ? live.avatar_url : `/uploads/profiles/${live.avatar_url}`}
+                                                alt={live.username}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white font-bold text-sm">
+                                                {live.username?.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-blue-500 animate-pulse" />
                                     </div>
-                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-blue-500 animate-pulse" />
-                                </div>
                                 <div>
                                     <p className="text-white font-semibold text-sm">{live.username}</p>
                                     <div className="flex items-center gap-1 text-blue-100 text-xs">

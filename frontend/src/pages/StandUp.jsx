@@ -69,7 +69,8 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
         const data = {
             type: 'comment',
             text: commentInput.trim(),
-            username: localParticipant?.name || 'Anonyme'
+            username: localParticipant?.name || 'Anonyme',
+            avatar: streamerAvatar || null
         };
         try {
             send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
@@ -163,7 +164,14 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
 
             <div className="absolute left-4 right-4 flex flex-col gap-1" style={{ bottom: '130px', zIndex: 10, maxHeight: '200px', overflow: 'hidden' }}>
                 {comments.slice(-8).map(c => (
-                    <div key={c.id} className="flex items-start gap-2">
+                    <div key={c.id} className="flex items-center gap-2">
+                        {c.avatar ? (
+                            <img src={c.avatar} alt={c.username} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                {c.username?.charAt(0).toUpperCase()}
+                            </div>
+                        )}
                         <span className="text-yellow-400 font-bold text-xs shrink-0">{c.username}</span>
                         <span className="text-white text-xs">{c.text}</span>
                     </div>
@@ -250,7 +258,7 @@ const StandUp = () => {
             setToken(response.token);
             setLiveId(response.live_id);
             setIsStreaming(true);
-            toast.success('Live démarré ! Tes abonnés ont été notifiés 🎤');
+            toast.success('Live démarré !');
         } catch {
             toast.error('Erreur lors du démarrage du live');
         } finally {
