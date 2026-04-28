@@ -1,43 +1,215 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Mic, Radio, Users, StopCircle, ArrowLeft, Loader } from 'lucide-react';
+import { Mic, Radio, Users, StopCircle, Loader } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
 import apiService from '../services/apiService';
 import '@livekit/components-styles';
 import {
     LiveKitRoom,
-    VideoConference,
     useParticipants,
     useTracks,
     VideoTrack,
     useDataChannel,
     useLocalParticipant,
+    RoomAudioRenderer,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 
 const LIVEKIT_URL = 'wss://laughtube.ca/livekit';
 
-const FloatingEmoji = ({ emoji, id }) => {
-    return (
-        <div
-            key={id}
-            className="absolute bottom-24 pointer-events-none text-3xl animate-bounce"
-            style={{
-                left: `${10 + Math.random() * 60}%`,
-                animation: 'floatUp 3s ease-out forwards',
-            }}
-        >
-            {emoji}
-        </div>
-    );
-};
-
+// Compteur de participants — doit être à l'intérieur de LiveKitRoom
 const ParticipantCount = () => {
     const participants = useParticipants();
     return (
         <div className="flex items-center gap-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
             <Users size={12} />
             <span>{participants.length}</span>
+        </div>
+    );
+};
+
+// Vue TikTok — doit être à l'intérieur de LiveKitRoom
+const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) => {
+    const [comments, setComments] = useState([]);
+    const [emojis, setEmojis] = useState([]);
+    const [commentInput, setCommentInput] = useState('');
+    const commentsEndRef = useRef(null);
+    const { localParticipant } = useLocalParticipant();
+    const participants = useParticipants();
+
+    // Récupère toutes les tracks caméra
+    const tracks = useTracks([
+        { source: Track.Source.Camera, withPlaceholder: false },
+    ]);
+
+    // Prend la première track vidéo disponible (le streamer)
+    const streamerTrack = tracks[0] || null;
+
+    const onMessage = useCallback((msg) => {
+        try {
+            const data = JSON.parse(new TextDecoder().decode(msg.payload));
+            if (data.type === 'comment') {
+                setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
+            } else if (data.type === 'emoji') {
+                const id = Date.now() + Math.random();
+                setEmojis(prev => [...prev, { emoji: data.emoji, id, left: 10 + Math.random() * 60 }]);
+                setTimeout(() => setEmojis(prev => prev.filter(e => e.id !== id)), 3000);
+            }
+        } catch {}
+    }, []);
+
+    const { send } = useDataChannel('chat', onMessage);
+
+    useEffect(() => {
+        commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [comments]);
+
+    const sendComment = useCallback(() => {
+        if (!commentInput.trim()) return;
+        const data = {
+            type: 'comment',
+            text: commentInput.trim(),
+            username: localParticipant?.name || 'Anonyme'
+        };
+        try {
+            send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
+        } catch {}
+        setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
+        setCommentInput('');
+    }, [commentInput, localParticipant, send]);
+
+    const sendEmoji = useCallback((emoji) => {
+        const data = { type: 'emoji', emoji };
+        try {
+            send(new TextEncoder().encode(JSON.stringify(data)), { reliable: false });
+        } catch {}
+        const id = Date.now() + Math.random();
+        const left = 10 + Math.random() * 60;
+        setEmojis(prev => [...prev, { emoji, id, left }]);
+        setTimeout(() => setEmojis(prev => prev.filter(e => e.id !== id)), 3000);
+    }, [send]);
+
+    return (
+        <div className="relative w-full h-screen bg-black overflow-hidden">
+            {/* Audio — CRUCIAL pour entendre le streamer */}
+            <RoomAudioRenderer />
+
+            <style>{`
+                @keyframes floatUp {
+                    0% { transform: translateY(0) scale(1); opacity: 1; }
+                    100% { transform: translateY(-300px) scale(1.8); opacity: 0; }
+                }
+                .float-emoji { animation: floatUp 3s ease-out forwards; position: absolute; }
+            `}</style>
+
+            {/* Vidéo plein écran */}
+            {streamerTrack ? (
+                <VideoTrack
+                    trackRef={streamerTrack}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+            ) : (
+                <div className="absolute inset-0 flex items-center justify-center flex-col gap-4">
+                    {streamerAvatar ? (
+                        <img src={streamerAvatar} alt={streamerName} className="w-24 h-24 rounded-full object-cover border-4 border-white" />
+                    ) : (
+                        <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-white text-4xl font-bold">
+                            {streamerName?.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                    <Mic size={32} className="text-white opacity-50" />
+                    <p className="text-white opacity-50">Connexion en cours...</p>
+                </div>
+            )}
+
+            {/* Overlay gradient bas */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30 pointer-events-none" style={{ zIndex: 1 }} />
+
+            {/* Header */}
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 z-50" style={{ paddingTop: '72px' }}>
+                <div className="flex items-center gap-3">
+                    {streamerAvatar ? (
+                        <img src={streamerAvatar} alt={streamerName} className="w-9 h-9 rounded-full object-cover border-2 border-white" />
+                    ) : (
+                        <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
+                            {streamerName?.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                    <div>
+                        <p className="text-white font-bold text-sm leading-none">{streamerName}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                            <span className="text-red-400 text-xs font-semibold">EN DIRECT</span>
+                        </div>
+                    </div>
+                    <ParticipantCount />
+                </div>
+                <button
+                    onClick={onStop}
+                    className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-sm transition-all"
+                >
+                    <StopCircle size={14} />
+                    {isStreaming ? 'Terminer' : 'Quitter'}
+                </button>
+            </div>
+
+            {/* Emojis flottants */}
+            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 20 }}>
+                {emojis.map(e => (
+                    <div
+                        key={e.id}
+                        className="float-emoji text-3xl"
+                        style={{ bottom: '120px', left: `${e.left}%` }}
+                    >
+                        {e.emoji}
+                    </div>
+                ))}
+            </div>
+
+            {/* Commentaires */}
+            <div className="absolute left-4 right-4 flex flex-col gap-1" style={{ bottom: '130px', zIndex: 10, maxHeight: '200px', overflow: 'hidden' }}>
+                {comments.slice(-8).map(c => (
+                    <div key={c.id} className="flex items-start gap-2">
+                        <span className="text-yellow-400 font-bold text-xs shrink-0">{c.username}</span>
+                        <span className="text-white text-xs">{c.text}</span>
+                    </div>
+                ))}
+                <div ref={commentsEndRef} />
+            </div>
+
+            {/* Barre bas */}
+            <div className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-2 flex flex-col gap-3" style={{ zIndex: 30 }}>
+                {/* Emojis rapides */}
+                <div className="flex gap-4 justify-center">
+                    {['❤️', '😂', '🔥', '👏', '💯'].map(emoji => (
+                        <button
+                            key={emoji}
+                            onClick={() => sendEmoji(emoji)}
+                            className="text-2xl hover:scale-125 transition-transform active:scale-95"
+                        >
+                            {emoji}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Input commentaire */}
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={commentInput}
+                        onChange={e => setCommentInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && sendComment()}
+                        placeholder="Ajouter un commentaire..."
+                        className="flex-1 bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-gray-300 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:bg-opacity-30"
+                    />
+                    <button
+                        onClick={sendComment}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2.5 rounded-full text-sm transition-all"
+                    >
+                        Envoyer
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
@@ -72,22 +244,8 @@ const StandUp = () => {
             localStorage.removeItem('currentLive');
             handleJoinLive(live);
         }
-
-        if (isAuthenticated && user?.id) {
-            apiService.requestV2('/lives').then(r => {
-                const myLive = (r.lives || []).find(l => l.user_id === user.id);
-                if (myLive) {
-                    setLiveId(myLive.id);
-                    setIsStreaming(true);
-                    apiService.requestV2('/lives/start', { method: 'POST' })
-                        .then(res => setToken(res.token))
-                        .catch(() => {});
-                }
-            });
-        }
-
         loadLives();
-    }, [isAuthenticated, user?.id]);
+    }, []);
 
     const handleStartLive = async () => {
         if (!isAuthenticated) {
@@ -101,7 +259,7 @@ const StandUp = () => {
             setLiveId(response.live_id);
             setIsStreaming(true);
             toast.success('Live démarré ! Tes abonnés ont été notifiés 🎤');
-        } catch (err) {
+        } catch {
             toast.error('Erreur lors du démarrage du live');
         } finally {
             setJoining(false);
@@ -131,7 +289,7 @@ const StandUp = () => {
             setCurrentLive(live);
             const response = await apiService.requestV2(`/lives/${live.id}/join`, { method: 'POST' });
             setToken(response.token);
-        } catch (err) {
+        } catch {
             toast.error('Erreur lors de la connexion au live');
             setCurrentLive(null);
         } finally {
@@ -145,7 +303,18 @@ const StandUp = () => {
         loadLives();
     };
 
+    const getAvatarUrl = (avatarUrl) => {
+        if (!avatarUrl) return null;
+        if (avatarUrl.startsWith('http')) return avatarUrl;
+        return `/uploads/profiles/${avatarUrl}`;
+    };
+
     if (token) {
+        const streamerAvatar = isStreaming
+            ? getAvatarUrl(user?.avatar_url)
+            : getAvatarUrl(currentLive?.avatar_url);
+        const streamerName = isStreaming ? user?.username : currentLive?.username;
+
         return (
             <LiveKitRoom
                 serverUrl={LIVEKIT_URL}
@@ -153,19 +322,12 @@ const StandUp = () => {
                 connect={true}
                 video={isStreaming}
                 audio={isStreaming}
-                options={{
-                    audioCaptureDefaults: {
-                        echoCancellation: true,
-                    },
-                    publishDefaults: {
-                        simulcast: false,
-                    },
-                }}
                 style={{ height: '100vh', background: '#000' }}
             >
                 <TikTokLiveView
                     isStreaming={isStreaming}
-                    streamerName={isStreaming ? user?.username : currentLive?.username}
+                    streamerName={streamerName}
+                    streamerAvatar={streamerAvatar}
                     onStop={isStreaming ? handleStopLive : handleLeave}
                 />
             </LiveKitRoom>
@@ -175,7 +337,6 @@ const StandUp = () => {
     return (
         <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 via-white to-blue-50">
             <div className="max-w-4xl mx-auto px-4 py-8">
-
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-blue-500 rounded-xl shadow-lg">
@@ -186,7 +347,6 @@ const StandUp = () => {
                             <p className="text-sm text-gray-500 mt-0.5">Performances en direct</p>
                         </div>
                     </div>
-
                     {isAuthenticated && (
                         <button
                             onClick={handleStartLive}
@@ -233,7 +393,7 @@ const StandUp = () => {
                                     <div className="relative">
                                         {live.avatar_url ? (
                                             <img
-                                                src={live.avatar_url.startsWith('http') ? live.avatar_url : `/uploads/profiles/${live.avatar_url}`}
+                                                src={getAvatarUrl(live.avatar_url)}
                                                 alt={live.username}
                                                 className="w-12 h-12 rounded-full object-cover"
                                             />
@@ -253,18 +413,18 @@ const StandUp = () => {
                                         </div>
                                     </div>
                                     {live.user_id === user?.id ? (
-                                            <button
-                                                onClick={async () => {
-                                                    await apiService.requestV2(`/lives/${live.id}/stop`, { method: 'POST' });
-                                                    toast.success('Live terminé');
-                                                    loadLives();
-                                                }}
-                                                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95"
-                                            >
-                                                <StopCircle size={14} />
-                                                Terminer le live
-                                            </button>
-                                        ) : (
+                                        <button
+                                            onClick={async () => {
+                                                await apiService.requestV2(`/lives/${live.id}/stop`, { method: 'POST' });
+                                                toast.success('Live terminé');
+                                                loadLives();
+                                            }}
+                                            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95"
+                                        >
+                                            <StopCircle size={14} />
+                                            Terminer
+                                        </button>
+                                    ) : (
                                         <button
                                             onClick={() => handleJoinLive(live)}
                                             disabled={joining}
@@ -278,147 +438,6 @@ const StandUp = () => {
                             ))}
                         </div>
                     )}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const TikTokLiveView = ({ isStreaming, streamerName, onStop }) => {
-    const [comments, setComments] = useState([]);
-    const [emojis, setEmojis] = useState([]);
-    const [commentInput, setCommentInput] = useState('');
-    const commentsEndRef = useRef(null);
-    const { localParticipant } = useLocalParticipant();
-
-    const tracks = useTracks([
-        { source: Track.Source.Camera, withPlaceholder: true },
-    ]);
-
-    const streamerTrack = tracks.find(t => t.participant?.isHost || tracks[0]);
-
-    const { send } = useDataChannel('chat', useCallback((msg) => {
-        try {
-            const data = JSON.parse(new TextDecoder().decode(msg.payload));
-            if (data.type === 'comment') {
-                setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() }]);
-            } else if (data.type === 'emoji') {
-                const id = Date.now() + Math.random();
-                setEmojis(prev => [...prev, { emoji: data.emoji, id }]);
-                setTimeout(() => setEmojis(prev => prev.filter(e => e.id !== id)), 3000);
-            }
-        } catch {}
-    }, []));
-
-    const sendComment = () => {
-        if (!commentInput.trim()) return;
-        const data = { type: 'comment', text: commentInput.trim(), username: localParticipant?.name || 'Anonyme' };
-        send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
-        setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() }]);
-        setCommentInput('');
-    };
-
-    const sendEmoji = (emoji) => {
-        const data = { type: 'emoji', emoji };
-        send(new TextEncoder().encode(JSON.stringify(data)), { reliable: false });
-        const id = Date.now() + Math.random();
-        setEmojis(prev => [...prev, { emoji, id }]);
-        setTimeout(() => setEmojis(prev => prev.filter(e => e.id !== id)), 3000);
-    };
-
-    return (
-        <div className="relative w-full h-screen bg-black overflow-hidden pt-16">
-            <style>{`
-                @keyframes floatUp {
-                    0% { transform: translateY(0) scale(1); opacity: 1; }
-                    100% { transform: translateY(-300px) scale(1.5); opacity: 0; }
-                }
-                .float-emoji { animation: floatUp 3s ease-out forwards; }
-            `}</style>
-
-            {streamerTrack && streamerTrack.publication?.track ? (
-                <VideoTrack
-                    trackRef={streamerTrack}
-                    className="absolute inset-0 w-full h-full object-cover"
-                />
-            ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-white text-center">
-                        <Mic size={64} className="mx-auto mb-4 opacity-50" />
-                        <p className="text-lg opacity-50">Connexion en cours...</p>
-                    </div>
-                </div>
-            )}
-
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-70 pointer-events-none" />
-
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-50 pt-20">
-            <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-white font-bold text-sm">{streamerName} — EN DIRECT</span>
-                </div>
-                <button
-                    onClick={onStop}
-                    className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-sm transition-all"
-                >
-                    <StopCircle size={14} />
-                    {isStreaming ? 'Terminer' : 'Quitter'}
-                </button>
-            </div>
-
-            <div className="absolute inset-0 pointer-events-none z-20">
-                {emojis.map(e => (
-                    <div
-                        key={e.id}
-                        className="absolute bottom-32 text-3xl float-emoji"
-                        style={{ left: `${10 + Math.random() * 60}%` }}
-                    >
-                        {e.emoji}
-                    </div>
-                ))}
-            </div>
-
-            <div className="absolute bottom-32 left-4 right-4 z-10 max-h-48 overflow-hidden flex flex-col gap-1">
-                {comments.slice(-8).map(c => (
-                    <div key={c.id} className="flex items-start gap-2">
-                        <span className="text-yellow-400 font-bold text-xs shrink-0">{c.username}</span>
-                        <span className="text-white text-xs">{c.text}</span>
-                    </div>
-                ))}
-                <div ref={commentsEndRef} />
-            </div>
-
-            {/* Barre bas — emojis + input */}
-            <div className="absolute bottom-0 left-0 right-0 z-10 p-4 flex flex-col gap-2">
-                {/* Emojis rapides */}
-                <div className="flex gap-3 justify-center">
-                    {['❤️','😂','🔥','👏','💯'].map(emoji => (
-                        <button
-                            key={emoji}
-                            onClick={() => sendEmoji(emoji)}
-                            className="text-2xl hover:scale-125 transition-transform active:scale-95"
-                        >
-                            {emoji}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Input commentaire */}
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        value={commentInput}
-                        onChange={e => setCommentInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && sendComment()}
-                        placeholder="Ajouter un commentaire..."
-                        className="flex-1 bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-gray-300 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:bg-opacity-30"
-                    />
-                    <button
-                        onClick={sendComment}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2.5 rounded-full text-sm transition-all"
-                    >
-                        Envoyer
-                    </button>
                 </div>
             </div>
         </div>
