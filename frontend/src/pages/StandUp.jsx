@@ -27,7 +27,7 @@ const ParticipantCount = () => {
     );
 };
 
-const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) => {
+const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar, onStop }) => {
     const [comments, setComments] = useState([]);
     const [emojis, setEmojis] = useState([]);
     const [commentInput, setCommentInput] = useState('');
@@ -70,7 +70,7 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
             type: 'comment',
             text: commentInput.trim(),
             username: localParticipant?.name || 'Anonyme',
-            avatar: streamerAvatar || null
+            avatar: userAvatar || null
         };
         try {
             send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
@@ -328,6 +328,7 @@ const StandUp = () => {
                     isStreaming={isStreaming}
                     streamerName={streamerName}
                     streamerAvatar={streamerAvatar}
+                    userAvatar={getAvatarUrl(user?.avatar_url)}
                     onStop={isStreaming ? handleStopLive : handleLeave}
                 />
             </LiveKitRoom>
