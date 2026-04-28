@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Mic, Radio, Users, StopCircle, Loader } from 'lucide-react';
+import EmojiPickerLib from 'emoji-picker-react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
 import apiService from '../services/apiService';
@@ -78,6 +79,45 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar,
         setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
         setCommentInput('');
     }, [commentInput, localParticipant, send]);
+
+    const EmojiPicker = ({ onSend }) => {
+        const [open, setOpen] = useState(false);
+        const ref = useRef(null);
+
+        useEffect(() => {
+            const handleClick = (e) => {
+                if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+            };
+            document.addEventListener('mousedown', handleClick);
+            return () => document.removeEventListener('mousedown', handleClick);
+        }, []);
+
+        return (
+            <div className="relative" ref={ref}>
+                {open && (
+                    <div className="absolute bottom-12 right-0" style={{ zIndex: 100 }}>
+                        <EmojiPickerLib
+                            onEmojiClick={(emojiData) => {
+                                onSend(emojiData.emoji);
+                                setOpen(false);
+                            }}
+                            theme="dark"
+                            height={350}
+                            width={300}
+                            searchPlaceholder="Rechercher..."
+                            lazyLoadEmojis={true}
+                        />
+                    </div>
+                )}
+                <button
+                    onClick={() => setOpen(!open)}
+                    className="w-10 h-10 flex items-center justify-center bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full text-xl transition-all"
+                >
+                    😊
+                </button>
+            </div>
+        );
+    };
 
     const sendEmoji = useCallback((emoji) => {
         const data = { type: 'emoji', emoji };
@@ -180,20 +220,7 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar,
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-2 flex flex-col gap-3" style={{ zIndex: 30 }}>
-                <div className="flex gap-4 justify-center">
-                    {['❤️', '😂', '🔥', '👏', '💯'].map(emoji => (
-                        <button
-                            key={emoji}
-                            onClick={() => sendEmoji(emoji)}
-                            className="text-2xl hover:scale-125 transition-transform active:scale-95"
-                        >
-                            {emoji}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Input commentaire */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                     <input
                         type="text"
                         value={commentInput}
@@ -202,6 +229,7 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar,
                         placeholder="Ajouter un commentaire..."
                         className="flex-1 bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-gray-300 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:bg-opacity-30"
                     />
+                    <EmojiPicker onSend={sendEmoji} />
                     <button
                         onClick={sendComment}
                         className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2.5 rounded-full text-sm transition-all"
