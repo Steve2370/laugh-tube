@@ -12,9 +12,10 @@ import {
     Calendar,
     Users,
     Video,
+    Swords
 } from 'lucide-react';
 
-const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
+const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser }) => {
     const getAvatarUrl = () => {
         if (!channelUser?.avatar_url || channelUser.avatar_url.includes('default')) return null;
         if (channelUser.avatar_url.startsWith('http')) return channelUser.avatar_url;
@@ -76,6 +77,23 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount }) => {
                         <BoutonSignaler videoId={null} userId={channelUser.id} />
                         <BoutonBloquer userId={channelUser.id} />
                         <BoutonAbonne targetUserId={channelUser.id} />
+
+                        {currentUser && currentUser.id !== channelUser.id && (
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        await apiService.requestV2(`/users/${channelUser.id}/challenge`, { method: 'POST' });
+                                        toast.success(`Défi envoyé à ${channelUser.username} ⚔️`);
+                                    } catch (err) {
+                                        toast.error('Erreur lors de l\'envoi du défi');
+                                    }
+                                }}
+                                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95"
+                            >
+                                <Swords size={16} />
+                                Défier
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -297,6 +315,7 @@ const Chaine = () => {
                             channelUser={channelUser}
                             stats={stats}
                             subscribersCount={subscribersCount}
+                            currentUser={currentUser}
                         />
 
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
