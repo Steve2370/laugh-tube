@@ -17,7 +17,6 @@ import { Track } from 'livekit-client';
 
 const LIVEKIT_URL = 'wss://laughtube.ca/livekit';
 
-// Compteur de participants — doit être à l'intérieur de LiveKitRoom
 const ParticipantCount = () => {
     const participants = useParticipants();
     return (
@@ -28,7 +27,6 @@ const ParticipantCount = () => {
     );
 };
 
-// Vue TikTok — doit être à l'intérieur de LiveKitRoom
 const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) => {
     const [comments, setComments] = useState([]);
     const [emojis, setEmojis] = useState([]);
@@ -37,28 +35,30 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
     const { localParticipant } = useLocalParticipant();
     const participants = useParticipants();
 
-    // Récupère toutes les tracks caméra
     const tracks = useTracks([
         { source: Track.Source.Camera, withPlaceholder: false },
     ]);
 
-    // Prend la première track vidéo disponible (le streamer)
     const streamerTrack = tracks[0] || null;
 
-    const onMessage = useCallback((msg) => {
+    const setCommentsRef = useRef(setComments);
+    const setEmojisRef = useRef(setEmojis);
+    setCommentsRef.current = setComments;
+    setEmojisRef.current = setEmojis;
+
+    const { send } = useDataChannel('chat', (msg) => {
         try {
             const data = JSON.parse(new TextDecoder().decode(msg.payload));
             if (data.type === 'comment') {
-                setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
+                setCommentsRef.current(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
             } else if (data.type === 'emoji') {
                 const id = Date.now() + Math.random();
-                setEmojis(prev => [...prev, { emoji: data.emoji, id, left: 10 + Math.random() * 60 }]);
-                setTimeout(() => setEmojis(prev => prev.filter(e => e.id !== id)), 3000);
+                const left = 10 + Math.random() * 60;
+                setEmojisRef.current(prev => [...prev, { emoji: data.emoji, id, left }]);
+                setTimeout(() => setEmojisRef.current(prev => prev.filter(e => e.id !== id)), 3000);
             }
-        } catch {}
-    }, []);
-
-    const { send } = useDataChannel('chat', onMessage);
+        } catch(e) { console.error('Message error:', e); }
+    });
 
     useEffect(() => {
         commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -91,7 +91,6 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
 
     return (
         <div className="relative w-full h-screen bg-black overflow-hidden">
-            {/* Audio — CRUCIAL pour entendre le streamer */}
             <RoomAudioRenderer />
 
             <style>{`
@@ -102,7 +101,6 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
                 .float-emoji { animation: floatUp 3s ease-out forwards; position: absolute; }
             `}</style>
 
-            {/* Vidéo plein écran */}
             {streamerTrack ? (
                 <VideoTrack
                     trackRef={streamerTrack}
@@ -122,10 +120,8 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
                 </div>
             )}
 
-            {/* Overlay gradient bas */}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30 pointer-events-none" style={{ zIndex: 1 }} />
 
-            {/* Header */}
             <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 z-50" style={{ paddingTop: '72px' }}>
                 <div className="flex items-center gap-3">
                     {streamerAvatar ? (
@@ -153,7 +149,6 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
                 </button>
             </div>
 
-            {/* Emojis flottants */}
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 20 }}>
                 {emojis.map(e => (
                     <div
@@ -166,7 +161,6 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
                 ))}
             </div>
 
-            {/* Commentaires */}
             <div className="absolute left-4 right-4 flex flex-col gap-1" style={{ bottom: '130px', zIndex: 10, maxHeight: '200px', overflow: 'hidden' }}>
                 {comments.slice(-8).map(c => (
                     <div key={c.id} className="flex items-start gap-2">
@@ -177,9 +171,7 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, onStop }) =
                 <div ref={commentsEndRef} />
             </div>
 
-            {/* Barre bas */}
             <div className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-2 flex flex-col gap-3" style={{ zIndex: 30 }}>
-                {/* Emojis rapides */}
                 <div className="flex gap-4 justify-center">
                     {['❤️', '😂', '🔥', '👏', '💯'].map(emoji => (
                         <button
