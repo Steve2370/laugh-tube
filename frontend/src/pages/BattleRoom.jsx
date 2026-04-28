@@ -409,8 +409,8 @@ const BattleRoom = () => {
                             <Swords size={28} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Battle Room</h1>
-                            <p className="text-sm text-gray-500 mt-0.5">Duels d'humoristes en direct</p>
+                            <h1 className="text-3xl font-bold text-white">Battle Room</h1>
+                            <p className="text-sm text-gray-300 mt-0.5">Duels d'humoristes en direct</p>
                         </div>
                     </div>
                 </div>
