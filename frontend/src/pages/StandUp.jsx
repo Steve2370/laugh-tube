@@ -320,7 +320,7 @@ const TikTokLiveView = ({ isStreaming, streamerName, onStop }) => {
     };
 
     return (
-        <div className="relative w-full h-screen bg-black overflow-hidden">
+        <div className="relative w-full h-screen bg-black overflow-hidden pt-16">
             <style>{`
                 @keyframes floatUp {
                     0% { transform: translateY(0) scale(1); opacity: 1; }
@@ -345,8 +345,8 @@ const TikTokLiveView = ({ isStreaming, streamerName, onStop }) => {
 
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-70 pointer-events-none" />
 
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-10">
-                <div className="flex items-center gap-2">
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-50 pt-20">
+            <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
                     <span className="text-white font-bold text-sm">{streamerName} — EN DIRECT</span>
                 </div>
