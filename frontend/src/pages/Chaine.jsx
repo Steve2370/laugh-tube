@@ -75,8 +75,6 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, chall
 
                     <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 mb-1">
                         <BoutonSignaler videoId={null} userId={channelUser.id} />
-                        <BoutonBloquer userId={channelUser.id} />
-                        <BoutonAbonne targetUserId={channelUser.id} />
 
                         {currentUser && currentUser.id !== channelUser.id && (
                             <button
@@ -87,7 +85,13 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, chall
                                         setChallenged(true);
                                         toast.success(`Défi envoyé à ${channelUser.username} ⚔️`);
                                     } catch (err) {
-                                        toast.error('Erreur lors de l\'envoi du défi');
+                                        const msg = err?.message || '';
+                                        if (msg.includes('400') || msg.includes('déjà')) {
+                                            toast.error('Un défi est déjà en cours avec cet utilisateur');
+                                            setChallenged(true);
+                                        } else {
+                                            toast.error('Erreur lors de l\'envoi du défi');
+                                        }
                                     }
                                 }}
                                 disabled={challenged}
@@ -101,6 +105,9 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, chall
                                 {challenged ? 'Défi envoyé' : 'Défier'}
                             </button>
                         )}
+
+                        <BoutonBloquer userId={channelUser.id} />
+                        <BoutonAbonne targetUserId={channelUser.id} />
                     </div>
                 </div>
 
