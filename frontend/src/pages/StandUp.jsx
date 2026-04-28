@@ -46,15 +46,28 @@ const StandUp = () => {
     }, []);
 
     useEffect(() => {
-        // Vérifie si on arrive depuis Home avec un live sélectionné
         const stored = localStorage.getItem('currentLive');
         if (stored) {
             const live = JSON.parse(stored);
             localStorage.removeItem('currentLive');
             handleJoinLive(live);
         }
+
+        if (isAuthenticated && user?.id) {
+            apiService.requestV2('/lives').then(r => {
+                const myLive = (r.lives || []).find(l => l.user_id === user.id);
+                if (myLive) {
+                    setLiveId(myLive.id);
+                    setIsStreaming(true);
+                    apiService.requestV2('/lives/start', { method: 'POST' })
+                        .then(res => setToken(res.token))
+                        .catch(() => {});
+                }
+            });
+        }
+
         loadLives();
-    }, []);
+    }, [isAuthenticated, user?.id]);
 
     const handleStartLive = async () => {
         if (!isAuthenticated) {
@@ -239,14 +252,28 @@ const StandUp = () => {
                                             <span>{new Date(live.started_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => handleJoinLive(live)}
-                                        disabled={joining}
-                                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95 disabled:opacity-50"
-                                    >
-                                        {joining ? <Loader size={14} className="animate-spin" /> : <Users size={14} />}
-                                        Rejoindre
-                                    </button>
+                                    {live.user_id === user?.id ? (
+                                            <button
+                                                onClick={async () => {
+                                                    await apiService.requestV2(`/lives/${live.id}/stop`, { method: 'POST' });
+                                                    toast.success('Live terminé');
+                                                    loadLives();
+                                                }}
+                                                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95"
+                                            >
+                                                <StopCircle size={14} />
+                                                Terminer le live
+                                            </button>
+                                        ) : (
+                                        <button
+                                            onClick={() => handleJoinLive(live)}
+                                            disabled={joining}
+                                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95 disabled:opacity-50"
+                                        >
+                                            {joining ? <Loader size={14} className="animate-spin" /> : <Users size={14} />}
+                                            Rejoindre
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>
