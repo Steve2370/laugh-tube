@@ -105,12 +105,17 @@ const NotificationDropdown = () => {
         const texts = {
             like: 'a aimé votre vidéo',
             comment: 'a commenté votre vidéo',
-            subscribe: 's\'est abonné à votre chaîne',
+            subscribe: "s'est abonné à votre chaîne",
             mention: 'vous a mentionné',
             reply: 'a répondu à votre commentaire',
-            video_upload: 'a publié une nouvelle vidéo'
+            video_upload: 'a publié une nouvelle vidéo',
+            live: 'est actuellement en direct',
+            battle_challenge: 'vous provoque en duel',
+            battle_accepted: 'a accepté votre défi',
+            battle_scheduled: 'a programmé une battle',
         };
-        return texts[type] || 'vous a notifié';
+        if (notification.message) return notification.message;
+        return texts[notification.type] || 'vous a notifié';
     };
 
     const formatTimeAgo = (dateString) => {
