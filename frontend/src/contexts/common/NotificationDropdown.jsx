@@ -202,9 +202,9 @@ const NotificationDropdown = () => {
 
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm text-gray-900 line-clamp-2">
-                                                    <span className="font-semibold">{notification.actor_name}</span>
-                                                    {' '}
-                                                    {getNotificationText(notification)}
+                                                    {notification.message || (
+                                                        <><span className="font-semibold">{notification.actor_name}</span> {getNotificationText(notification)}</>
+                                                    )}
                                                 </p>
 
                                                 {notification.video_title && (

@@ -349,7 +349,7 @@ const BattleRoom = () => {
     const handleSchedule = async (battleId) => {
         if (!scheduleDate) return;
         try {
-            const formatted = scheduleDate.replace('T', ' ') + ':00';
+            const formatted = new Date(scheduleDate).toISOString().slice(0, 19).replace('T', ' ');
             await apiService.requestV2(`/battles/${battleId}/schedule`, {
                 method: 'POST',
                 body: JSON.stringify({ scheduled_at: formatted }),
@@ -402,7 +402,6 @@ const BattleRoom = () => {
             </video>
             <div className="max-w-4xl mx-auto px-4 py-8">
 
-                {/* Header */}
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-gray-600 rounded-xl shadow-lg">
