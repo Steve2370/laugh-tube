@@ -25,6 +25,9 @@ class LiveController extends Controller
         $this->host = 'http://' . env('LIVEKIT_HOST', 'livekit:7880');
     }
 
+    /**
+     * @throws \Exception
+     */
     public function start(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -64,6 +67,9 @@ class LiveController extends Controller
         ]);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function join(Request $request, int $liveId): JsonResponse
     {
         $user = $request->user();
@@ -119,6 +125,9 @@ class LiveController extends Controller
         return response()->json(['lives' => $lives]);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function joinPublic(Request $request, int $liveId): JsonResponse
     {
         $live = DB::table('lives')->where('id', $liveId)->where('status', 'live')->first();
@@ -136,6 +145,9 @@ class LiveController extends Controller
         ]);
     }
 
+    /**
+     * @throws \Exception
+     */
     private function generateToken(string $roomName, mixed $userId, string $username, bool $isPublisher): string
     {
         $tokenOptions = (new AccessTokenOptions())

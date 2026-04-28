@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AbonnementController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BattleController;
 use App\Http\Controllers\Api\BlockController;
 use App\Http\Controllers\Api\ClassementController;
 use App\Http\Controllers\Api\CommentController;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v2')->group(function () {
 
+    Route::get('/battles', [BattleController::class, 'index']);
     Route::get('/ping', fn() => response()->json(['status' => 'ok', 'version' => 'laravel']));
     Route::get('/classement', [ClassementController::class, 'index']);
     Route::get('/videos', [VideoController::class, 'index']);
@@ -135,6 +137,14 @@ Route::prefix('v2')->group(function () {
         Route::post('/replies/{replyId}/like', [CommentInteractionController::class, 'toggleReplyLike']);
         Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
 
+        Route::post('/users/{id}/challenge', [BattleController::class, 'challenge']);
+        Route::post('/battles/{id}/respond', [BattleController::class, 'respond']);
+        Route::post('/battles/{id}/schedule', [BattleController::class, 'schedule']);
+        Route::post('/battles/{id}/start', [BattleController::class, 'start']);
+        Route::post('/battles/{id}/join', [BattleController::class, 'join']);
+        Route::post('/battles/{id}/vote', [BattleController::class, 'vote']);
+        Route::post('/battles/{id}/stop', [BattleController::class, 'stop']);
+        Route::get('/battles/my', [BattleController::class, 'myBattles']);
     });
 
     Route::post('/lives/{id}/join-public', [LiveController::class, 'joinPublic']);
