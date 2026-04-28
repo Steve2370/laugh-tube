@@ -154,6 +154,15 @@ const StandUp = () => {
                 video={isStreaming}
                 audio={isStreaming}
                 style={{ height: '100vh', background: '#000' }}
+                onConnected={(room) => {
+                    if (!isStreaming) {
+                        room.remoteParticipants.forEach(participant => {
+                            participant.audioTrackPublications.forEach(pub => {
+                                pub.track?.attach();
+                            });
+                        });
+                    }
+                }}
             >
                 <TikTokLiveView
                     isStreaming={isStreaming}
@@ -289,19 +298,18 @@ const TikTokLiveView = ({ isStreaming, streamerName, onStop }) => {
 
     const streamerTrack = tracks.find(t => t.participant?.isHost || tracks[0]);
 
-    const { send } = useDataChannel('chat', (msg) => {
+    const { send } = useDataChannel('chat', useCallback((msg) => {
         try {
             const data = JSON.parse(new TextDecoder().decode(msg.payload));
             if (data.type === 'comment') {
                 setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() }]);
-                commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
             } else if (data.type === 'emoji') {
                 const id = Date.now() + Math.random();
                 setEmojis(prev => [...prev, { emoji: data.emoji, id }]);
                 setTimeout(() => setEmojis(prev => prev.filter(e => e.id !== id)), 3000);
             }
         } catch {}
-    });
+    }, []));
 
     const sendComment = () => {
         if (!commentInput.trim()) return;
