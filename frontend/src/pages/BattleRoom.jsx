@@ -259,7 +259,6 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
     );
 };
 
-// Page principale Battle Room
 const BattleRoom = () => {
     const { user, isAuthenticated } = useAuth();
     const toast = useToast();

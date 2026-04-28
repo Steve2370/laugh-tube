@@ -81,17 +81,24 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser }) => 
                         {currentUser && currentUser.id !== channelUser.id && (
                             <button
                                 onClick={async () => {
+                                    if (challenged) return;
                                     try {
                                         await apiService.requestV2(`/users/${channelUser.id}/challenge`, { method: 'POST' });
+                                        setChallenged(true);
                                         toast.success(`Défi envoyé à ${channelUser.username} ⚔️`);
                                     } catch (err) {
                                         toast.error('Erreur lors de l\'envoi du défi');
                                     }
                                 }}
-                                className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95"
+                                disabled={challenged}
+                                className={`flex items-center gap-2 font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95 ${
+                                    challenged
+                                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                        : 'bg-gray-900 hover:bg-gray-800 text-white'
+                                }`}
                             >
                                 <Swords size={16} />
-                                Défier
+                                {challenged ? 'Défi envoyé' : 'Défier'}
                             </button>
                         )}
                     </div>
@@ -170,6 +177,7 @@ const Chaine = () => {
     const [channelUser, setChannelUser] = useState(null);
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [challenged, setChallenged] = useState(false);
     const [stats, setStats] = useState({
         totalVideos: 0,
         totalViews: 0,
@@ -316,6 +324,9 @@ const Chaine = () => {
                             stats={stats}
                             subscribersCount={subscribersCount}
                             currentUser={currentUser}
+                            challenged={challenged}
+                            setChallenged={setChallenged}
+                            toast={toast}
                         />
 
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
