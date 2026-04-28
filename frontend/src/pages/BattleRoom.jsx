@@ -34,7 +34,6 @@ const Avatar = ({ url, username, size = 'md' }) => {
     );
 };
 
-// Countdown
 const Countdown = ({ scheduledAt }) => {
     const [timeLeft, setTimeLeft] = useState('');
 
@@ -55,7 +54,6 @@ const Countdown = ({ scheduledAt }) => {
     return <span className="font-mono font-bold text-lg">{timeLeft}</span>;
 };
 
-// Vue Battle Live
 const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
     const [scores, setScores] = useState({
         challenger: battle.challenger_score || 0,
@@ -130,9 +128,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
         <div className="relative w-full h-screen bg-black overflow-hidden">
             <RoomAudioRenderer />
 
-            {/* Deux vidéos côte à côte */}
             <div className="absolute inset-0 flex">
-                {/* Challenger */}
                 <div className="relative flex-1 border-r-2 border-white border-opacity-30">
                     {challengerTrack ? (
                         <VideoTrack trackRef={challengerTrack} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -142,14 +138,11 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
                             <p className="text-white font-bold">{battle.challenger_username}</p>
                         </div>
                     )}
-                    {/* Overlay gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 pointer-events-none" />
-                    {/* Nom + score */}
                     <div className="absolute bottom-32 left-0 right-0 text-center">
                         <p className="text-white font-black text-lg drop-shadow">{battle.challenger_username}</p>
                         <p className="text-yellow-400 font-bold text-2xl">{scores.challenger} pts</p>
                     </div>
-                    {/* Bouton voter */}
                     {!isParticipant && userId !== battle.challenger_id && (
                         <div className="absolute bottom-20 left-0 right-0 flex justify-center gap-2">
                             {VOTE_EMOJIS.map(v => (
@@ -264,7 +257,7 @@ const BattleRoom = () => {
     const [battles, setBattles] = useState([]);
     const [myBattles, setMyBattles] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState('battles'); // battles | my
+    const [tab, setTab] = useState('battles');
     const [token, setToken] = useState(null);
     const [currentBattle, setCurrentBattle] = useState(null);
     const [joining, setJoining] = useState(false);
@@ -290,13 +283,24 @@ const BattleRoom = () => {
     useEffect(() => {
         loadBattles();
         loadMyBattles();
-        // Vérifie si on arrive avec une battle sélectionnée
         const stored = localStorage.getItem('currentBattle');
         if (stored) {
             localStorage.removeItem('currentBattle');
             const battle = JSON.parse(stored);
             handleJoin(battle);
         }
+    }, []);
+
+    useEffect(() => {
+        const audio = new Audio('/sounds/Battle.mp3');
+        audio.loop = true;
+        audio.volume = 0.3;
+        audio.play().catch(() => {});
+
+        return () => {
+            audio.pause();
+            audio.src = '';
+        };
     }, []);
 
     const handleJoin = async (battle) => {
