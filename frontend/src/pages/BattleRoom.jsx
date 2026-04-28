@@ -353,7 +353,7 @@ const BattleRoom = () => {
                 method: 'POST',
                 body: JSON.stringify({ scheduled_at: formatted }),
             });
-            toast.success('Battle programmée ! Les abonnés ont été notifiés ⚔️');
+            toast.success('Battle programmée ! Les abonnés ont été notifiés');
             setSchedulingId(null);
             setScheduleDate('');
             loadMyBattles();
