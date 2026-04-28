@@ -45,7 +45,8 @@ const getNotificationText = (type) => {
         battle_accepted: 'a accepté votre défi',
         battle_scheduled: 'a programmé une battle',
     };
-    return texts[type] || 'vous a notifié';
+    if (notification.message) return notification.message;
+    return texts[notification.type] || 'vous a notifié';
 };
 
 const formatTimeAgo = (dateString) => {

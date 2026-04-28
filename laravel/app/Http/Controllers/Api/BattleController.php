@@ -106,7 +106,8 @@ class BattleController extends Controller
 
     public function schedule(Request $request, int $battleId): JsonResponse
     {
-        $request->validate(['scheduled_at' => 'required|date|after:now']);
+        $request->validate(['scheduled_at' => 'required|string']);
+        $scheduledAt = date('Y-m-d H:i:s', strtotime($request->scheduled_at));
 
         $user = $request->user();
         $battle = DB::table('battles')->where('id', $battleId)
@@ -121,7 +122,7 @@ class BattleController extends Controller
         }
 
         DB::table('battles')->where('id', $battleId)->update([
-            'scheduled_at' => $request->scheduled_at,
+            'scheduledAt' => $request->scheduledAt,
             'status' => 'scheduled',
             'updated_at' => now(),
         ]);
@@ -132,7 +133,7 @@ class BattleController extends Controller
             'actor_id' => $user->id,
             'actor_name' => $user->username,
             'type' => 'battle_scheduled',
-            'message' => 'La battle a été programmée pour le ' . date('d/m/Y à H:i', strtotime($request->scheduled_at)),
+            'message' => 'La battle a été programmée pour le ' . date('d/m/Y à H:i', strtotime($request->scheduledAt)),
             'is_read' => false,
             'created_at' => now(),
         ]);
@@ -152,7 +153,7 @@ class BattleController extends Controller
                 'actor_id' => $user->id,
                 'actor_name' => $user->username,
                 'type' => 'battle_scheduled',
-                'message' => "⚔️ {$challenger->username} vs {$challenged->username} — Battle programmée !",
+                'message' => " {$challenger->username} vs {$challenged->username} — Battle programmée !",
                 'is_read' => false,
                 'created_at' => now(),
             ]);
@@ -170,7 +171,7 @@ class BattleController extends Controller
             ->select(
                 'battles.id',
                 'battles.status',
-                'battles.scheduled_at',
+                'battles.scheduledAt',
                 'battles.challenger_score',
                 'battles.challenged_score',
                 'battles.challenger_id',
@@ -180,7 +181,7 @@ class BattleController extends Controller
                 'd.username as challenged_username',
                 'd.avatar_url as challenged_avatar',
             )
-            ->orderBy('battles.scheduled_at', 'asc')
+            ->orderBy('battles.scheduledAt', 'asc')
             ->get();
 
         return response()->json(['battles' => $battles]);
@@ -198,7 +199,7 @@ class BattleController extends Controller
             ->select(
                 'battles.id',
                 'battles.status',
-                'battles.scheduled_at',
+                'battles.scheduledAt',
                 'battles.challenger_id',
                 'battles.challenged_id',
                 'battles.challenger_score',
