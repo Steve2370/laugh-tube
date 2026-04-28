@@ -10,7 +10,7 @@ import {
     useParticipants,
 } from '@livekit/components-react';
 
-const LIVEKIT_URL = 'ws://134.209.168.137:7880';
+const LIVEKIT_URL = 'wss://laughtube.ca/livekit';
 
 const ParticipantCount = () => {
     const participants = useParticipants();
@@ -112,7 +112,6 @@ const StandUp = () => {
         loadLives();
     };
 
-    // Vue Live — streamer ou spectateur
     if (token) {
         return (
             <div className="min-h-screen pt-16 bg-gray-950">
@@ -160,7 +159,6 @@ const StandUp = () => {
         );
     }
 
-    // Vue principale
     return (
         <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 via-white to-blue-50">
             <div className="max-w-4xl mx-auto px-4 py-8">
@@ -188,7 +186,6 @@ const StandUp = () => {
                     )}
                 </div>
 
-                {/* Lives en cours */}
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                         <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
@@ -221,9 +218,17 @@ const StandUp = () => {
                             {lives.map(live => (
                                 <div key={live.id} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg">
-                                            {live.username?.charAt(0).toUpperCase()}
-                                        </div>
+                                        {live.avatar_url ? (
+                                            <img
+                                                src={live.avatar_url.startsWith('http') ? live.avatar_url : `/uploads/profiles/${live.avatar_url}`}
+                                                alt={live.username}
+                                                className="w-12 h-12 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                                                {live.username?.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
                                         <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
                                     </div>
                                     <div className="flex-1">
