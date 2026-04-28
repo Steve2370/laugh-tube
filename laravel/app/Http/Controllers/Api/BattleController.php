@@ -171,7 +171,7 @@ class BattleController extends Controller
             ->select(
                 'battles.id',
                 'battles.status',
-                'battles.scheduledAt',
+                'battles.scheduled_at',
                 'battles.challenger_score',
                 'battles.challenged_score',
                 'battles.challenger_id',
@@ -181,7 +181,7 @@ class BattleController extends Controller
                 'd.username as challenged_username',
                 'd.avatar_url as challenged_avatar',
             )
-            ->orderBy('battles.scheduledAt', 'asc')
+            ->orderBy('battles.scheduled_at', 'asc')
             ->get();
 
         return response()->json(['battles' => $battles]);

@@ -101,7 +101,8 @@ const NotificationDropdown = () => {
         return colors[type] || 'text-gray-500 bg-gray-50';
     };
 
-    const getNotificationText = (type) => {
+    const getNotificationText = (notification) => {
+        if (notification.message) return notification.message;
         const texts = {
             like: 'a aimé votre vidéo',
             comment: 'a commenté votre vidéo',
@@ -114,7 +115,6 @@ const NotificationDropdown = () => {
             battle_accepted: 'a accepté votre défi',
             battle_scheduled: 'a programmé une battle',
         };
-        if (notification.message) return notification.message;
         return texts[notification.type] || 'vous a notifié';
     };
 
@@ -204,7 +204,7 @@ const NotificationDropdown = () => {
                                                 <p className="text-sm text-gray-900 line-clamp-2">
                                                     <span className="font-semibold">{notification.actor_name}</span>
                                                     {' '}
-                                                    {getNotificationText(notification.type)}
+                                                    {getNotificationText(notification)}
                                                 </p>
 
                                                 {notification.video_title && (
