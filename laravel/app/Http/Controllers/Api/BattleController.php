@@ -42,7 +42,7 @@ class BattleController extends Controller
             ->orWhere(function ($q) use ($challenger, $challengedId) {
                 $q->where('challenger_id', $challengedId)->where('challenged_id', $challenger->id);
             })
-            ->whereIn('status', ['pending', 'accepted', 'scheduled', 'live'])
+            ->whereIn('status', ['pending', 'accepted', 'scheduled', 'live']) // ← 'ended' et 'refused' exclus
             ->first();
 
         if ($existing) {
