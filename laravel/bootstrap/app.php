@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.sanctum' => EnsureFrontendRequestsAreStateful::class,
         ]);
+        $middleware->redirectGuestsTo(fn() => null);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Throwable $e, $request) {
