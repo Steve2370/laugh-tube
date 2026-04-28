@@ -40,6 +40,10 @@ const getNotificationText = (type) => {
         mention: 'vous a mentionné',
         reply: 'a répondu à votre commentaire',
         video_upload: 'a publié une nouvelle vidéo',
+        live: 'est actuellement en direct',
+        battle_challenge: 'vous provoque en duel',
+        battle_accepted: 'a accepté votre défi',
+        battle_scheduled: 'a programmé une battle',
     };
     return texts[type] || 'vous a notifié';
 };
@@ -225,7 +229,7 @@ const Notifications = () => {
                                             <p className="text-sm text-gray-900 leading-snug">
                                                 <span className="font-semibold">{notification.actor_name}</span>
                                                 {' '}
-                                                {getNotificationText(notification.type)}
+                                                {getNotificationText(notification)}
                                             </p>
 
                                             {notification.video_title && (

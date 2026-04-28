@@ -28,7 +28,7 @@ const Avatar = ({ url, username, size = 'md' }) => {
     return url ? (
         <img src={url} alt={username} className={`${sizes[size]} rounded-full object-cover`} />
     ) : (
-        <div className={`${sizes[size]} rounded-full bg-purple-600 flex items-center justify-center text-white font-bold`}>
+        <div className={`${sizes[size]} rounded-full bg-gray-600 flex items-center justify-center text-white font-bold`}>
             {username?.charAt(0).toUpperCase()}
         </div>
     );
@@ -216,11 +216,11 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
                     </div>
                     <div className="flex rounded-full overflow-hidden h-3">
                         <div className="bg-blue-500 transition-all duration-500" style={{ width: `${challengerPct}%` }} />
-                        <div className="bg-purple-500 transition-all duration-500" style={{ width: `${challengedPct}%` }} />
+                        <div className="bg-gray-500 transition-all duration-500" style={{ width: `${challengedPct}%` }} />
                     </div>
                     <div className="flex justify-between mt-1">
                         <span className="text-blue-400 text-xs font-bold">{challengerPct}%</span>
-                        <span className="text-purple-400 text-xs font-bold">{challengedPct}%</span>
+                        <span className="text-gray-400 text-xs font-bold">{challengedPct}%</span>
                     </div>
                 </div>
             </div>
@@ -348,9 +348,10 @@ const BattleRoom = () => {
     const handleSchedule = async (battleId) => {
         if (!scheduleDate) return;
         try {
+            const formatted = scheduleDate.replace('T', ' ') + ':00';
             await apiService.requestV2(`/battles/${battleId}/schedule`, {
                 method: 'POST',
-                body: JSON.stringify({ scheduled_at: scheduleDate }),
+                body: JSON.stringify({ scheduled_at: formatted }),
             });
             toast.success('Battle programmée ! Les abonnés ont été notifiés ⚔️');
             setSchedulingId(null);
@@ -369,7 +370,6 @@ const BattleRoom = () => {
         refused: { text: 'Refusé', color: 'bg-red-100 text-red-400' },
     }[status] || { text: status, color: 'bg-gray-100 text-gray-600' });
 
-    // Vue live
     if (token && currentBattle) {
         const isParticipant = user?.id === currentBattle.challenger_id || user?.id === currentBattle.challenged_id;
         return (
@@ -392,13 +392,13 @@ const BattleRoom = () => {
     }
 
     return (
-        <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 via-white to-purple-50">
+        <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 via-white to-gray-50">
             <div className="max-w-4xl mx-auto px-4 py-8">
 
                 {/* Header */}
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-purple-600 rounded-xl shadow-lg">
+                        <div className="p-3 bg-gray-600 rounded-xl shadow-lg">
                             <Swords size={28} className="text-white" />
                         </div>
                         <div>
@@ -413,13 +413,13 @@ const BattleRoom = () => {
                     <div className="flex gap-2 mb-6">
                         <button
                             onClick={() => setTab('battles')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'battles' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'battles' ? 'bg-gray-600 text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
                         >
                             Battles publiques
                         </button>
                         <button
                             onClick={() => { setTab('my'); loadMyBattles(); }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'my' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'my' ? 'bg-gray-600 text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
                         >
                             Mes battles
                             {myBattles.filter(b => b.status === 'pending' && b.challenged_id === user?.id).length > 0 && (
@@ -435,14 +435,14 @@ const BattleRoom = () => {
                 {tab === 'battles' && (
                     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-                            <Swords size={18} className="text-purple-600" />
+                            <Swords size={18} className="text-gray-600" />
                             <h2 className="font-bold text-gray-700">Battles en cours & à venir</h2>
                             <span className="ml-auto text-sm text-gray-400">{battles.length} battle{battles.length !== 1 ? 's' : ''}</span>
                         </div>
 
                         {loading ? (
                             <div className="flex items-center justify-center py-16">
-                                <Loader size={32} className="animate-spin text-purple-500" />
+                                <Loader size={32} className="animate-spin text-gray-500" />
                             </div>
                         ) : battles.length === 0 ? (
                             <div className="text-center py-16 px-4">
@@ -466,15 +466,15 @@ const BattleRoom = () => {
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col items-center gap-1">
-                                                    <div className="bg-purple-100 rounded-full p-2">
-                                                        <Swords size={16} className="text-purple-600" />
+                                                    <div className="bg-gray-100 rounded-full p-2">
+                                                        <Swords size={16} className="text-gray-600" />
                                                     </div>
                                                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.color}`}>{s.text}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 flex-1 justify-end">
                                                     <div className="text-right">
                                                         <p className="font-bold text-gray-900 text-sm">{battle.challenged_username}</p>
-                                                        <p className="text-purple-600 font-bold text-xs">{battle.challenged_score} pts</p>
+                                                        <p className="text-gray-600 font-bold text-xs">{battle.challenged_score} pts</p>
                                                     </div>
                                                     <Avatar url={getAvatarUrl(battle.challenged_avatar)} username={battle.challenged_username} />
                                                 </div>
@@ -482,8 +482,8 @@ const BattleRoom = () => {
 
                                             {/* Countdown ou bouton */}
                                             {battle.status === 'scheduled' && (
-                                                <div className="flex items-center justify-between bg-purple-50 rounded-xl px-4 py-2">
-                                                    <div className="flex items-center gap-2 text-purple-700">
+                                                <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2">
+                                                    <div className="flex items-center gap-2 text-gray-700">
                                                         <Clock size={14} />
                                                         <span className="text-sm">Dans :</span>
                                                         <Countdown scheduledAt={battle.scheduled_at} />
@@ -491,7 +491,7 @@ const BattleRoom = () => {
                                                     {(user?.id === battle.challenger_id) && (
                                                         <button
                                                             onClick={() => handleStart(battle)}
-                                                            className="flex items-center gap-1.5 bg-purple-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs"
+                                                            className="flex items-center gap-1.5 bg-gray-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs"
                                                         >
                                                             <Play size={12} /> Démarrer
                                                         </button>
@@ -499,7 +499,7 @@ const BattleRoom = () => {
                                                     {user?.id !== battle.challenger_id && user?.id !== battle.challenged_id && (
                                                         <button
                                                             onClick={() => handleJoin(battle)}
-                                                            className="flex items-center gap-1.5 bg-purple-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs"
+                                                            className="flex items-center gap-1.5 bg-gray-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs"
                                                         >
                                                             <Users size={12} /> M'avertir
                                                         </button>
@@ -550,8 +550,8 @@ const BattleRoom = () => {
                                             <div className="flex items-center gap-3 mb-3">
                                                 <Avatar url={getAvatarUrl(battle.challenger_avatar)} username={battle.challenger_username} size="sm" />
                                                 <span className="text-gray-500 text-sm font-medium">{battle.challenger_username}</span>
-                                                <div className="bg-purple-100 rounded-full p-1">
-                                                    <Swords size={12} className="text-purple-600" />
+                                                <div className="bg-gray-100 rounded-full p-1">
+                                                    <Swords size={12} className="text-gray-600" />
                                                 </div>
                                                 <span className="text-gray-500 text-sm font-medium">{battle.challenged_username}</span>
                                                 <Avatar url={getAvatarUrl(battle.challenged_avatar)} username={battle.challenged_username} size="sm" />
@@ -563,7 +563,7 @@ const BattleRoom = () => {
                                                     <Calendar size={12} />
                                                     <span>{new Date(battle.scheduled_at).toLocaleString('fr-FR')}</span>
                                                     {battle.status === 'scheduled' && (
-                                                        <span className="ml-2 font-bold text-purple-600">
+                                                        <span className="ml-2 font-bold text-gray-600">
                                                             <Countdown scheduledAt={battle.scheduled_at} />
                                                         </span>
                                                     )}
@@ -605,11 +605,11 @@ const BattleRoom = () => {
                                                                 type="datetime-local"
                                                                 value={scheduleDate}
                                                                 onChange={e => setScheduleDate(e.target.value)}
-                                                                className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                                className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
                                                             />
                                                             <button
                                                                 onClick={() => handleSchedule(battle.id)}
-                                                                className="bg-purple-600 text-white font-bold px-4 py-2 rounded-xl text-sm"
+                                                                className="bg-gray-600 text-white font-bold px-4 py-2 rounded-xl text-sm"
                                                             >
                                                                 Confirmer
                                                             </button>
@@ -623,7 +623,7 @@ const BattleRoom = () => {
                                                     ) : (
                                                         <button
                                                             onClick={() => setSchedulingId(battle.id)}
-                                                            className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all"
+                                                            className="flex items-center gap-1.5 bg-gray-600 hover:bg-gray-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all"
                                                         >
                                                             <Calendar size={14} /> Programmer la battle
                                                         </button>
