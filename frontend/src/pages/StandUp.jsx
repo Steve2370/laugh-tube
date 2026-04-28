@@ -378,8 +378,8 @@ const StandUp = () => {
                             <Mic size={28} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white-900">Stand-Up Live</h1>
-                            <p className="text-sm text-white-500 mt-0.5">Performances en direct</p>
+                            <h1 className="text-3xl font-bold text-white">Stand-Up Live</h1>
+                            <p className="text-sm text-gray-300 mt-0.5">Performances en direct</p>
                         </div>
                     </div>
                     {isAuthenticated && (
