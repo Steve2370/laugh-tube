@@ -153,16 +153,15 @@ const StandUp = () => {
                 connect={true}
                 video={isStreaming}
                 audio={isStreaming}
-                style={{ height: '100vh', background: '#000' }}
-                onConnected={(room) => {
-                    if (!isStreaming) {
-                        room.remoteParticipants.forEach(participant => {
-                            participant.audioTrackPublications.forEach(pub => {
-                                pub.track?.attach();
-                            });
-                        });
-                    }
+                options={{
+                    audioCaptureDefaults: {
+                        echoCancellation: true,
+                    },
+                    publishDefaults: {
+                        simulcast: false,
+                    },
                 }}
+                style={{ height: '100vh', background: '#000' }}
             >
                 <TikTokLiveView
                     isStreaming={isStreaming}
