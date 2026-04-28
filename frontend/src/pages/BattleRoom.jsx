@@ -90,7 +90,7 @@ const BattleEmojiPicker = ({ onSend }) => {
     );
 };
 
-const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop }) => {
+const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onLeave }) => {
     const [scores, setScores] = useState({
         challenger: battle.challenger_score || 0,
         challenged: battle.challenged_score || 0,
@@ -386,12 +386,14 @@ const BattleRoom = () => {
     const handleStop = async () => {
         try {
             await apiService.requestV2(`/battles/${currentBattle.id}/stop`, { method: 'POST' });
+        } catch { }
+        finally {
             setToken(null);
             setCurrentBattle(null);
             toast.success('Battle terminée !');
             loadBattles();
             loadMyBattles();
-        } catch { toast.error('Erreur'); }
+        }
     };
 
     const handleRespond = async (battleId, action) => {
