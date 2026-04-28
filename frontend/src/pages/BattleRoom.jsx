@@ -225,7 +225,6 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
                 </div>
             </div>
 
-            {/* Commentaires */}
             <div className="absolute left-4 right-4 flex flex-col gap-1 z-10" style={{ bottom: '90px', maxHeight: '150px', overflow: 'hidden' }}>
                 {comments.slice(-6).map(c => (
                     <div key={c.id} className="flex items-start gap-2">
@@ -236,7 +235,6 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
                 <div ref={commentsEndRef} />
             </div>
 
-            {/* Barre bas */}
             <div className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-2 z-30 flex gap-2">
                 <input
                     type="text"
@@ -430,7 +428,6 @@ const BattleRoom = () => {
                     </div>
                 )}
 
-                {/* Battles publiques */}
                 {tab === 'battles' && (
                     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
@@ -455,7 +452,6 @@ const BattleRoom = () => {
                                     const s = statusLabel(battle.status);
                                     return (
                                         <div key={battle.id} className="px-6 py-5">
-                                            {/* VS */}
                                             <div className="flex items-center gap-4 mb-3">
                                                 <div className="flex items-center gap-2 flex-1">
                                                     <Avatar url={getAvatarUrl(battle.challenger_avatar)} username={battle.challenger_username} />
@@ -479,7 +475,6 @@ const BattleRoom = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Countdown ou bouton */}
                                             {battle.status === 'scheduled' && (
                                                 <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2">
                                                     <div className="flex items-center gap-2 text-gray-700">
@@ -524,7 +519,6 @@ const BattleRoom = () => {
                     </div>
                 )}
 
-                {/* Mes battles */}
                 {tab === 'my' && isAuthenticated && (
                     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
@@ -578,7 +572,6 @@ const BattleRoom = () => {
                                                 </div>
                                             )}
 
-                                            {/* Actions */}
                                             {isPending && (
                                                 <div className="flex gap-2">
                                                     <button
