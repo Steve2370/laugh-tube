@@ -146,6 +146,7 @@ class LiveController extends Controller
             ->setRoomJoin(true)
             ->setRoomName($roomName)
             ->setCanPublish($isPublisher)
+            ->setCanPublishData(true)
             ->setCanSubscribe(true);
 
         $token = (new AccessToken($this->apiKey, $this->apiSecret))
