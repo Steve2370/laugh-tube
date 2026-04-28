@@ -93,7 +93,6 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
             });
             setScores({ challenger: res.challenger_score, challenged: res.challenged_score });
             setMyVote(targetId);
-            // Broadcast les scores
             try {
                 send(new TextEncoder().encode(JSON.stringify({
                     type: 'scores',
@@ -240,7 +239,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, onStop }) => {
                 <button onClick={sendComment} className="bg-blue-500 text-white font-bold px-4 py-2.5 rounded-full text-sm">
                     Envoyer
                 </button>
-                {isParticipant && userId === battle.challenger_id && (
+                {isParticipant && (
                     <button onClick={onStop} className="bg-red-600 text-white font-bold px-4 py-2.5 rounded-full text-sm flex items-center gap-1">
                         <X size={14} /> Terminer
                     </button>
@@ -291,17 +290,26 @@ const BattleRoom = () => {
         }
     }, []);
 
+    const audioRef = useRef(null);
+
     useEffect(() => {
         const audio = new Audio('/sounds/Battle.mp3');
         audio.loop = true;
         audio.volume = 0.3;
         audio.play().catch(() => {});
+        audioRef.current = audio;
 
         return () => {
             audio.pause();
             audio.src = '';
         };
     }, []);
+
+    useEffect(() => {
+        if (token && audioRef.current) {
+            audioRef.current.pause();
+        }
+    }, [token]);
 
     const handleJoin = async (battle) => {
         if (!isAuthenticated) { window.location.hash = '#/login'; return; }
