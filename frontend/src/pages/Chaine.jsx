@@ -15,7 +15,7 @@ import {
     Swords
 } from 'lucide-react';
 
-const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser }) => {
+const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, challenged, setChallenged, toast }) => {
     const getAvatarUrl = () => {
         if (!channelUser?.avatar_url || channelUser.avatar_url.includes('default')) return null;
         if (channelUser.avatar_url.startsWith('http')) return channelUser.avatar_url;
