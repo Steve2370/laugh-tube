@@ -199,7 +199,7 @@ class BattleController extends Controller
             ->select(
                 'battles.id',
                 'battles.status',
-                'battles.scheduledAt',
+                'battles.scheduled_at',
                 'battles.challenger_id',
                 'battles.challenged_id',
                 'battles.challenger_score',

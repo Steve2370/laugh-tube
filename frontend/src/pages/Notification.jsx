@@ -40,10 +40,6 @@ const getNotificationText = (type) => {
         mention: 'vous a mentionné',
         reply: 'a répondu à votre commentaire',
         video_upload: 'a publié une nouvelle vidéo',
-        live: 'est actuellement en direct',
-        battle_challenge: 'vous provoque en duel',
-        battle_accepted: 'a accepté votre défi',
-        battle_scheduled: 'a programmé une battle',
     };
     if (notification.message) return notification.message;
     return texts[notification.type] || 'vous a notifié';
