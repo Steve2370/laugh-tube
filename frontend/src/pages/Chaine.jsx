@@ -88,7 +88,7 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser }) => 
                                         toast.error('Erreur lors de l\'envoi du défi');
                                     }
                                 }}
-                                className="flex items-center gap-2 bg-black-600 hover:bg-black-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95"
+                                className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all active:scale-95"
                             >
                                 <Swords size={16} />
                                 Défier
