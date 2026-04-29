@@ -76,8 +76,8 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar,
                 setComments(prev => [...prev.slice(-50), {
                     id: Date.now() + Math.random(),
                     type: 'join',
-                    username: 'Système',
-                    text: `${p.name} a rejoint le live`,
+                    username: p.name || p.identity || 'Anonyme',
+                    text: `a rejoint le live`,
                     avatar: null,
                 }]);
             }
