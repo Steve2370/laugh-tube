@@ -42,7 +42,7 @@ class BattleController extends Controller
             ->orWhere(function ($q) use ($challenger, $challengedId) {
                 $q->where('challenger_id', $challengedId)->where('challenged_id', $challenger->id);
             })
-            ->whereIn('status', ['pending', 'accepted', 'scheduled', 'live']) // ← 'ended' et 'refused' exclus
+            ->whereIn('status', ['pending', 'accepted', 'scheduled', 'live'])
             ->first();
 
         if ($existing) {
@@ -68,6 +68,7 @@ class BattleController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Défi envoyé !',
             'battle_id' => $battleId,
         ]);
@@ -77,8 +78,12 @@ class BattleController extends Controller
     {
         $request->validate(['action' => 'required|in:accept,refuse']);
 
-        $user = $request->user();
-        $battle = DB::table('battles')->where('id', $battleId)->where('challenged_id', $user->id)->where('status', 'pending')->first();
+        $user   = $request->user();
+        $battle = DB::table('battles')
+            ->where('id', $battleId)
+            ->where('challenged_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
 
         if (!$battle) {
             return response()->json(['error' => 'Défi introuvable'], 404);
@@ -86,7 +91,7 @@ class BattleController extends Controller
 
         if ($request->action === 'refuse') {
             DB::table('battles')->where('id', $battleId)->update(['status' => 'refused', 'updated_at' => now()]);
-            return response()->json(['message' => 'Défi refusé']);
+            return response()->json(['success' => true, 'message' => 'Défi refusé']);
         }
 
         DB::table('battles')->where('id', $battleId)->update(['status' => 'accepted', 'updated_at' => now()]);
@@ -101,7 +106,7 @@ class BattleController extends Controller
             'created_at' => now(),
         ]);
 
-        return response()->json(['message' => 'Défi accepté !', 'battle_id' => $battleId]);
+        return response()->json(['success' => true, 'message' => 'Défi accepté !', 'battle_id' => $battleId]);
     }
 
     public function schedule(Request $request, int $battleId): JsonResponse
@@ -110,8 +115,9 @@ class BattleController extends Controller
         $scheduledAt = str_replace('T', ' ', $request->scheduled_at);
         if (strlen($scheduledAt) === 16) $scheduledAt .= ':00';
 
-        $user = $request->user();
-        $battle = DB::table('battles')->where('id', $battleId)
+        $user   = $request->user();
+        $battle = DB::table('battles')
+            ->where('id', $battleId)
             ->where(function ($q) use ($user) {
                 $q->where('challenger_id', $user->id)->orWhere('challenged_id', $user->id);
             })
@@ -134,7 +140,7 @@ class BattleController extends Controller
             'actor_id' => $user->id,
             'actor_name' => $user->username,
             'type' => 'battle_scheduled',
-            'message' => 'La battle a été programmée pour le ' . date('d/m/Y à H:i', strtotime($request->scheduledAt)),
+            'message' => 'La battle a été programmée pour le ' . date('d/m/Y à H:i', strtotime($scheduledAt)),
             'is_read' => false,
             'created_at' => now(),
         ]);
@@ -154,13 +160,13 @@ class BattleController extends Controller
                 'actor_id' => $user->id,
                 'actor_name' => $user->username,
                 'type' => 'battle_scheduled',
-                'message' => " {$challenger->username} vs {$challenged->username} — Battle programmée !",
+                'message' => "{$challenger->username} vs {$challenged->username} — Battle programmée !",
                 'is_read' => false,
                 'created_at' => now(),
             ]);
         }
 
-        return response()->json(['message' => 'Battle programmée !']);
+        return response()->json(['success' => true, 'message' => 'Battle programmée !']);
     }
 
     public function index(): JsonResponse
@@ -177,6 +183,7 @@ class BattleController extends Controller
                 'battles.challenged_score',
                 'battles.challenger_id',
                 'battles.challenged_id',
+                'battles.winner_id',
                 'c.username as challenger_username',
                 'c.avatar_url as challenger_avatar',
                 'd.username as challenged_username',
@@ -195,12 +202,15 @@ class BattleController extends Controller
         $battles = DB::table('battles')
             ->join('users as c', 'battles.challenger_id', '=', 'c.id')
             ->join('users as d', 'battles.challenged_id', '=', 'd.id')
-            ->where('battles.challenger_id', $user->id)
-            ->orWhere('battles.challenged_id', $user->id)
+            ->where(function ($q) use ($user) {
+                $q->where('battles.challenger_id', $user->id)
+                    ->orWhere('battles.challenged_id', $user->id);
+            })
             ->select(
                 'battles.id',
                 'battles.status',
                 'battles.scheduled_at',
+                'battles.started_at',
                 'battles.challenger_id',
                 'battles.challenged_id',
                 'battles.challenger_score',
@@ -217,14 +227,14 @@ class BattleController extends Controller
         return response()->json(['battles' => $battles]);
     }
 
-
     /**
      * @throws \Exception
      */
     public function start(Request $request, int $battleId): JsonResponse
     {
         $user = $request->user();
-        $battle = DB::table('battles')->where('id', $battleId)
+        $battle = DB::table('battles')
+            ->where('id', $battleId)
             ->where('challenger_id', $user->id)
             ->whereIn('status', ['scheduled', 'accepted'])
             ->first();
@@ -247,10 +257,6 @@ class BattleController extends Controller
         return response()->json(['token' => $token, 'room_name' => $roomName]);
     }
 
-
-    /**
-     * @throws \Exception
-     */
     public function join(Request $request, int $battleId): JsonResponse
     {
         $user = $request->user();
@@ -261,7 +267,7 @@ class BattleController extends Controller
         }
 
         $isParticipant = $user->id === $battle->challenger_id || $user->id === $battle->challenged_id;
-        $token = $this->generateToken($battle->room_name, $user->id, $user->username, $isParticipant);
+        $token  = $this->generateToken($battle->room_name, $user->id, $user->username, $isParticipant);
 
         return response()->json(['token' => $token, 'room_name' => $battle->room_name]);
     }
@@ -281,9 +287,9 @@ class BattleController extends Controller
         }
 
         $points = match($request->emoji) {
+            '👑' => 5,
             '🔥' => 3,
             '😂' => 2,
-            '👑' => 5,
             default => 1,
         };
 
@@ -302,6 +308,7 @@ class BattleController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'challenger_score' => $challengerScore,
             'challenged_score' => $challengedScore,
         ]);
@@ -312,9 +319,8 @@ class BattleController extends Controller
         $user = $request->user();
         $battle = DB::table('battles')
             ->where('id', $battleId)
-            ->where(function($q) use ($user) {
-                $q->where('challenger_id', $user->id)
-                    ->orWhere('challenged_id', $user->id);
+            ->where(function ($q) use ($user) {
+                $q->where('challenger_id', $user->id)->orWhere('challenged_id', $user->id);
             })
             ->where('status', 'live')
             ->first();
@@ -334,7 +340,7 @@ class BattleController extends Controller
             'updated_at' => now(),
         ]);
 
-        return response()->json(['message' => 'Battle terminée', 'winner_id' => $winnerId]);
+        return response()->json(['success' => true, 'message' => 'Battle terminée', 'winner_id' => $winnerId]);
     }
 
     /**
