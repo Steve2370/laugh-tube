@@ -205,6 +205,8 @@ const Chaine = () => {
     }, []);
 
     useEffect(() => {
+        setChallenged(false);
+
         if (currentUser && channelUser?.id && currentUser.id !== channelUser.id) {
             apiService.requestV2('/battles/my')
                 .then(r => {
@@ -215,9 +217,10 @@ const Chaine = () => {
                     );
                     setChallenged(!!active);
                 })
-                .catch(() => {});
+                .catch(() => setChallenged(false));
         }
-    }, [currentUser, channelUser?.id]);
+    }, [currentUser?.id, channelUser?.id]);
+
 
     useEffect(() => {
         if (videos.length > 0) {
