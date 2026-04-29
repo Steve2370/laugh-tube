@@ -35,6 +35,7 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar,
     const commentsEndRef = useRef(null);
     const { localParticipant } = useLocalParticipant();
     const participants = useParticipants();
+    const prevParticipantsRef = useRef([]);
 
     const tracks = useTracks([
         { source: Track.Source.Camera, withPlaceholder: false },
@@ -64,6 +65,26 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar,
     useEffect(() => {
         commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [comments]);
+
+    useEffect(() => {
+        const prev = prevParticipantsRef.current;
+        const current = participants;
+
+        current.forEach(p => {
+            const wasHere = prev.find(pp => pp.identity === p.identity);
+            if (!wasHere && p.name) {
+                setComments(prev => [...prev.slice(-50), {
+                    id: Date.now() + Math.random(),
+                    type: 'join',
+                    username: 'Système',
+                    text: `${p.name} a rejoint le live`,
+                    avatar: null,
+                }]);
+            }
+        });
+
+        prevParticipantsRef.current = current;
+    }, [participants]);
 
     const sendComment = useCallback(() => {
         if (!commentInput.trim()) return;
@@ -205,15 +226,21 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar,
             <div className="absolute left-4 right-4 flex flex-col gap-1" style={{ bottom: '130px', zIndex: 10, maxHeight: '200px', overflow: 'hidden' }}>
                 {comments.slice(-8).map(c => (
                     <div key={c.id} className="flex items-center gap-2">
-                        {c.avatar ? (
-                            <img src={c.avatar} alt={c.username} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                        {c.type === 'join' ? (
+                            <span className="text-green-400 text-xs italic">{c.text}</span>
                         ) : (
-                            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                {c.username?.charAt(0).toUpperCase()}
-                            </div>
+                            <>
+                                {c.avatar ? (
+                                    <img src={c.avatar} alt={c.username} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                                ) : (
+                                    <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                        {c.username?.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                                <span className="text-yellow-400 font-bold text-xs shrink-0">{c.username}</span>
+                                <span className="text-white text-xs">{c.text}</span>
+                            </>
                         )}
-                        <span className="text-yellow-400 font-bold text-xs shrink-0">{c.username}</span>
-                        <span className="text-white text-xs">{c.text}</span>
                     </div>
                 ))}
                 <div ref={commentsEndRef} />
