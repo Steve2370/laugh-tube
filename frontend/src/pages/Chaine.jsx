@@ -212,8 +212,8 @@ const Chaine = () => {
                 .then(r => {
                     const active = (r.battles || []).find(b =>
                         ['pending', 'accepted', 'scheduled', 'live'].includes(b.status) &&
-                        ((b.challenger_id === currentUser.id && b.challenged_id === channelUser.id) ||
-                            (b.challenger_id === channelUser.id && b.challenged_id === currentUser.id))
+                        ((Number(b.challenger_id) === Number(currentUser.id) && Number(b.challenged_id) === Number(channelUser.id)) ||
+                            (Number(b.challenger_id) === Number(channelUser.id) && Number(b.challenged_id) === Number(currentUser.id)))
                     );
                     setChallenged(!!active);
                 })
