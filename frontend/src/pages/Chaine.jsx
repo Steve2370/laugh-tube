@@ -205,6 +205,21 @@ const Chaine = () => {
     }, []);
 
     useEffect(() => {
+        if (currentUser && channelUser?.id && currentUser.id !== channelUser.id) {
+            apiService.requestV2('/battles/my')
+                .then(r => {
+                    const active = (r.battles || []).find(b =>
+                        ['pending', 'accepted', 'scheduled', 'live'].includes(b.status) &&
+                        ((b.challenger_id === currentUser.id && b.challenged_id === channelUser.id) ||
+                            (b.challenger_id === channelUser.id && b.challenged_id === currentUser.id))
+                    );
+                    setChallenged(!!active);
+                })
+                .catch(() => {});
+        }
+    }, [currentUser, channelUser?.id]);
+
+    useEffect(() => {
         if (videos.length > 0) {
             calculateStats();
         }
