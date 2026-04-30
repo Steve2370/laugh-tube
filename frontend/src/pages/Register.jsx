@@ -185,7 +185,7 @@ const Register = () => {
                                 </div>
                                 <input
                                     type="text"
-                                    placeholder="LaughTale"
+                                    placeholder="LaughTube"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -211,7 +211,7 @@ const Register = () => {
                                 </div>
                                 <input
                                     type="email"
-                                    placeholder="laughtale@email.com"
+                                    placeholder="laughtube@email.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
