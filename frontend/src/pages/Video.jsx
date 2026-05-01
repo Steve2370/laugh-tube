@@ -457,12 +457,16 @@ const Video = () => {
             const id = video.author_id || video.auteur_id || video.user_id;
             setAuteurId(id);
             if (id) {
-                const avatarUrl = video.avatar_url;
-                if (avatarUrl) {
-                    setAuteurImage(avatarUrl.startsWith('http') ? avatarUrl : `/uploads/profiles/${avatarUrl}`);
-                } else {
-                    setAuteurImage('/default-avatar.png');
-                }
+                apiService.requestV2(`/users/${id}/profile`)
+                    .then(r => {
+                        const avatarUrl = r.profile?.avatar_url || r.data?.avatar_url;
+                        if (avatarUrl) {
+                            setAuteurImage(avatarUrl.startsWith('http') ? avatarUrl : `/uploads/profiles/${avatarUrl}`);
+                        } else {
+                            setAuteurImage('/default-avatar.png');
+                        }
+                    })
+                    .catch(() => setAuteurImage('/default-avatar.png'));
             }
         }
     }, [video]);
