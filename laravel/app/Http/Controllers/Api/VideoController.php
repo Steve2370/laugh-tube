@@ -78,7 +78,7 @@ class VideoController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $video = Video::with('user:id,username')
+        $video = Video::with('user:id,username,avatar_url')
             ->whereNull('deleted_at')
             ->findOrFail($id);
 
@@ -114,6 +114,7 @@ class VideoController extends Controller
             'views' => $video->views,
             'created_at' => $video->created_at,
             'username' => $video->user?->username,
+            'avatar_url' => $video->user?->avatar_url,
             'user_id' => $video->user_id,
             'recent_views' => $video->recent_views ?? null,
             'recent_likes' => $video->recent_likes ?? null,
