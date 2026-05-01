@@ -46,13 +46,14 @@ const NotificationDropdown = () => {
         if (!notification.is_read) {
             await markAsRead(notification.id);
         }
+        setIsOpen(false);
 
         if (notification.video_id) {
             try {
                 const video = await apiService.getVideoById(notification.video_id);
                 localStorage.setItem('currentVideo', JSON.stringify(video));
-                navigateTo('video');
-            } catch (error) {
+                window.location.hash = `#/video/${notification.video_id}`;
+            } catch {
                 toast.error('Erreur lors du chargement de la vidéo');
             }
         } else if (notification.type === 'subscribe' && notification.actor_id) {
@@ -61,9 +62,11 @@ const NotificationDropdown = () => {
                 username: notification.actor_name || ''
             }));
             navigateTo('chaine');
+        } else if (notification.type === 'battle_challenge' || notification.type === 'battle_accepted' || notification.type === 'battle_scheduled') {
+            navigateTo('battleroom');
+        } else if (notification.type === 'live') {
+            navigateTo('standup');
         }
-
-        setIsOpen(false);
     };
 
     const handleMarkAllAsRead = async () => {
@@ -196,8 +199,19 @@ const NotificationDropdown = () => {
                                         }`}
                                     >
                                         <div className="flex gap-3">
-                                            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
-                                                {getNotificationIcon(notification.type)}
+                                            <div className="flex-shrink-0 relative">
+                                                <img
+                                                    src={notification.actor_avatar
+                                                        ? (notification.actor_avatar.startsWith('http') ? notification.actor_avatar : `/uploads/profiles/${notification.actor_avatar}`)
+                                                        : '/default-avatar.png'
+                                                    }
+                                                    alt={notification.actor_name}
+                                                    className="w-10 h-10 rounded-full object-cover bg-white"
+                                                    onError={(e) => { e.target.src = '/default-avatar.png'; }}
+                                                />
+                                                <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
+                                                    {getNotificationIcon(notification.type)}
+                                                </div>
                                             </div>
 
                                             <div className="flex-1 min-w-0">
