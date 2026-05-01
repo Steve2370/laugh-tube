@@ -297,7 +297,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                     className="flex-1 bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-gray-300 px-4 py-2.5 rounded-full text-sm focus:outline-none"
                 />
                 <BattleEmojiPicker onSend={(emoji) => {
-                    const data = { type: 'comment', text: emoji, username: localParticipant?.name || 'Anonyme', avatar: null };
+                    const data = { type: 'comment', text: emoji, username: localParticipant?.name || 'Anonyme', avatar: userAvatar || null };
                     try { send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true }); } catch {}
                     setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
                 }} />
