@@ -20,6 +20,7 @@ class NotificationController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->offset($offset)
+            ->select('notifications.*', 'users.avatar_url as actor_avatar')
             ->get();
 
         $unreadCount = DB::table('notifications')
