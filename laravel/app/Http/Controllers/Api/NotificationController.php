@@ -16,8 +16,9 @@ class NotificationController extends Controller
         $offset = (int) $request->get('offset', 0);
 
         $notifications = DB::table('notifications')
-            ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
+            ->leftJoin('users', 'notifications.actor_id', '=', 'users.id')
+            ->where('notifications.user_id', $user->id)
+            ->orderBy('notifications.created_at', 'desc')
             ->limit($limit)
             ->offset($offset)
             ->select('notifications.*', 'users.avatar_url as actor_avatar')
