@@ -143,8 +143,8 @@ const ReplyItem = ({ reply, isAuthenticated, userId, onUserClick, onReply }) => 
         return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     };
 
-    const avatarUrl = reply.user_id
-        ? `/api/users/${reply.user_id}/profile-image`
+    const avatarUrl = reply.avatar_url
+        ? (reply.avatar_url.startsWith('http') ? reply.avatar_url : `/uploads/profiles/${reply.avatar_url}`)
         : null;
 
     return (
@@ -286,9 +286,10 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
         return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     };
 
-    const avatarUrl = comment.user_id
-        ? `/api/users/${comment.user_id}/profile-image`
+    const avatarUrl = comment.avatar_url
+        ? (comment.avatar_url.startsWith('http') ? comment.avatar_url : `/uploads/profiles/${comment.avatar_url}`)
         : null;
+
     const replyCount = comment.reply_count || replies.length || 0;
 
     return (
@@ -798,8 +799,8 @@ const Video = () => {
                             {isAuthenticated ? (
                                 <div className="mb-6">
                                     <form onSubmit={handleCommentSubmit} className="flex items-start gap-3">
-                                        {user && (getProfileImage(user.id) || user.avatar_url) ? (
-                                            <img src={auteurImage} alt="Votre photo" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                                        {user?.avatar_url ? (
+                                            <img src={user.avatar_url.startsWith('http') ? user.avatar_url : `/uploads/profiles/${user.avatar_url}`} alt="Votre photo" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
                                         ) : (
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
                                                 <User size={18} className="text-white" />

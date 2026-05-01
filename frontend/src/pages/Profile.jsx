@@ -4,6 +4,7 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import { useAbonnement } from '../hooks/useAbonnement';
 import apiService from '../services/apiService.js';
 import VideoCard from '../components/VideoCard.jsx';
+import { getAvatarUrl } from '../utils/avatar';
 
 import {
     User,
