@@ -49,10 +49,16 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     useEffect(() => {
         if (!authUser?.id) return;
         setBioDraft(authUser.bio || '');
-        setAvatarPreview(authUser.avatar_url && !authUser.avatar_url.includes('default')
-            ? `/uploads/profiles/${authUser.avatar_url}`
-            : '/images/default-avatar.svg'
-        );
+        if (authUser.avatar_url && !authUser.avatar_url.includes('default')) {
+            setAvatarPreview(
+                authUser.avatar_url.startsWith('http')
+                    ? authUser.avatar_url
+                    : `/uploads/profiles/${authUser.avatar_url}`
+            );
+        } else {
+            setAvatarPreview('/default-avatar.png');
+        }
+
         setCoverPreview(authUser.cover_url && !authUser.cover_url.includes('default')
             ? `/uploads/profiles/${authUser.cover_url}`
             : '/images/default-cover.svg'
@@ -109,7 +115,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
                     : `${window.location.origin}${authUser.avatar_url}`;
                 setAvatarPreview(avatarUrl);
             } else {
-                setAvatarPreview('/images/default-avatar.svg');
+                setAvatarPreview('/default-avatar.png');
             }
         } finally {
             setUploadingAvatar(false);
@@ -176,7 +182,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
     const handleDeleteAvatar = async () => {
         try {
             await apiService.request(`/users/${authUser.id}/avatar`, { method: 'DELETE' });
-            setAvatarPreview('/images/default-avatar.svg');
+            setAvatarPreview('/default-avatar.png');
             updateUser({ avatar_url: null });
             toast.success('Avatar supprimé');
         } catch (err) {

@@ -457,8 +457,12 @@ const Video = () => {
             const id = video.author_id || video.auteur_id || video.user_id;
             setAuteurId(id);
             if (id) {
-                const localImage = localStorage.getItem(`profileImage_${id}`);
-                setAuteurImage(localImage || apiService.getProfileImageUrl(id));
+                const avatarUrl = video.avatar_url;
+                if (avatarUrl) {
+                    setAuteurImage(avatarUrl.startsWith('http') ? avatarUrl : `/uploads/profiles/${avatarUrl}`);
+                } else {
+                    setAuteurImage('/default-avatar.png');
+                }
             }
         }
     }, [video]);
@@ -775,7 +779,12 @@ const Video = () => {
                                         className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
                                     >
                                         {auteurImage ? (
-                                            <img src={auteurImage} alt={`Photo de profil de ${video.auteur}`} className="w-10 h-10 rounded-full object-cover border-2 border-gray-300" />
+                                            <img
+                                                src={auteurImage || '/default-avatar.png'}
+                                                alt={`Photo de profil de ${video.auteur}`}
+                                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 bg-white"
+                                                onError={(e) => { e.target.src = '/default-avatar.png'; }}
+                                            />
                                         ) : (
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
                                                 <User size={18} className="text-white" />
