@@ -88,7 +88,6 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, chall
                                         const msg = err?.message || '';
                                         if (msg.includes('400') || msg.includes('déjà')) {
                                             toast.error('Un défi est déjà en cours avec cet utilisateur');
-                                            setChallenged(true);
                                         } else {
                                             toast.error('Erreur lors de l\'envoi du défi');
                                         }
@@ -185,6 +184,7 @@ const Chaine = () => {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [challenged, setChallenged] = useState(false);
+    const [battleCheckTime, setBattleCheckTime] = useState(Date.now());
     const [stats, setStats] = useState({
         totalVideos: 0,
         totalViews: 0,
@@ -219,7 +219,7 @@ const Chaine = () => {
                 })
                 .catch(() => setChallenged(false));
         }
-    }, [currentUser?.id, channelUser?.id]);
+    }, [currentUser?.id, channelUser?.id, battleCheckTime]);
 
 
     useEffect(() => {
@@ -277,6 +277,7 @@ const Chaine = () => {
         } finally {
             setLoading(false);
         }
+        setBattleCheckTime(Date.now());
     };
 
     const calculateStats = () => {
