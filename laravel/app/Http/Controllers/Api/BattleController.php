@@ -111,30 +111,34 @@ class BattleController extends Controller
 
     public function schedule(Request $request, int $battleId): JsonResponse
     {
-        $request->validate(['scheduled_at' => 'required|string']);
-        $scheduledAt = str_replace('T', ' ', $request->scheduled_at);
-        if (strlen($scheduledAt) === 16) $scheduledAt .= ':00';
+        $request->validate([
+            'scheduled_at' => 'required|string',
+            'duration_minutes' => 'nullable|integer|min:1',
+        ]);
 
-        $user   = $request->user();
+        $user = $request->user();
+
         $battle = DB::table('battles')
             ->where('id', $battleId)
-            ->where(function ($q) use ($user) {
-                $q->where('challenger_id', $user->id)->orWhere('challenged_id', $user->id);
-            })
+            ->where('challenger_id', $user->id)
             ->where('status', 'accepted')
             ->first();
 
         if (!$battle) {
-            return response()->json(['error' => 'Battle introuvable'], 404);
+            return response()->json(['error' => 'Non autorisé ou battle introuvable'], 403);
         }
+
+        $scheduledAt = str_replace('T', ' ', $request->scheduled_at);
+        if (strlen($scheduledAt) === 16) $scheduledAt .= ':00';
 
         DB::table('battles')->where('id', $battleId)->update([
             'scheduled_at' => $scheduledAt,
+            'duration_minutes' => $request->duration_minutes,
             'status' => 'scheduled',
             'updated_at' => now(),
         ]);
 
-        $otherId = $user->id === $battle->challenger_id ? $battle->challenged_id : $battle->challenger_id;
+        $otherId = $battle->challenged_id;
         DB::table('notifications')->insert([
             'user_id' => $otherId,
             'actor_id' => $user->id,
@@ -166,7 +170,7 @@ class BattleController extends Controller
             ]);
         }
 
-        return response()->json(['success' => true, 'message' => 'Battle programmée !']);
+        return response()->json(['message' => 'Battle programmée !']);
     }
 
     public function index(): JsonResponse
@@ -210,6 +214,7 @@ class BattleController extends Controller
                 'battles.id',
                 'battles.status',
                 'battles.scheduled_at',
+                'battles.duration_minutes',
                 'battles.started_at',
                 'battles.challenger_id',
                 'battles.challenged_id',

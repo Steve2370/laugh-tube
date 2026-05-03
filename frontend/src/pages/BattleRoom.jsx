@@ -121,6 +121,40 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
         } catch {}
     });
 
+    const BattleCountdown = ({ durationMinutes, onTimeUp }) => {
+        const [secondsLeft, setSecondsLeft] = useState(durationMinutes * 60);
+
+        useEffect(() => {
+            if (!durationMinutes) return;
+            const interval = setInterval(() => {
+                setSecondsLeft(prev => {
+                    if (prev <= 1) {
+                        clearInterval(interval);
+                        onTimeUp();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(interval);
+        }, [durationMinutes]);
+
+        if (!durationMinutes) return null;
+
+        const mins = Math.floor(secondsLeft / 60);
+        const secs = secondsLeft % 60;
+
+        return (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 z-20" style={{ marginTop: '40px' }}>
+                <div className="bg-black bg-opacity-70 rounded-2xl px-4 py-2 text-center">
+                    <p className="text-white font-mono font-black text-2xl">
+                        {String(mins).padStart(2,'0')}:{String(secs).padStart(2,'0')}
+                    </p>
+                </div>
+            </div>
+        );
+    };
+
     const vote = async (targetId, emoji, points) => {
         try {
             const res = await apiService.requestV2(`/battles/${battle.id}/vote`, {
@@ -239,12 +273,16 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                 </div>
             </div>
 
-            {/* VS au centre */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                 <div className="bg-red-600 rounded-full w-12 h-12 flex items-center justify-center shadow-2xl border-2 border-white">
                     <Swords size={20} className="text-white" />
                 </div>
             </div>
+
+            <BattleCountdown
+                durationMinutes={battle.duration_minutes}
+                onTimeUp={onStop}
+            />
 
             <div className="absolute top-0 left-0 right-0 z-30 px-4" style={{ paddingTop: '72px' }}>
                 <div className="bg-black bg-opacity-60 rounded-2xl p-3">
@@ -325,6 +363,7 @@ const BattleRoom = () => {
     const [joining, setJoining] = useState(false);
     const [schedulingId, setSchedulingId] = useState(null);
     const [scheduleDate, setScheduleDate] = useState('');
+    const [duration, setDuration] = useState('');
 
     const loadBattles = useCallback(async () => {
         try {
@@ -390,7 +429,7 @@ const BattleRoom = () => {
     const handleStart = async (battle) => {
         try {
             const res = await apiService.requestV2(`/battles/${battle.id}/start`, { method: 'POST' });
-            setCurrentBattle({ ...battle, room_name: res.room_name });
+            setCurrentBattle({ ...battle, room_name: res.room_name, duration_minutes: battle.duration_minutes });
             setToken(res.token);
         } catch { toast.error('Erreur lors du démarrage de la battle'); }
     };
@@ -425,11 +464,15 @@ const BattleRoom = () => {
             const formatted = scheduleDate + ':00';
             await apiService.requestV2(`/battles/${battleId}/schedule`, {
                 method: 'POST',
-                body: JSON.stringify({ scheduled_at: formatted }),
+                body: JSON.stringify({
+                    scheduled_at: formatted,
+                    duration_minutes: duration ? parseInt(duration) : null,
+                }),
             });
             toast.success('Battle programmée ! Les abonnés ont été notifiés');
             setSchedulingId(null);
             setScheduleDate('');
+            setDuration('');
             loadMyBattles();
             loadBattles();
         } catch { toast.error('Erreur lors de la programmation'); }
@@ -625,7 +668,7 @@ const BattleRoom = () => {
                                     const s = statusLabel(battle.status);
                                     const isPending = battle.status === 'pending' && battle.challenged_id === user?.id;
                                     const isAccepted = battle.status === 'accepted';
-                                    const canSchedule = isAccepted && (battle.challenger_id === user?.id || battle.challenged_id === user?.id);
+                                    const canSchedule = isAccepted && battle.challenger_id === user?.id;
 
                                     return (
                                         <div key={battle.id} className="px-6 py-4">
@@ -681,25 +724,38 @@ const BattleRoom = () => {
                                             {canSchedule && (
                                                 <div>
                                                     {schedulingId === battle.id ? (
-                                                        <div className="flex gap-2 mt-2">
-                                                            <input
-                                                                type="datetime-local"
-                                                                value={scheduleDate}
-                                                                onChange={e => setScheduleDate(e.target.value)}
-                                                                className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                                            />
-                                                            <button
-                                                                onClick={() => handleSchedule(battle.id)}
-                                                                className="bg-gray-600 text-white font-bold px-4 py-2 rounded-xl text-sm"
-                                                            >
-                                                                Confirmer
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setSchedulingId(null)}
-                                                                className="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-xl text-sm"
-                                                            >
-                                                                <X size={14} />
-                                                            </button>
+                                                        <div className="flex flex-col gap-2 mt-2">
+                                                            <div className="flex gap-2">
+                                                                <input
+                                                                    type="datetime-local"
+                                                                    value={scheduleDate}
+                                                                    onChange={e => setScheduleDate(e.target.value)}
+                                                                    className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                                                />
+                                                                <button
+                                                                    onClick={() => handleSchedule(battle.id)}
+                                                                    className="bg-gray-600 text-white font-bold px-4 py-2 rounded-xl text-sm"
+                                                                >
+                                                                    Confirmer
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setSchedulingId(null)}
+                                                                    className="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-xl text-sm"
+                                                                >
+                                                                    <X size={14} />
+                                                                </button>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <input
+                                                                    type="number"
+                                                                    value={duration}
+                                                                    onChange={e => setDuration(e.target.value)}
+                                                                    placeholder="Durée en minutes (optionnel)"
+                                                                    min="1"
+                                                                    className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                                                />
+                                                                <span className="text-xs text-gray-400 whitespace-nowrap">min (optionnel)</span>
+                                                            </div>
                                                         </div>
                                                     ) : (
                                                         <button

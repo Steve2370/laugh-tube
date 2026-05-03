@@ -195,6 +195,9 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar,
                     )}
                     <div>
                         <p className="text-white font-bold text-sm leading-none">{streamerName}</p>
+                        {streamerTitle && (
+                            <p className="text-blue-200 text-xs font-medium mt-0.5 max-w-[200px] truncate">{streamerTitle}</p>
+                        )}
                         <div className="flex items-center gap-1 mt-0.5">
                             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
                             <span className="text-red-400 text-xs font-semibold">EN DIRECT</span>
@@ -280,6 +283,8 @@ const StandUp = () => {
     const [isStreaming, setIsStreaming] = useState(false);
     const [liveId, setLiveId] = useState(null);
     const [joining, setJoining] = useState(false);
+    const [liveTitle, setLiveTitle] = useState('');
+    const [showTitleModal, setShowTitleModal] = useState(false);
 
     const loadLives = useCallback(async () => {
         try {
@@ -302,18 +307,26 @@ const StandUp = () => {
         loadLives();
     }, []);
 
-    const handleStartLive = async () => {
+    const handleStartLive = () => {
         if (!isAuthenticated) {
             window.location.hash = '#/login';
             return;
         }
+        setShowTitleModal(true);
+    };
+
+    const confirmStartLive = async () => {
         try {
             setJoining(true);
-            const response = await apiService.requestV2('/lives/start', { method: 'POST' });
+            setShowTitleModal(false);
+            const response = await apiService.requestV2('/lives/start', {
+                method: 'POST',
+                body: JSON.stringify({ title: liveTitle.trim() || 'Stand-Up Live' }),
+            });
             setToken(response.token);
             setLiveId(response.live_id);
             setIsStreaming(true);
-            toast.success('Live démarré !');
+            toast.success('Live démarré ! Tes abonnés ont été notifiés 🎤');
         } catch {
             toast.error('Erreur lors du démarrage du live');
         } finally {
@@ -383,6 +396,7 @@ const StandUp = () => {
                     isStreaming={isStreaming}
                     streamerName={streamerName}
                     streamerAvatar={streamerAvatar}
+                    streamerTitle={isStreaming ? liveTitle : currentLive?.title}
                     userAvatar={getAvatarUrl(user?.avatar_url)}
                     onStop={isStreaming ? handleStopLive : handleLeave}
                 />
@@ -420,6 +434,43 @@ const StandUp = () => {
                         </button>
                     )}
                 </div>
+
+                {showTitleModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
+                        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Mic size={20} className="text-blue-500" />
+                                Titre de votre Stand-Up
+                            </h3>
+                            <input
+                                type="text"
+                                value={liveTitle}
+                                onChange={e => setLiveTitle(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && confirmStartLive()}
+                                placeholder="Ex: Ma première punchline en direct !"
+                                maxLength={80}
+                                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                                autoFocus
+                            />
+                            <p className="text-xs text-gray-400 mb-4">{liveTitle.length}/80 — Optionnel</p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowTitleModal(false)}
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={confirmStartLive}
+                                    disabled={joining}
+                                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all disabled:opacity-50"
+                                >
+                                    {joining ? <Loader size={16} className="animate-spin mx-auto" /> : 'Lancer 🎤'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
