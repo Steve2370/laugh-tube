@@ -6,6 +6,7 @@ import { useToast } from '../contexts/ToastContext';
 import apiService from '../services/apiService';
 import VideoPlayer from '../components/VideoPlayer';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
+import MentionPicker from '../components/MentionPicker';
 import useAbonnement from '../hooks/useAbonnement.js';
 
 import {
@@ -425,6 +426,8 @@ const Video = () => {
     const [signalDone, setSignalDone] = useState(false);
     const [likeBurst, setLikeBurst] = useState(0);
     const [shareAnim, setShareAnim] = useState(false);
+    const [showMentionPicker, setShowMentionPicker] = useState(false);
+    const [mentionedUsers, setMentionedUsers] = useState([]);
     const animLikes = useAnimatedCount(reactionsCount.likes);
     const animDislikes = useAnimatedCount(reactionsCount.dislikes);
     const animViews = useAnimatedCount(viewsCount);
@@ -564,6 +567,19 @@ const Video = () => {
             await postComment(newComment.trim());
             setNewComment('');
             toast.success('Commentaire publié');
+            if (mentionedUsers.length > 0) {
+                const usersToNotify = mentionedUsers[0] === 'all'
+                    ? []
+                    : mentionedUsers;
+
+                for (const mentionedUser of usersToNotify) {
+                    await apiService.requestV2(`/comments/${newCommentId}/mention`, {
+                        method: 'POST',
+                        body: JSON.stringify({ mentioned_user_id: mentionedUser.id }),
+                    });
+                }
+                setMentionedUsers([]);
+            }
         } catch (err) {
             toast.error('Erreur lors de la publication');
         } finally {
@@ -819,15 +835,43 @@ const Video = () => {
                                                 <User size={18} className="text-white" />
                                             </div>
                                         )}
-                                        <div className="flex-1">
+                                        <div className="flex-1 relative">
                                             <textarea
                                                 value={newComment}
-                                                onChange={(e) => setNewComment(e.target.value)}
-                                                placeholder="Ajoutez un commentaire..."
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setNewComment(val);
+                                                    // Affiche le picker quand l'user tape @
+                                                    if (val.endsWith('@')) {
+                                                        setShowMentionPicker(true);
+                                                    } else {
+                                                        setShowMentionPicker(false);
+                                                    }
+                                                }}
+                                                placeholder="Ajoutez un commentaire... (@ pour mentionner)"
                                                 rows={3}
                                                 maxLength={1000}
                                                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                                             />
+
+                                            {showMentionPicker && (
+                                                <MentionPicker
+                                                    onSelect={async (type, users) => {
+                                                        setShowMentionPicker(false);
+                                                        if (type === 'all') {
+                                                            // Ajoute @all au commentaire
+                                                            setNewComment(prev => prev.slice(0, -1) + '@tous ');
+                                                            // Notifie tous les abonnés après soumission — géré dans handleCommentSubmit
+                                                        } else {
+                                                            setNewComment(prev => prev.slice(0, -1) + `@${users[0].username} `);
+                                                        }
+                                                        // Stocke les users à notifier
+                                                        setMentionedUsers(users);
+                                                    }}
+                                                    onClose={() => setShowMentionPicker(false)}
+                                                />
+                                            )}
+
                                             <div className="flex justify-between items-center mt-2">
                                                 <span className="text-xs text-gray-500">{newComment.length}/1000</span>
                                                 <button

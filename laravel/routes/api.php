@@ -99,6 +99,7 @@ Route::prefix('v2')->group(function () {
         Route::post('/lives/start', [LiveController::class, 'start']);
         Route::post('/lives/{id}/stop', [LiveController::class, 'stop']);
         Route::post('/lives/{id}/join', [LiveController::class, 'join']);
+        Route::post('/comments/{commentId}/mention', [CommentInteractionController::class, 'mention']);
 
         Route::put('/profile', [ProfileController::class, 'update']);
         Route::put('/profile/password', [ProfileController::class, 'updatePassword']);

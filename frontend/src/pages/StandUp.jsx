@@ -465,7 +465,7 @@ const StandUp = () => {
                                     disabled={joining}
                                     className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all disabled:opacity-50"
                                 >
-                                    {joining ? <Loader size={16} className="animate-spin mx-auto" /> : 'Lancer 🎤'}
+                                    {joining ? <Loader size={16} className="animate-spin mx-auto" /> : 'Lancer'}
                                 </button>
                             </div>
                         </div>

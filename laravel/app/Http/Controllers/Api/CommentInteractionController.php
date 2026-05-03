@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -134,5 +135,30 @@ class CommentInteractionController extends Controller
         $count = DB::table('reply_likes')->where('reply_id', $replyId)->count();
 
         return response()->json(['liked' => $liked, 'like_count' => $count]);
+    }
+
+    public function mention(Request $request, int $commentId): JsonResponse
+    {
+        $request->validate(['mentioned_user_id' => 'required|integer']);
+
+        $comment = DB::table('commentaires')->where('id', $commentId)->first();
+        if (!$comment) return response()->json(['error' => 'Commentaire introuvable'], 404);
+
+        $video = DB::table('videos')->where('id', $comment->video_id)->first();
+
+        DB::table('notifications')->insert([
+            'user_id' => $request->mentioned_user_id,
+            'actor_id' => $request->user()->id,
+            'actor_name' => $request->user()->username,
+            'type' => 'mention',
+            'video_id' => $comment->video_id,
+            'comment_id' => $commentId,
+            'video_title' => $video?->title,
+            'comment_preview' => substr($comment->content, 0, 100),
+            'is_read' => false,
+            'created_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Notification envoyée']);
     }
 }
