@@ -122,6 +122,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
     });
 
     const BattleCountdown = ({ durationMinutes, onTimeUp }) => {
+        console.log('BattleCountdown durationMinutes:', durationMinutes);
         const [secondsLeft, setSecondsLeft] = useState(durationMinutes * 60);
 
         useEffect(() => {
