@@ -67,9 +67,9 @@ export const useVideo = (videoId) => {
 
     const postComment = useCallback(async (content) => {
         try {
-            await videoService.postComment(videoId, content);
+            const response = await videoService.postComment(videoId, content);
             await loadComments();
-            return { success: true };
+            return response;
         } catch (err) {
             return { success: false, error: err.message };
         }
