@@ -7,7 +7,6 @@ import apiService from '../services/apiService';
 import VideoPlayer from '../components/VideoPlayer';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
 import MentionPicker from '../components/MentionPicker';
-import { MoreHorizontal, Pencil } from 'lucide-react';
 import useAbonnement from '../hooks/useAbonnement.js';
 
 import {
@@ -27,6 +26,9 @@ import {
     Heart,
     Reply,
     ChevronDown,
+    Pencil,
+    MoreHorizontal,
+    Trash2,
     ChevronUp,
     Flag,
 } from 'lucide-react';
@@ -304,7 +306,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
 
                 <div className="flex-1 min-w-0">
                     <div className="relative">
-                        <div className="bg-gray-100 rounded-2xl px-4 py-3 inline-block max-w-full">
+                        <div className="bg-gray-100 rounded-2xl px-4 py-3 inline-block max-w-full relative pr-8">
                             <button onClick={() => onUserClick(comment.user_id, comment.username)} className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
                                 {comment.username || 'Utilisateur'}
                             </button>
@@ -341,15 +343,15 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
                         </div>
 
                         {isOwner && !editing && (
-                            <div className="absolute top-2 right-0 translate-x-full pl-2" ref={menuRef}>
+                            <div className="absolute top-2 right-3" ref={menuRef}>
                                 <button
                                     onClick={() => setShowMenu(!showMenu)}
-                                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-200"
                                 >
                                     <MoreHorizontal size={16} />
                                 </button>
                                 {showMenu && (
-                                    <div className="absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10 w-36">
+                                    <div className="absolute right-0 top-7 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 w-36">
                                         <button
                                             onClick={() => { setEditing(true); setShowMenu(false); }}
                                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
