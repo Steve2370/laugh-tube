@@ -242,7 +242,7 @@ const Upload = () => {
 
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Miniature <span className="text-gray-400 font-normal">(optionnel — JPG ou PNG)</span>
+                                Miniature <span className="text-gray-400 font-normal">(optionnel: JPG ou PNG)</span>
                             </label>
                             {!thumbnailPreview ? (
                                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-all duration-300">

@@ -30,12 +30,14 @@ class LiveController extends Controller
      */
     public function start(Request $request): JsonResponse
     {
+        $title = $request->input('title', 'Stand-Up Live');
         $user = $request->user();
         $roomName = 'standup-' . $user->id . '-' . time();
 
         $liveId = DB::table('lives')->insertGetId([
             'user_id' => $user->id,
             'room_name' => $roomName,
+            'title' => $title,
             'status' => 'live',
             'started_at' => now(),
             'created_at' => now(),
@@ -115,6 +117,7 @@ class LiveController extends Controller
                 'lives.id',
                 'lives.room_name',
                 'lives.started_at',
+                'lives.title',
                 'users.id as user_id',
                 'users.username',
                 'users.avatar_url',
