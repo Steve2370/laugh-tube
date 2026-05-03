@@ -242,7 +242,6 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                     )}
                 </div>
 
-                {/* Challenged */}
                 <div className="relative flex-1">
                     {challengedTrack ? (
                         <VideoTrack trackRef={challengedTrack} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
