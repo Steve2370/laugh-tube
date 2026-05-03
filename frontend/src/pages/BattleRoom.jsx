@@ -121,8 +121,10 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
         } catch {}
     });
 
-    const BattleCountdown = ({ durationMinutes, onTimeUp }) => {
-        const [secondsLeft, setSecondsLeft] = useState(durationMinutes * 60);
+    const BattleCountdown = React.memo(({ durationMinutes, onTimeUp }) => {
+        const [secondsLeft, setSecondsLeft] = useState(() => durationMinutes * 60);
+        const onTimeUpRef = useRef(onTimeUp);
+        onTimeUpRef.current = onTimeUp;
 
         useEffect(() => {
             if (!durationMinutes) return;
@@ -130,7 +132,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                 setSecondsLeft(prev => {
                     if (prev <= 1) {
                         clearInterval(interval);
-                        onTimeUp();
+                        onTimeUpRef.current();
                         return 0;
                     }
                     return prev - 1;
@@ -153,7 +155,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                 </div>
             </div>
         );
-    };
+    });
 
     const vote = async (targetId, emoji, points) => {
         try {
