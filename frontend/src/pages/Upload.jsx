@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
-import { Upload as UploadIcon, X, FileVideo, Check, Lock, AlertCircle } from 'lucide-react';
+import { Upload as UploadIcon, X, FileVideo, Check, Lock, AlertCircle, Image as ImageIcon } from 'lucide-react';
 
 const Upload = () => {
     const [title, setTitle] = useState('');
@@ -11,6 +11,8 @@ const Upload = () => {
     const [preview, setPreview] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
+    const [thumbnailFile, setThumbnailFile] = useState(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState(null);
 
     const { isAuthenticated, user, loading } = useAuth();
     const toast = useToast();
@@ -38,6 +40,24 @@ const Upload = () => {
 
         return true;
     };
+
+    const handleThumbnailChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            toast.error('Format non supporté. Utilisez JPG ou PNG');
+            return;
+        }
+        setThumbnailFile(file);
+        setThumbnailPreview(URL.createObjectURL(file));
+    };
+
+    const removeThumbnail = () => {
+        if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
+        setThumbnailFile(null);
+        setThumbnailPreview(null);
+    };
+
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -81,6 +101,10 @@ const Upload = () => {
             formData.append('video', selectedFile);
             formData.append('title', title.trim());
             formData.append('description', description.trim());
+
+            if (thumbnailFile) {
+                formData.append('thumbnail', thumbnailFile);
+            }
 
             await apiService.uploadVideo(formData, (percent) => {
                 setUploadProgress(percent);
@@ -214,6 +238,47 @@ const Upload = () => {
                                     {description.length}/5000
                                 </span>
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Miniature <span className="text-gray-400 font-normal">(optionnel — JPG ou PNG)</span>
+                            </label>
+                            {!thumbnailPreview ? (
+                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-all duration-300">
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png"
+                                        onChange={handleThumbnailChange}
+                                        className="hidden"
+                                        id="thumbnail-upload"
+                                        disabled={uploading}
+                                    />
+                                    <label htmlFor="thumbnail-upload" className="cursor-pointer">
+                                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-3">
+                                            <ImageIcon size={24} className="text-gray-500" />
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-700 mb-1">Ajouter une miniature</p>
+                                        <p className="text-xs text-gray-500">JPG, PNG · Recommandé : 1280×720px</p>
+                                    </label>
+                                </div>
+                            ) : (
+                                <div className="relative rounded-xl overflow-hidden border-2 border-blue-200">
+                                    <img src={thumbnailPreview} alt="Miniature" className="w-full h-48 object-cover" />
+                                    {!uploading && (
+                                        <button
+                                            type="button"
+                                            onClick={removeThumbnail}
+                                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    )}
+                                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-lg">
+                                        Miniature personnalisée
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div>
