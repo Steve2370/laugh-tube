@@ -183,6 +183,7 @@ class BattleController extends Controller
                 'battles.id',
                 'battles.status',
                 'battles.scheduled_at',
+                'battles.duration_minutes',
                 'battles.challenger_score',
                 'battles.challenged_score',
                 'battles.challenger_id',
