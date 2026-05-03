@@ -135,6 +135,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/comments/{commentId}/like-status', [CommentInteractionController::class, 'getCommentLikeStatus']);
         Route::get('/comments/{commentId}/replies', [CommentInteractionController::class, 'getReplies']);
         Route::post('/comments/{commentId}/replies', [CommentInteractionController::class, 'postReply']);
+        Route::put('/comments/{commentId}', [CommentController::class, 'update']);
         Route::post('/replies/{replyId}/like', [CommentInteractionController::class, 'toggleReplyLike']);
         Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
 

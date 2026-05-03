@@ -127,4 +127,19 @@ class CommentController extends Controller
 
         return response()->json(['message' => 'Commentaire supprimé']);
     }
+
+    public function update(Request $request, int $commentId): JsonResponse
+    {
+        $request->validate(['content' => 'required|string|min:1|max:2000']);
+
+        $comment = Commentaire::findOrFail($commentId);
+
+        if ($comment->user_id !== $request->user()->id) {
+            return response()->json(['error' => 'Non autorisé'], 403);
+        }
+
+        $comment->update(['content' => trim($request->input('content'))]);
+
+        return response()->json(['message' => 'Commentaire modifié', 'comment' => $comment]);
+    }
 }

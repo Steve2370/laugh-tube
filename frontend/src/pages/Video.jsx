@@ -307,7 +307,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
                 <div className="flex-1 min-w-0">
                     <div className="relative">
                         <div className="bg-gray-100 rounded-2xl px-4 py-3 inline-block max-w-full relative pr-8">
-                            <button onClick={() => onUserClick(comment.user_id, comment.username)} className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
+                        <button onClick={() => onUserClick(comment.user_id, comment.username)} className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
                                 {comment.username || 'Utilisateur'}
                             </button>
                             {editing ? (
@@ -343,7 +343,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
                         </div>
 
                         {isOwner && !editing && (
-                            <div className="absolute top-2 right-3" ref={menuRef}>
+                            <div className="absolute top-1.5 right-1.5" ref={menuRef}>
                                 <button
                                     onClick={() => setShowMenu(!showMenu)}
                                     className="p-1 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-200"
