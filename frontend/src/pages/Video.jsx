@@ -306,7 +306,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
 
                 <div className="flex-1 min-w-0">
                     <div className="relative">
-                        <div className="bg-gray-100 rounded-2xl px-4 py-3 relative pr-8 max-w-prose">
+                        <div className="bg-gray-100 rounded-2xl px-4 py-3 inline-block max-w-full relative pr-8">
                         <button onClick={() => onUserClick(comment.user_id, comment.username)} className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
                                 {comment.username || 'Utilisateur'}
                             </button>
