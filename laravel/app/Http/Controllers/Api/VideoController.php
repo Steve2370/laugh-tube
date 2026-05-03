@@ -129,19 +129,27 @@ class VideoController extends Controller
             'video' => 'required|file|mimes:mp4,avi,mov,webm,quicktime|max:512000',
             'title' => 'required|string|min:3|max:100',
             'description' => 'nullable|string|max:5000',
+            'thumbnail' => 'nullable|file|mimes:jpg,jpeg,png|max:10240',
         ]);
 
         $file = $request->file('video');
         $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-
         $uploadPath = '/var/www/html/public/uploads/videos/';
         $file->move($uploadPath, $filename);
+
+        $thumbnailName = null;
+        if ($request->hasFile('thumbnail')) {
+            $thumb = $request->file('thumbnail');
+            $thumbnailName = pathinfo($filename, PATHINFO_FILENAME) . '_thumb.' . $thumb->getClientOriginalExtension();
+            $thumb->move('/var/www/html/public/uploads/thumbnails/', $thumbnailName);
+        }
 
         $video = DB::table('videos')->insertGetId([
             'user_id' => $request->user()->id,
             'title' => $request->input('title'),
             'description' => $request->input('description', ''),
             'filename' => $filename,
+            'thumbnail' => $thumbnailName,
             'status' => 'pending',
             'created_at' => now(),
             'updated_at' => now(),
@@ -151,6 +159,7 @@ class VideoController extends Controller
             'video_id' => $video,
             'status' => 'pending',
             'priority' => 0,
+            'custom_thumbnail' => $thumbnailName ? true : false, // ← indique à l'encodeur de ne pas générer de miniature
             'created_at' => now(),
             'updated_at' => now(),
         ]);

@@ -152,7 +152,8 @@ class VideoEncoder {
                         eq.video_id,
                         v.filename,
                         v.title AS title,
-                        u.username AS username
+                        u.username AS username,
+                        eq.custom_thumbnail
                 `);
 
                 if (result.rows.length === 0) {
@@ -247,18 +248,19 @@ class VideoEncoder {
             const encodingTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
             logSuccess(`Worker ${this.workerId} - Encodé: ${outputSize} MB en ${encodingTime}s`);
-            logInfo(`Worker ${this.workerId} - Génération thumbnail...`);
-
-            const thumbCmd = `ffmpeg -y -i "${outputPath}" \
-                -ss 00:00:03 \
-                -vframes 1 \
-                -vf "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" \
-                -q:v 2 \
-                "${thumbPath}" 2>&1`;
-
-            await execCommand(thumbCmd);
-
-            logSuccess(`Worker ${this.workerId} - Thumbnail créé`);
+            if (job.custom_thumbnail) {
+                logInfo(`Worker ${this.workerId} - Miniature personnalisée détectée, skip génération`);
+            } else {
+                logInfo(`Worker ${this.workerId} - Génération thumbnail...`);
+                const thumbCmd = `ffmpeg -y -i "${outputPath}" \
+                    -ss 00:00:03 \
+                    -vframes 1 \
+                    -vf "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" \
+                    -q:v 2 \
+                    "${thumbPath}" 2>&1`;
+                await execCommand(thumbCmd);
+                logSuccess(`Worker ${this.workerId} - Thumbnail créé`);
+            }
 
             const client = await pool.connect();
             try {
