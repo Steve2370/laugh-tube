@@ -28,7 +28,7 @@ const ParticipantCount = () => {
     );
 };
 
-const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, userAvatar, onStop }) => {
+const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, streamerTitle, userAvatar, onStop }) => {
     const [comments, setComments] = useState([]);
     const [emojis, setEmojis] = useState([]);
     const [commentInput, setCommentInput] = useState('');
