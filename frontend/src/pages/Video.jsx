@@ -7,6 +7,7 @@ import apiService from '../services/apiService';
 import VideoPlayer from '../components/VideoPlayer';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
 import MentionPicker from '../components/MentionPicker';
+import { MoreHorizontal, Pencil } from 'lucide-react';
 import useAbonnement from '../hooks/useAbonnement.js';
 
 import {
@@ -197,7 +198,7 @@ const ReplyItem = ({ reply, isAuthenticated, userId, onUserClick, onReply }) => 
     );
 };
 
-const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPosted }) => {
+const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPosted, onDelete }) => {
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(comment.like_count || 0);
     const [showReplies, setShowReplies] = useState(false);
@@ -205,47 +206,49 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
     const [replyText, setReplyText] = useState('');
     const [replyLoading, setReplyLoading] = useState(false);
     const [likeLoading, setLikeLoading] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [editText, setEditText] = useState(comment.content);
+    const menuRef = useRef(null);
     const replyInputRef = useRef(null);
+
+    const isOwner = userId === comment.user_id;
+
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
+        };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
 
     useEffect(() => {
         if (isAuthenticated && comment.id) {
             apiService.getCommentLikeStatus(comment.id)
-                .then(res => {
-                    setLiked(!!res.liked);
-                    setLikeCount(res.like_count || 0);
-                })
+                .then(res => { setLiked(!!res.liked); setLikeCount(res.like_count || 0); })
                 .catch(() => {});
         }
     }, [comment.id, isAuthenticated]);
 
     useEffect(() => {
-        if (showReplies && comment.id) {
-            loadReplies();
-        }
+        if (showReplies && comment.id) loadReplies();
     }, [showReplies, comment.id]);
 
     const loadReplies = async () => {
         try {
             const data = await apiService.getReplies(comment.id);
             setReplies(data.replies || []);
-        } catch (e) {
-            console.error('Erreur chargement réponses:', e);
-        }
+        } catch (e) {}
     };
 
     const handleLike = async () => {
-        if (!isAuthenticated) return;
-        if (likeLoading) return;
+        if (!isAuthenticated || likeLoading) return;
         setLikeLoading(true);
         try {
             const res = await apiService.toggleCommentLike(comment.id);
             setLiked(res.liked);
             setLikeCount(res.like_count);
-        } catch (e) {
-            console.error('Erreur like commentaire:', e);
-        } finally {
-            setLikeLoading(false);
-        }
+        } catch (e) {} finally { setLikeLoading(false); }
     };
 
     const handleReplySubmit = async (e) => {
@@ -257,11 +260,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
             setReplies(prev => [...prev, res.reply]);
             setReplyText('');
             if (onReplyPosted) onReplyPosted();
-        } catch (e) {
-            console.error('Erreur post réponse:', e);
-        } finally {
-            setReplyLoading(false);
-        }
+        } catch (e) {} finally { setReplyLoading(false); }
     };
 
     const handleReplyClick = (username) => {
@@ -278,8 +277,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
         if (!d) return '';
         const date = new Date(d);
         const now = new Date();
-        const diffMs = now - date;
-        const diffH = Math.floor(diffMs / 3600000);
+        const diffH = Math.floor((now - date) / 3600000);
         const diffD = Math.floor(diffH / 24);
         if (diffH < 1) return 'À l\'instant';
         if (diffH < 24) return `Il y a ${diffH}h`;
@@ -294,94 +292,137 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
     const replyCount = comment.reply_count || replies.length || 0;
 
     return (
-        <div className="border-b border-gray-100 pb-4 mb-4 last:border-0">
+        <div className="mb-4 last:mb-0">
             <div className="flex items-start gap-3">
                 {avatarUrl ? (
-                    <img src={avatarUrl} alt={comment.username || 'Avatar'} className="w-10 h-10 rounded-full object-cover border border-gray-200 flex-shrink-0" />
+                    <img src={avatarUrl} alt={comment.username} className="w-9 h-9 rounded-full object-cover flex-shrink-0 cursor-pointer" onClick={() => onUserClick(comment.user_id, comment.username)} />
                 ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center flex-shrink-0">
-                        <User size={18} className="text-white" />
+                    <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0 cursor-pointer" onClick={() => onUserClick(comment.user_id, comment.username)}>
+                        <User size={16} className="text-gray-600" />
                     </div>
                 )}
+
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                        <button
-                            onClick={() => onUserClick(comment.user_id, comment.username)}
-                            className="font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
-                        >
-                            {comment.username || 'Utilisateur'}
-                        </button>
-                        <span className="text-sm text-gray-400">{formatDate(comment.created_at)}</span>
+                    <div className="relative">
+                        <div className="bg-gray-100 rounded-2xl px-4 py-3 inline-block max-w-full">
+                            <button onClick={() => onUserClick(comment.user_id, comment.username)} className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
+                                {comment.username || 'Utilisateur'}
+                            </button>
+                            {editing ? (
+                                <div className="mt-1">
+                                    <textarea
+                                        value={editText}
+                                        onChange={e => setEditText(e.target.value)}
+                                        className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                        rows={2}
+                                    />
+                                    <div className="flex gap-2 mt-1">
+                                        <button onClick={() => setEditing(false)} className="text-xs text-gray-500 hover:text-gray-700">Annuler</button>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    await apiService.requestV2(`/comments/${comment.id}`, {
+                                                        method: 'PUT',
+                                                        body: JSON.stringify({ content: editText }),
+                                                    });
+                                                    comment.content = editText;
+                                                    setEditing(false);
+                                                } catch {}
+                                            }}
+                                            className="text-xs text-blue-600 font-semibold hover:text-blue-700"
+                                        >
+                                            Sauvegarder
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-gray-800 text-sm mt-0.5 whitespace-pre-wrap">{comment.content}</p>
+                            )}
+                        </div>
+
+                        {isOwner && !editing && (
+                            <div className="absolute top-2 right-0 translate-x-full pl-2" ref={menuRef}>
+                                <button
+                                    onClick={() => setShowMenu(!showMenu)}
+                                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <MoreHorizontal size={16} />
+                                </button>
+                                {showMenu && (
+                                    <div className="absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10 w-36">
+                                        <button
+                                            onClick={() => { setEditing(true); setShowMenu(false); }}
+                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                        >
+                                            <Pencil size={14} /> Modifier
+                                        </button>
+                                        <button
+                                            onClick={() => { onDelete(comment.id); setShowMenu(false); }}
+                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                        >
+                                            <Trash2 size={14} /> Supprimer
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
-                    <p className="text-gray-700 mt-1 whitespace-pre-wrap">{comment.content}</p>
-                    <div className="flex items-center gap-4 mt-2">
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-4 mt-1 ml-2">
+                        <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
                         <button
                             onClick={handleLike}
                             disabled={!isAuthenticated || likeLoading}
-                            className={`text-sm flex items-center gap-1.5 transition-colors ${
-                                liked
-                                    ? 'text-red-600 hover:text-red-700 font-semibold'
-                                    : 'text-gray-500 hover:text-gray-700'
-                            } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                            title={!isAuthenticated ? 'Connectez-vous pour liker' : ''}
+                            className={`text-xs font-semibold flex items-center gap-1 transition-colors ${liked ? 'text-red-500' : 'text-gray-500 hover:text-gray-700'}`}
                         >
-                            <Heart size={14} fill={liked ? 'currentColor' : 'none'} />
+                            <Heart size={13} fill={liked ? 'currentColor' : 'none'} />
                             {likeCount > 0 && <span>{likeCount}</span>}
                         </button>
                         <button
                             onClick={() => handleReplyClick(comment.username)}
-                            className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                            className="text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1"
                         >
-                            <Reply size={14} />
+                            <Reply size={13} />
                             Répondre
                         </button>
                         {replyCount > 0 && (
                             <button
                                 onClick={() => setShowReplies(!showReplies)}
-                                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                                className="text-xs text-blue-500 font-semibold flex items-center gap-1"
                             >
-                                {showReplies ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                {showReplies ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                                 {replyCount} {replyCount === 1 ? 'réponse' : 'réponses'}
                             </button>
                         )}
                     </div>
 
                     {showReplies && (
-                        <div className="mt-4 pl-4 border-l-2 border-gray-200">
-                            <div className="space-y-2">
-                                {replies.map((reply, idx) => (
-                                    <ReplyItem
-                                        key={reply.id || idx}
-                                        reply={reply}
-                                        isAuthenticated={isAuthenticated}
-                                        userId={userId}
-                                        onUserClick={onUserClick}
-                                        onReply={handleReplyClick}
-                                    />
-                                ))}
-                            </div>
-
+                        <div className="mt-3 pl-4 border-l-2 border-gray-200 space-y-2">
+                            {replies.map((reply, idx) => (
+                                <ReplyItem
+                                    key={reply.id || idx}
+                                    reply={reply}
+                                    isAuthenticated={isAuthenticated}
+                                    userId={userId}
+                                    onUserClick={onUserClick}
+                                    onReply={handleReplyClick}
+                                />
+                            ))}
                             {isAuthenticated && (
-                                <form onSubmit={handleReplySubmit} className="mt-3">
-                                    <div className="flex gap-2">
-                                        <input
-                                            ref={replyInputRef}
-                                            type="text"
-                                            value={replyText}
-                                            onChange={(e) => setReplyText(e.target.value)}
-                                            placeholder="Écrivez une réponse..."
-                                            maxLength={500}
-                                            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={!replyText.trim() || replyLoading}
-                                            className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                        >
-                                            <Send size={14} />
-                                            {replyLoading ? '...' : 'Envoyer'}
-                                        </button>
-                                    </div>
+                                <form onSubmit={handleReplySubmit} className="mt-2 flex gap-2">
+                                    <input
+                                        ref={replyInputRef}
+                                        type="text"
+                                        value={replyText}
+                                        onChange={e => setReplyText(e.target.value)}
+                                        placeholder="Répondre..."
+                                        maxLength={500}
+                                        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <button type="submit" disabled={!replyText.trim() || replyLoading} className="px-3 py-2 bg-blue-600 text-white text-sm rounded-full hover:bg-blue-700 transition disabled:opacity-50">
+                                        <Send size={14} />
+                                    </button>
                                 </form>
                             )}
                         </div>
@@ -564,16 +605,14 @@ const Video = () => {
 
         setCommentLoading(true);
         try {
-            await postComment(newComment.trim());
+            const response = await postComment(newComment.trim());
+            const commentId = response?.comment?.id;
             setNewComment('');
             toast.success('Commentaire publié');
-            if (mentionedUsers.length > 0) {
-                const usersToNotify = mentionedUsers[0] === 'all'
-                    ? []
-                    : mentionedUsers;
 
-                for (const mentionedUser of usersToNotify) {
-                    await apiService.requestV2(`/comments/${newCommentId}/mention`, {
+            if (mentionedUsers.length > 0 && commentId) {
+                for (const mentionedUser of mentionedUsers) {
+                    await apiService.requestV2(`/comments/${commentId}/mention`, {
                         method: 'POST',
                         body: JSON.stringify({ mentioned_user_id: mentionedUser.id }),
                     });
@@ -903,12 +942,16 @@ const Video = () => {
                                 ) : (
                                     comments.map((comment, index) => (
                                         <CommentItem
-                                            key={comment.id || index}
+                                            key={comment.id}
                                             comment={comment}
                                             isAuthenticated={isAuthenticated}
                                             userId={user?.id}
                                             onUserClick={handleUserClick}
                                             onReplyPosted={reloadComments}
+                                            onDelete={async (id) => {
+                                                await apiService.requestV2(`/videos/${videoId}/comments/${id}`, { method: 'DELETE' });
+                                                reloadComments();
+                                            }}
                                         />
                                     ))
                                 )}
