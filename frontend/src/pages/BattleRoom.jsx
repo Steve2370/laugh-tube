@@ -122,7 +122,6 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
     });
 
     const BattleCountdown = ({ durationMinutes, onTimeUp }) => {
-        console.log('BattleCountdown durationMinutes:', durationMinutes);
         const [secondsLeft, setSecondsLeft] = useState(durationMinutes * 60);
 
         useEffect(() => {
@@ -138,7 +137,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                 });
             }, 1000);
             return () => clearInterval(interval);
-        }, [durationMinutes]);
+        }, []);
 
         if (!durationMinutes) return null;
 
@@ -427,7 +426,6 @@ const BattleRoom = () => {
     };
 
     const handleStart = async (battle) => {
-        console.log('battle.duration_minutes:', battle.duration_minutes);
         try {
             const res = await apiService.requestV2(`/battles/${battle.id}/start`, { method: 'POST' });
             setCurrentBattle({ ...battle, room_name: res.room_name, duration_minutes: battle.duration_minutes });
