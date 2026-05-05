@@ -198,7 +198,7 @@ const Notifications = () => {
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <LoadingPage size={180} />
+                            <LoadingPage size={280} />
                         </div>
                     ) : filtered.length === 0 ? (
                         <div className="text-center py-20 px-4">
