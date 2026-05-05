@@ -1127,8 +1127,14 @@ const Video = () => {
 
                         <div className="px-6 py-4 flex gap-3 items-center border-b border-gray-700">
                             {video.thumbnail ? (
-                                <img src={`/uploads/thumbnails/${video.thumbnail}`} alt={video.title}
-                                     className="w-24 h-14 rounded-lg object-cover flex-shrink-0" />
+                                <img
+                                    src={video.thumbnail
+                                        ? (video.thumbnail.startsWith('http') ? video.thumbnail : `/uploads/thumbnails/${video.thumbnail}`)
+                                        : null }
+                                    alt={video.title}
+                                    className="w-24 h-14 rounded-lg object-cover flex-shrink-0"
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                />
                             ) : (
                                 <div className="w-24 h-14 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
                                     <Play size={20} className="text-gray-400" />
