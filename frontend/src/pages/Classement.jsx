@@ -194,7 +194,7 @@ const Classement = () => {
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
-                        <LoadingPage size={80} />
+                        <LoadingPage size={120} />
                     </div>
                 ) : classement.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-2xl shadow-xl border border-gray-100">

@@ -171,7 +171,7 @@ const VideoGrid = ({ videos, onVideoClick }) => {
 const LoadingState = () => (
     <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-            <LoadingPage size={80} />
+            <LoadingPage size={120} />
             <p className="text-gray-600 font-medium">Chargement de la chaîne...</p>
         </div>
     </div>
