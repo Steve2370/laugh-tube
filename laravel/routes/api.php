@@ -67,7 +67,7 @@ Route::prefix('v2')->group(function () {
         <title>{$title}</title>
         <meta name='description' content='{$desc}'>
         <meta property='og:type' content='video.other'>
-        <meta property='og:url' content='{$url}'>
+        <meta property='og:url' content='https://laughtube.ca/api/v2/og/video/{$id}'>
         <meta property='og:title' content='{$title}'>
         <meta property='og:description' content='{$desc}'>
         <meta property='og:image' content='{$thumb}'>
