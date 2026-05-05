@@ -664,7 +664,8 @@ const Video = () => {
         const [videos, setVideos] = useState([]);
 
         useEffect(() => {
-            apiService.requestV2('/videos')
+            if (!currentVideoId) return;
+            apiService.requestV2('/videos/recent')
                 .then(r => setVideos((r.videos || []).filter(v => v.id !== currentVideoId)))
                 .catch(() => {});
         }, [currentVideoId]);
@@ -778,8 +779,8 @@ const Video = () => {
                     <span className="font-medium">Retour</span>
                 </button>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    <div className="lg:col-span-3">
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                    <div className="xl:col-span-3">
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
                             <VideoPlayer
                                 src={videoSrc}
@@ -993,7 +994,7 @@ const Video = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="lg:col-span-1">
+                    <div className="xl:col-span-1">
                         <div className="bg-white rounded-2xl shadow-xl p-4">
                             <h3 className="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
                                 <TrendingUp size={16} className="text-blue-500" />
