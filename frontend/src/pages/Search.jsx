@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigation } from '../contexts/NavigationContext.jsx';
+import LottieIcon from '../components/LottieIcon';
+import PacmanAnimation from '../assets/lottie/pacman.json';
 import VideoCard from '../components/VideoCard.jsx';
 import apiService from '../services/apiService.js';
 import { Search as SearchIcon } from 'lucide-react';
@@ -54,8 +56,14 @@ const Search = () => {
             </div>
 
             {loading && (
-                <div className="flex items-center justify-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-900 border-t-transparent"></div>
+                <div className="flex justify-center py-12">
+                    <LottieIcon
+                        animationData={PacmanAnimation}
+                        size={80}
+                        autoplay={true}
+                        loop={true}
+                        playOnHover={false}
+                    />
                 </div>
             )}
 

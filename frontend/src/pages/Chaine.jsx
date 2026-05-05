@@ -6,6 +6,7 @@ import apiService from '../services/apiService.js';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
 import BoutonSignaler from '../components/BoutonSignaler.jsx';
 import BoutonBloquer from '../components/BoutonBloquer.jsx';
+import LoadingPage from '../components/LoadingPage';
 import VideoCard from '../components/VideoCard.jsx';
 import {
     ArrowLeft,
@@ -170,7 +171,7 @@ const VideoGrid = ({ videos, onVideoClick }) => {
 const LoadingState = () => (
     <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto mb-4"></div>
+            <LoadingPage size={80} />
             <p className="text-gray-600 font-medium">Chargement de la chaîne...</p>
         </div>
     </div>

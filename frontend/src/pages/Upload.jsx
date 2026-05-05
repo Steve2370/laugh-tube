@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
 import { Upload as UploadIcon, X, FileVideo, Check, Lock, AlertCircle, Image as ImageIcon } from 'lucide-react';
+import LoadingPage from "../components/LoadingPage.jsx";
 
 const Upload = () => {
     const [title, setTitle] = useState('');
@@ -147,7 +148,7 @@ const Upload = () => {
         return (
             <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <LoadingPage size={80} />
                     <p className="mt-4 text-gray-600">Chargement...</p>
                 </div>
             </div>

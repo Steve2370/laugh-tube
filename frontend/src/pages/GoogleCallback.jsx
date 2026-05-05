@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import LoadingPage from "../components/LoadingPage.jsx";
 
 const GoogleCallback = () => {
     const { loginWithToken } = useAuth();
@@ -21,7 +22,7 @@ const GoogleCallback = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <LoadingPage size={80} />
         </div>
     );
 };

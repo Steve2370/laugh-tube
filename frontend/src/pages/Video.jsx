@@ -7,7 +7,7 @@ import apiService from '../services/apiService';
 import VideoPlayer from '../components/VideoPlayer';
 import BoutonAbonne from '../components/BoutonAbonne.jsx';
 import MentionPicker from '../components/MentionPicker';
-import useAbonnement from '../hooks/useAbonnement.js';
+import LoadingPage from '../components/LoadingPage';
 
 import {
     ThumbsUp,
@@ -21,7 +21,7 @@ import {
     LogIn,
     MessageCircle,
     Send,
-    Users,
+    TrendingUp,
     X,
     Heart,
     Reply,
@@ -659,6 +659,47 @@ const Video = () => {
         }
     };
 
+    const SuggestedVideos = ({ currentVideoId, onVideoClick }) => {
+        const [videos, setVideos] = useState([]);
+
+        useEffect(() => {
+            apiService.requestV2('/videos/popular')
+                .then(r => setVideos((r.videos || []).filter(v => v.id !== currentVideoId).slice(0, 8)))
+                .catch(() => {});
+        }, [currentVideoId]);
+
+        return (
+            <div className="flex flex-col gap-3">
+                {videos.map(v => (
+                    <button
+                        key={v.id}
+                        onClick={() => onVideoClick(v)}
+                        className="flex gap-3 text-left hover:bg-gray-50 rounded-xl p-2 transition-all group"
+                    >
+                        <div className="relative flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-gray-200">
+                            {v.thumbnail ? (
+                                <img
+                                    src={`/uploads/thumbnails/${v.thumbnail}`}
+                                    alt={v.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                                    <Play size={20} className="text-white" />
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-gray-900 line-clamp-2 leading-tight mb-1">{v.title}</p>
+                            <p className="text-xs text-gray-500">{v.username}</p>
+                            <p className="text-xs text-gray-400">{formatNumber(v.views)} vues</p>
+                        </div>
+                    </button>
+                ))}
+            </div>
+        );
+    };
+
     const handleShare = async () => {
         const url = `${window.location.origin}/#/video/${video.id}`;
         setShareAnim(true);
@@ -703,7 +744,7 @@ const Video = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto mb-4"></div>
+                    <LoadingPage size={80} />
                     <p className="text-gray-600 font-medium">Chargement de la vidéo...</p>
                 </div>
             </div>
@@ -958,6 +999,19 @@ const Video = () => {
                                     ))
                                 )}
                             </div>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-1">
+                        <div className="bg-white rounded-2xl shadow-xl p-4">
+                            <h3 className="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
+                                <TrendingUp size={16} className="text-blue-500" />
+                                Vidéos populaires
+                            </h3>
+                            <SuggestedVideos currentVideoId={video?.id} onVideoClick={(v) => {
+                                localStorage.setItem('currentVideo', JSON.stringify(v));
+                                reload();
+                                window.scrollTo(0, 0);
+                            }} />
                         </div>
                     </div>
                 </div>
