@@ -30,7 +30,7 @@ import {
     MoreHorizontal,
     Trash2,
     ChevronUp,
-    Flag,
+    Flag, Mailbox, Bird,
 } from 'lucide-react';
 import videoService from "../services/videoService.js";
 
@@ -473,6 +473,7 @@ const Video = () => {
     const [mentionedUsers, setMentionedUsers] = useState([]);
     const animLikes = useAnimatedCount(reactionsCount.likes);
     const animDislikes = useAnimatedCount(reactionsCount.dislikes);
+    const [showShareModal, setShowShareModal] = useState(false);
     const animViews = useAnimatedCount(viewsCount);
     const videoSrc = video?.filename
         ? `/uploads/videos/${video.filename}`
@@ -704,20 +705,8 @@ const Video = () => {
         );
     };
 
-    const handleShare = async () => {
-        const url = `${window.location.origin}/#/video/${video.id}`;
-        setShareAnim(true);
-        setTimeout(() => setShareAnim(false), 600);
-        try {
-            if (navigator.share) {
-                await navigator.share({ title: video.title, text: video.description, url });
-            } else {
-                await navigator.clipboard.writeText(url);
-                toast.success('Lien copié dans le presse-papiers');
-            }
-        } catch (err) {
-            console.log('Erreur partage:', err);
-        }
+    const handleShare = () => {
+        setShowShareModal(true);
     };
 
     const handleUserClick = (userId, username) => {
@@ -1119,6 +1108,94 @@ const Video = () => {
                         <div className="flex gap-3">
                             <button onClick={() => { setShowLoginModal(false); navigateTo('login'); }} className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 transition font-medium">Se connecter</button>
                             <button onClick={() => setShowLoginModal(false)} className="flex-1 bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl hover:bg-gray-300 transition font-medium">Annuler</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showShareModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-end sm:items-center justify-center z-50 p-4"
+                     onClick={(e) => e.target === e.currentTarget && setShowShareModal(false)}>
+                    <div className="bg-gray-900 rounded-2xl w-full max-w-md overflow-hidden">
+
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+                            <h3 className="text-white font-semibold text-lg">Partager</h3>
+                            <button onClick={() => setShowShareModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X size={22} />
+                            </button>
+                        </div>
+
+                        <div className="px-6 py-4 flex gap-3 items-center border-b border-gray-700">
+                            {video.thumbnail ? (
+                                <img src={`/uploads/thumbnails/${video.thumbnail}`} alt={video.title}
+                                     className="w-24 h-14 rounded-lg object-cover flex-shrink-0" />
+                            ) : (
+                                <div className="w-24 h-14 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
+                                    <Play size={20} className="text-gray-400" />
+                                </div>
+                            )}
+                            <div className="min-w-0">
+                                <p className="text-white text-sm font-semibold line-clamp-2">{video.title}</p>
+                                <p className="text-gray-400 text-xs mt-0.5">{video.username}</p>
+                            </div>
+                        </div>
+
+                        <div className="px-6 py-4 border-b border-gray-700">
+                            <p className="text-gray-400 text-xs mb-3 uppercase tracking-wide">Partager via</p>
+                            <div className="flex gap-4 overflow-x-auto pb-1">
+                                {[
+                                    {
+                                        name: 'WhatsApp',
+                                        color: 'bg-green-500',
+                                        icon: <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.104.549 4.076 1.503 5.789L.057 23.486a.5.5 0 0 0 .614.612l5.756-1.426A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.65-.52-5.16-1.427l-.36-.214-3.793.939.977-3.718-.234-.373A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>,
+                                        url: `https://wa.me/?text=${encodeURIComponent(video.title + ' ' + window.location.origin + '/#/video/' + video.id)}`
+                                    },
+                                    {
+                                        name: 'Facebook',
+                                        color: 'bg-blue-600',
+                                        icon: <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
+                                        url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + '/#/video/' + video.id)}`
+                                    },
+                                    {
+                                        name: 'X',
+                                        color: 'bg-black',
+                                        icon: <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
+                                        url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(video.title)}&url=${encodeURIComponent(window.location.origin + '/#/video/' + video.id)}`
+                                    },
+                                    {
+                                        name: 'Email',
+                                        color: 'bg-gray-600',
+                                        icon: <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>,
+                                        url: `mailto:?subject=${encodeURIComponent(video.title)}&body=${encodeURIComponent(window.location.origin + '/#/video/' + video.id)}`
+                                    },
+                                ].map(s => (
+                                    <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
+                                       className="flex flex-col items-center gap-2 flex-shrink-0">
+                                        <div className={`w-14 h-14 rounded-full ${s.color} flex items-center justify-center`}>
+                                            {s.icon}
+                                        </div>
+                                        <span className="text-gray-400 text-xs">{s.name}</span>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="px-6 py-4">
+                            <p className="text-gray-400 text-xs mb-2 uppercase tracking-wide">Lien</p>
+                            <div className="flex gap-2 bg-gray-800 rounded-xl px-4 py-3 items-center">
+                                <p className="text-gray-300 text-sm flex-1 truncate">
+                                    {window.location.origin}/#/video/{video.id}
+                                </p>
+                                <button
+                                    onClick={async () => {
+                                        await navigator.clipboard.writeText(`${window.location.origin}/#/video/${video.id}`);
+                                        toast.success('Lien copié !');
+                                    }}
+                                    className="bg-white text-gray-900 font-bold text-sm px-4 py-1.5 rounded-lg hover:bg-gray-100 transition-all flex-shrink-0"
+                                >
+                                    Copier
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
