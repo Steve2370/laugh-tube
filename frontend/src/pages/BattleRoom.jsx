@@ -122,12 +122,15 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
     });
 
     const BattleCountdown = React.memo(({ durationMinutes, onTimeUp }) => {
-        const [secondsLeft, setSecondsLeft] = useState(() => durationMinutes * 60);
+        const initialSeconds = durationMinutes * 60;
+        const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
         const onTimeUpRef = useRef(onTimeUp);
         onTimeUpRef.current = onTimeUp;
+        const startedRef = useRef(false);
 
         useEffect(() => {
-            if (!durationMinutes) return;
+            if (!durationMinutes || startedRef.current) return;
+            startedRef.current = true;
             const interval = setInterval(() => {
                 setSecondsLeft(prev => {
                     if (prev <= 1) {
