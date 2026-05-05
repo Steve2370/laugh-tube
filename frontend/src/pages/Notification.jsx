@@ -223,8 +223,19 @@ const Notifications = () => {
                                     }`}
                                 >
                                     <div className="flex gap-4 items-start">
-                                        <div className={`flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
-                                            {getNotificationText(notification)}
+                                        <div className="flex-shrink-0 relative">
+                                            <img
+                                                src={notification.actor_avatar
+                                                    ? (notification.actor_avatar.startsWith('http') ? notification.actor_avatar : `/uploads/profiles/${notification.actor_avatar}`)
+                                                    : '/default-avatar.png'
+                                                }
+                                                alt={notification.actor_name}
+                                                className="w-11 h-11 rounded-full object-cover bg-white"
+                                                onError={(e) => { e.target.src = '/default-avatar.png'; }}
+                                            />
+                                            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
+                                                {getNotificationIcon(notification.type)}
+                                            </div>
                                         </div>
 
                                         <div className="flex-1 min-w-0 pr-8">
