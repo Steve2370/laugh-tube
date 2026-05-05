@@ -663,8 +663,8 @@ const Video = () => {
         const [videos, setVideos] = useState([]);
 
         useEffect(() => {
-            apiService.requestV2('/videos/popular')
-                .then(r => setVideos((r.videos || []).filter(v => v.id !== currentVideoId).slice(0, 8)))
+            apiService.requestV2('/videos')
+                .then(r => setVideos((r.videos || []).filter(v => v.id !== currentVideoId)))
                 .catch(() => {});
         }, [currentVideoId]);
 
