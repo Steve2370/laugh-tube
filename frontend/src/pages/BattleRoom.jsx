@@ -90,16 +90,24 @@ const BattleEmojiPicker = ({ onSend }) => {
     );
 };
 
-const BattleCountdown = React.memo(({ durationMinutes, onTimeUp }) => {
-    const initialSeconds = durationMinutes * 60;
-    const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+const BattleCountdown = React.memo(({ durationMinutes, startedAt, onTimeUp }) => {
+    const getSecondsLeft = () => {
+        if (!durationMinutes) return 0;
+        const totalSeconds = durationMinutes * 60;
+        const elapsedSeconds = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+        return Math.max(0, totalSeconds - elapsedSeconds);
+    };
+
+    const [secondsLeft, setSecondsLeft] = useState(() => getSecondsLeft());
     const onTimeUpRef = useRef(onTimeUp);
     onTimeUpRef.current = onTimeUp;
-    const startedRef = useRef(false);
 
     useEffect(() => {
-        if (!durationMinutes || startedRef.current) return;
-        startedRef.current = true;
+        if (!durationMinutes) return;
+        if (getSecondsLeft() <= 0) {
+            onTimeUpRef.current();
+            return;
+        }
         const interval = setInterval(() => {
             setSecondsLeft(prev => {
                 if (prev <= 1) {
@@ -515,6 +523,7 @@ const BattleRoom = () => {
                 {currentBattle.duration_minutes && (
                     <BattleCountdown
                         durationMinutes={currentBattle.duration_minutes}
+                        startedAt={currentBattle.started_at}
                         onTimeUp={handleStop}
                     />
                 )}

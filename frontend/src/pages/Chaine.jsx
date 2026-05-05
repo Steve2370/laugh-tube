@@ -83,7 +83,7 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, chall
                                     try {
                                         await apiService.requestV2(`/users/${channelUser.id}/challenge`, { method: 'POST' });
                                         setChallenged(true);
-                                        toast.success(`Défi envoyé à ${channelUser.username} ⚔️`);
+                                        toast.success(`Défi envoyé à ${channelUser.username}`);
                                     } catch (err) {
                                         const msg = err?.message || '';
                                         if (msg.includes('400') || msg.includes('déjà')) {
