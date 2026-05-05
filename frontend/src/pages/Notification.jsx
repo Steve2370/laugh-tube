@@ -6,6 +6,7 @@ import {
 import { useNotifications } from '../hooks/useNotification';
 import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
+import LoadingPage from "../components/LoadingPage.jsx";
 
 const getNotificationIcon = (type) => {
     const icons = {
@@ -197,7 +198,7 @@ const Notifications = () => {
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500" />
+                            <LoadingPage size={80} />
                         </div>
                     ) : filtered.length === 0 ? (
                         <div className="text-center py-20 px-4">

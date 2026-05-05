@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import LottieIcon from '../../components/LottieIcon';
+import GearAnimation from '../../assets/lottie/Gear.json';
 import {
     ChevronDown,
     LayoutDashboard,
@@ -6,7 +8,6 @@ import {
     LogOut,
     MessageSquare,
     Search,
-    Settings,
     Trophy,
     Upload,
     User,
@@ -231,12 +232,10 @@ export default function Navbar() {
                                                 </button>
 
                                                 <button
-                                                    onClick={() =>
-                                                        handleDropdownItemClick(() => navigateTo("settings"))
-                                                    }
+                                                    onClick={() => handleDropdownItemClick(() => navigateTo("settings"))}
                                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:bg-opacity-50 flex items-center gap-3 transition-colors"
                                                 >
-                                                    <Settings size={16} />
+                                                    <LottieIcon animationData={GearAnimation} size={20} playOnHover={true} />
                                                     Paramètres
                                                 </button>
 
