@@ -235,7 +235,11 @@ export default function Navbar() {
                                                     onClick={() => handleDropdownItemClick(() => navigateTo("settings"))}
                                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:bg-opacity-50 flex items-center gap-3 transition-colors"
                                                 >
-                                                    <LottieIcon animationData={GearAnimation} size={60} playOnHover={true} />
+                                                    <div style={{ width: 16, height: 16, overflow: 'visible', position: 'relative' }}>
+                                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(3)' }}>
+                                                            <LottieIcon animationData={GearAnimation} size={16} playOnHover={true} />
+                                                        </div>
+                                                    </div>
                                                     Paramètres
                                                 </button>
 

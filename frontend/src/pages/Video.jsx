@@ -748,7 +748,7 @@ const Video = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 flex items-center justify-center">
                 <div className="text-center">
-                    <LoadingPage size={120} />
+                    <LoadingPage size={280} />
                     <p className="text-gray-600 font-medium">Chargement de la vidéo...</p>
                 </div>
             </div>
