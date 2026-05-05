@@ -435,7 +435,7 @@ const BattleRoom = () => {
         } catch { toast.error('Erreur lors du démarrage de la battle'); }
     };
 
-    const handleStop = async () => {
+    const handleStop = useCallback(async () => {
         try {
             await apiService.requestV2(`/battles/${currentBattle.id}/stop`, { method: 'POST' });
         } catch { }
@@ -446,7 +446,7 @@ const BattleRoom = () => {
             loadBattles();
             loadMyBattles();
         }
-    };
+    }, [currentBattle?.id]);
 
     const handleRespond = async (battleId, action) => {
         try {
