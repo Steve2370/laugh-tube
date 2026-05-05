@@ -148,7 +148,7 @@ const Upload = () => {
         return (
             <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
                 <div className="text-center">
-                    <LoadingPage size={120} />
+                    <LoadingPage size={180} />
                     <p className="mt-4 text-gray-600">Chargement...</p>
                 </div>
             </div>

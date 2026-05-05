@@ -6,7 +6,7 @@ const LottieIcon = ({ animationData, size = 32, loop = false, autoplay = false, 
 
     return (
         <div
-            style={{ width: size, height: size }}
+            style={{ width: size, height: size, flexShrink: 0 }}
             className={`inline-flex items-center justify-center ${className}`}
             onMouseEnter={() => playOnHover && lottieRef.current?.play()}
             onMouseLeave={() => { playOnHover && lottieRef.current?.stop(); playOnHover && lottieRef.current?.goToAndStop(0, true); }}
@@ -17,6 +17,7 @@ const LottieIcon = ({ animationData, size = 32, loop = false, autoplay = false, 
                 loop={loop}
                 autoplay={autoplay}
                 style={{ width: '100%', height: '100%' }}
+                rendererSettings={{ preserveAspectRatio: 'xMidYMid meet' }}
             />
         </div>
     );
