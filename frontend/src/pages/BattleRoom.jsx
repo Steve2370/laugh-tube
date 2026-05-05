@@ -90,6 +90,45 @@ const BattleEmojiPicker = ({ onSend }) => {
     );
 };
 
+const BattleCountdown = React.memo(({ durationMinutes, onTimeUp }) => {
+    const initialSeconds = durationMinutes * 60;
+    const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+    const onTimeUpRef = useRef(onTimeUp);
+    onTimeUpRef.current = onTimeUp;
+    const startedRef = useRef(false);
+
+    useEffect(() => {
+        if (!durationMinutes || startedRef.current) return;
+        startedRef.current = true;
+        const interval = setInterval(() => {
+            setSecondsLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    onTimeUpRef.current();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    if (!durationMinutes) return null;
+
+    const mins = Math.floor(secondsLeft / 60);
+    const secs = secondsLeft % 60;
+
+    return (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 z-20" style={{ marginTop: '40px' }}>
+            <div className="bg-black bg-opacity-70 rounded-2xl px-4 py-2 text-center">
+                <p className="text-white font-mono font-black text-2xl">
+                    {String(mins).padStart(2,'0')}:{String(secs).padStart(2,'0')}
+                </p>
+            </div>
+        </div>
+    );
+});
+
 const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onLeave }) => {
     const [scores, setScores] = useState({
         challenger: battle.challenger_score || 0,
@@ -119,45 +158,6 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                 setCommentsRef.current(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
             }
         } catch {}
-    });
-
-    const BattleCountdown = React.memo(({ durationMinutes, onTimeUp }) => {
-        const initialSeconds = durationMinutes * 60;
-        const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
-        const onTimeUpRef = useRef(onTimeUp);
-        onTimeUpRef.current = onTimeUp;
-        const startedRef = useRef(false);
-
-        useEffect(() => {
-            if (!durationMinutes || startedRef.current) return;
-            startedRef.current = true;
-            const interval = setInterval(() => {
-                setSecondsLeft(prev => {
-                    if (prev <= 1) {
-                        clearInterval(interval);
-                        onTimeUpRef.current();
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-            return () => clearInterval(interval);
-        }, []);
-
-        if (!durationMinutes) return null;
-
-        const mins = Math.floor(secondsLeft / 60);
-        const secs = secondsLeft % 60;
-
-        return (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 z-20" style={{ marginTop: '40px' }}>
-                <div className="bg-black bg-opacity-70 rounded-2xl px-4 py-2 text-center">
-                    <p className="text-white font-mono font-black text-2xl">
-                        {String(mins).padStart(2,'0')}:{String(secs).padStart(2,'0')}
-                    </p>
-                </div>
-            </div>
-        );
     });
 
     const vote = async (targetId, emoji, points) => {
@@ -544,7 +544,6 @@ const BattleRoom = () => {
                     </div>
                 </div>
 
-                {/* Tabs */}
                 {isAuthenticated && (
                     <div className="flex gap-2 mb-6">
                         <button
