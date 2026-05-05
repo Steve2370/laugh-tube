@@ -283,11 +283,6 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                 </div>
             </div>
 
-            <BattleCountdown
-                durationMinutes={battle.duration_minutes}
-                onTimeUp={onStop}
-            />
-
             <div className="absolute top-0 left-0 right-0 z-30 px-4" style={{ paddingTop: '72px' }}>
                 <div className="bg-black bg-opacity-60 rounded-2xl p-3">
                     <div className="flex items-center justify-between mb-2">
@@ -499,23 +494,31 @@ const BattleRoom = () => {
     if (token && currentBattle) {
         const isParticipant = user?.id === currentBattle.challenger_id || user?.id === currentBattle.challenged_id;
         return (
-            <LiveKitRoom
-                serverUrl={LIVEKIT_URL}
-                token={token}
-                connect={true}
-                video={isParticipant}
-                audio={isParticipant}
-                style={{ height: '100vh', background: '#000' }}
-            >
-                <BattleLiveView
-                    battle={currentBattle}
-                    isParticipant={isParticipant}
-                    userId={user?.id}
-                    userAvatar={user?.avatar_url ? (user.avatar_url.startsWith('http') ? user.avatar_url : `/uploads/profiles/${user.avatar_url}`) : null}
-                    onStop={handleStop}
-                    onLeave={handleLeave}
-                />
-            </LiveKitRoom>
+            <div style={{ height: '100vh', background: '#000', position: 'relative' }}>
+                <LiveKitRoom
+                    serverUrl={LIVEKIT_URL}
+                    token={token}
+                    connect={true}
+                    video={isParticipant}
+                    audio={isParticipant}
+                    style={{ height: '100vh', background: '#000' }}
+                >
+                    <BattleLiveView
+                        battle={currentBattle}
+                        isParticipant={isParticipant}
+                        userId={user?.id}
+                        userAvatar={user?.avatar_url ? (user.avatar_url.startsWith('http') ? user.avatar_url : `/uploads/profiles/${user.avatar_url}`) : null}
+                        onStop={handleStop}
+                        onLeave={handleLeave}
+                    />
+                </LiveKitRoom>
+                {currentBattle.duration_minutes && (
+                    <BattleCountdown
+                        durationMinutes={currentBattle.duration_minutes}
+                        onTimeUp={handleStop}
+                    />
+                )}
+            </div>
         );
     }
 
