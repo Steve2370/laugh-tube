@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useVideos } from "../hooks/useVideos";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
+import { motion } from 'framer-motion';
 import VideoCard from "../components/VideoCard";
 import apiService from "../services/apiService";
 import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap, CheckCircle2, Mic, Radio, Users, Swords } from "lucide-react";
@@ -113,51 +114,138 @@ const HeroBanner = ({ total, videoSrc }) => (
     </div>
 );
 
-const ValueSection = ({ navigateTo, isAuthenticated }) => (
-    <div className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-3">
-            <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center text-2xl">🎭</div>
-            <h3 className="font-black text-gray-900 text-lg">Un tremplin, pas juste une plateforme</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-                LaughTube, c'est une scène numérique dédié à offrir de la visibilité aux créateurs de contenu humoristique.
-                <br /><br />
-                <span className="font-semibold text-gray-800">Notre mission : propulser les humoristes émergents qui veulent se faire connaître.</span>
-            </p>
+const ValueSection = ({ navigateTo, isAuthenticated }) => {
+    const cardVariants = {
+        hidden: { opacity: 0, y: 40 },
+        visible: (i) => ({
+            opacity: 1,
+            y: 0,
+            transition: { delay: i * 0.15, duration: 0.5, ease: 'easeOut' }
+        })
+    };
+
+    const listVariants = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -10 },
+        visible: { opacity: 1, x: 0 }
+    };
+
+    return (
+        <div className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <motion.div
+                custom={0}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={cardVariants}
+                whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-3"
+            >
+                <motion.div
+                    initial={{ rotate: -10, scale: 0.8 }}
+                    whileInView={{ rotate: 0, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+                    className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center text-2xl"
+                >🎭</motion.div>
+                <h3 className="font-black text-gray-900 text-lg">Un tremplin, pas juste une plateforme</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                    LaughTube, c'est une scène numérique dédié à offrir de la visibilité aux créateurs de contenu humoristique.
+                    <br /><br />
+                    <span className="font-semibold text-gray-800">Notre mission : propulser les humoristes émergents qui veulent se faire connaître.</span>
+                </p>
+            </motion.div>
+
+            <motion.div
+                custom={1}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={cardVariants}
+                whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                className="bg-blue-500 rounded-2xl p-6 shadow-sm flex flex-col gap-3"
+            >
+                <motion.div
+                    initial={{ rotate: -10, scale: 0.8 }}
+                    whileInView={{ rotate: 0, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ type: 'spring', stiffness: 200, delay: 0.35 }}
+                    className="w-11 h-11 rounded-xl bg-white bg-opacity-20 flex items-center justify-center text-2xl"
+                >👀</motion.div>
+                <h3 className="font-black text-white text-lg">Pour les spectateurs</h3>
+                <motion.ul
+                    variants={listVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="text-blue-100 text-sm space-y-2"
+                >
+                    {['Du contenu 100% humour, sans distractions', 'Découvrez des talents avant tout le monde', 'Une communauté qui vient pour la même raison que toi', 'Zéro drama. Que du LOL.'].map((text, i) => (
+                        <motion.li key={i} variants={itemVariants} className="flex items-start gap-2">
+                            <CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> {text}
+                        </motion.li>
+                    ))}
+                </motion.ul>
+                {!isAuthenticated && (
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigateTo("register")}
+                        className="mt-2 w-full bg-white text-blue-700 font-bold py-2.5 rounded-xl hover:bg-blue-50 transition-all text-sm"
+                    >
+                        Je veux rire
+                    </motion.button>
+                )}
+            </motion.div>
+
+            <motion.div
+                custom={2}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={cardVariants}
+                whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                className="bg-gray-900 rounded-2xl p-6 shadow-sm flex flex-col gap-3"
+            >
+                <motion.div
+                    initial={{ rotate: -10, scale: 0.8 }}
+                    whileInView={{ rotate: 0, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ type: 'spring', stiffness: 200, delay: 0.5 }}
+                    className="w-11 h-11 rounded-xl bg-white bg-opacity-10 flex items-center justify-center text-2xl"
+                >🎤</motion.div>
+                <h3 className="font-black text-white text-lg">Pour les créateurs</h3>
+                <motion.ul
+                    variants={listVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="text-gray-300 text-sm space-y-2"
+                >
+                    {['Une audience qui cherche exactement ton contenu', 'De la visibilité basée sur ta créativité', 'Une communauté engagée qui vient pour rire', 'Le côté humain mis en avant, pas l\'algorithme'].map((text, i) => (
+                        <motion.li key={i} variants={itemVariants} className="flex items-start gap-2">
+                            <CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> {text}
+                        </motion.li>
+                    ))}
+                </motion.ul>
+                {!isAuthenticated && (
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigateTo("register")}
+                        className="mt-2 w-full bg-yellow-400 text-gray-900 font-bold py-2.5 rounded-xl hover:bg-yellow-300 transition-all text-sm"
+                    >
+                        Je crée du contenu
+                    </motion.button>
+                )}
+            </motion.div>
         </div>
-        <div className="bg-blue-500 rounded-2xl p-6 shadow-sm flex flex-col gap-3">
-            <div className="w-11 h-11 rounded-xl bg-white bg-opacity-20 flex items-center justify-center text-2xl">👀</div>
-            <h3 className="font-black text-white text-lg">Pour les spectateurs</h3>
-            <ul className="text-blue-100 text-sm space-y-2">
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Du contenu 100% humour, sans distractions</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Découvrez des talents avant tout le monde</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Une communauté qui vient pour la même raison que toi</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-300 flex-shrink-0 mt-0.5" /> Zéro drama. Que du LOL.</li>
-            </ul>
-            {!isAuthenticated && (
-                <button onClick={() => navigateTo("register")}
-                        className="mt-2 w-full bg-white text-blue-700 font-bold py-2.5 rounded-xl hover:bg-blue-50 transition-all text-sm active:scale-95">
-                    Je veux rire 😂
-                </button>
-            )}
-        </div>
-        <div className="bg-gray-900 rounded-2xl p-6 shadow-sm flex flex-col gap-3">
-            <div className="w-11 h-11 rounded-xl bg-white bg-opacity-10 flex items-center justify-center text-2xl">🎤</div>
-            <h3 className="font-black text-white text-lg">Pour les créateurs</h3>
-            <ul className="text-gray-300 text-sm space-y-2">
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Une audience qui cherche exactement ton contenu</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> De la visibilité basée sur ta créativité</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Une communauté engagée qui vient pour rire</li>
-                <li className="flex items-start gap-2"><CheckCircle2 size={15} className="text-yellow-400 flex-shrink-0 mt-0.5" /> Le côté humain mis en avant, pas l'algorithme</li>
-            </ul>
-            {!isAuthenticated && (
-                <button onClick={() => navigateTo("register")}
-                        className="mt-2 w-full bg-yellow-400 text-gray-900 font-bold py-2.5 rounded-xl hover:bg-yellow-300 transition-all text-sm active:scale-95">
-                    Je crée du contenu 🎤
-                </button>
-            )}
-        </div>
-    </div>
-);
+    );
+};
 
 const FILTERS = [
     { id: 'all', label: 'Tout', icon: Play },

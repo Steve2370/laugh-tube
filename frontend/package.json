@@ -12,6 +12,7 @@
     "@livekit/components-styles": "^1.2.0",
     "axios": "^1.13.2",
     "emoji-picker-react": "^4.19.1",
+    "framer-motion": "^12.38.0",
     "livekit-client": "^2.18.7",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.562.0",
