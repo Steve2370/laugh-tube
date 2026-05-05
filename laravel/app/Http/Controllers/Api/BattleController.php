@@ -37,10 +37,13 @@ class BattleController extends Controller
 
         $existing = DB::table('battles')
             ->where(function ($q) use ($challenger, $challengedId) {
-                $q->where('challenger_id', $challenger->id)->where('challenged_id', $challengedId);
-            })
-            ->orWhere(function ($q) use ($challenger, $challengedId) {
-                $q->where('challenger_id', $challengedId)->where('challenged_id', $challenger->id);
+                $q->where(function ($inner) use ($challenger, $challengedId) {
+                    $inner->where('challenger_id', $challenger->id)
+                        ->where('challenged_id', $challengedId);
+                })->orWhere(function ($inner) use ($challenger, $challengedId) {
+                    $inner->where('challenger_id', $challengedId)
+                        ->where('challenged_id', $challenger->id);
+                });
             })
             ->whereIn('status', ['pending', 'accepted', 'scheduled', 'live'])
             ->first();
