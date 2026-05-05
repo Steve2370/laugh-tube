@@ -710,8 +710,6 @@ const Video = () => {
         setShowShareModal(true);
     };
 
-    const shareUrl = `https://laughtube.ca/api/v2/og/video/${video.id}`;
-
     const handleUserClick = (userId, username) => {
         localStorage.setItem('channelUser', JSON.stringify({ id: userId, username }));
         window.location.hash = '#/chaine';
@@ -766,6 +764,7 @@ const Video = () => {
             </div>
         );
     }
+    const shareUrl = `https://laughtube.ca/api/v2/og/video/${video.id}`;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20">
@@ -919,7 +918,6 @@ const Video = () => {
                                                 onChange={(e) => {
                                                     const val = e.target.value;
                                                     setNewComment(val);
-                                                    // Affiche le picker quand l'user tape @
                                                     if (val.endsWith('@')) {
                                                         setShowMentionPicker(true);
                                                     } else {
