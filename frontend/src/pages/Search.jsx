@@ -59,7 +59,7 @@ const Search = () => {
                 <div className="flex justify-center py-12">
                     <LottieIcon
                         animationData={PacmanAnimation}
-                        size={120}
+                        size={180}
                         autoplay={true}
                         loop={true}
                         playOnHover={false}

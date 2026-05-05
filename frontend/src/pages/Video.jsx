@@ -680,7 +680,7 @@ const Video = () => {
                         }}
                         className="flex gap-3 text-left hover:bg-gray-50 rounded-xl p-2 transition-all group"
                     >
-                        <div className="relative flex-shrink-0 w-40 h-24 rounded-lg overflow-hidden bg-gray-200">
+                        <div className="relative flex-shrink-0 w-44 h-28 rounded-lg overflow-hidden bg-gray-200">
                             {v.thumbnail ? (
                                 <img
                                     src={`/uploads/thumbnails/${v.thumbnail}`}
@@ -694,8 +694,8 @@ const Video = () => {
                             )}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-gray-900 line-clamp-2 leading-tight mb-1">{v.title}</p>
-                            <p className="text-xs text-gray-500">{v.username}</p>
+                            <p className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight mb-1">{v.title}</p>
+                            <p className="text-sm text-gray-500">{v.username}</p>
                             <p className="text-xs text-gray-400">{formatNumber(v.views)} vues</p>
                         </div>
                     </button>
