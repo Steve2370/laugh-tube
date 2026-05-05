@@ -3,7 +3,6 @@ import { Mic, Radio, Users, StopCircle, Loader } from 'lucide-react';
 import EmojiPickerLib from 'emoji-picker-react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
-import LoadingPage from '../components/LoadingPage';
 import apiService from '../services/apiService';
 import '@livekit/components-styles';
 import {

@@ -22,7 +22,7 @@ const GoogleCallback = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center">
-            <LoadingPage size={80} />
+            <LoadingPage size={120} />
         </div>
     );
 };

@@ -673,10 +673,14 @@ const Video = () => {
                 {videos.map(v => (
                     <button
                         key={v.id}
-                        onClick={() => onVideoClick(v)}
+                        onClick={() => {
+                            localStorage.setItem('currentVideo', JSON.stringify(v));
+                            window.location.hash = '#/video';
+                            window.location.reload();
+                        }}
                         className="flex gap-3 text-left hover:bg-gray-50 rounded-xl p-2 transition-all group"
                     >
-                        <div className="relative flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-gray-200">
+                        <div className="relative flex-shrink-0 w-40 h-24 rounded-lg overflow-hidden bg-gray-200">
                             {v.thumbnail ? (
                                 <img
                                     src={`/uploads/thumbnails/${v.thumbnail}`}
@@ -744,7 +748,7 @@ const Video = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 flex items-center justify-center">
                 <div className="text-center">
-                    <LoadingPage size={80} />
+                    <LoadingPage size={120} />
                     <p className="text-gray-600 font-medium">Chargement de la vidéo...</p>
                 </div>
             </div>
@@ -774,7 +778,7 @@ const Video = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20">
             <style>{ANIM_STYLES}</style>
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="max-w-screen-2xl mx-auto px-4 py-8">
                 <button
                     onClick={goBack}
                     className="mb-6 flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-all hover:-translate-x-1"
@@ -783,8 +787,8 @@ const Video = () => {
                     <span className="font-medium">Retour</span>
                 </button>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-3">
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
                             <VideoPlayer
                                 src={videoSrc}
@@ -941,13 +945,10 @@ const Video = () => {
                                                     onSelect={async (type, users) => {
                                                         setShowMentionPicker(false);
                                                         if (type === 'all') {
-                                                            // Ajoute @all au commentaire
                                                             setNewComment(prev => prev.slice(0, -1) + '@tous ');
-                                                            // Notifie tous les abonnés après soumission — géré dans handleCommentSubmit
                                                         } else {
                                                             setNewComment(prev => prev.slice(0, -1) + `@${users[0].username} `);
                                                         }
-                                                        // Stocke les users à notifier
                                                         setMentionedUsers(users);
                                                     }}
                                                     onClose={() => setShowMentionPicker(false)}
