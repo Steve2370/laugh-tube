@@ -394,9 +394,20 @@ const Settings = () => {
                                     <div className="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden">
                                         {subscribers.map((sub) => (
                                             <div key={sub.id || sub.user_id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                                                    {(sub.username || '?').charAt(0).toUpperCase()}
-                                                </div>
+                                                {sub.avatar_url ? (
+                                                    <img
+                                                        src={sub.avatar_url.startsWith('http') ? sub.avatar_url : `/uploads/profiles/${sub.avatar_url}`}
+                                                        alt={sub.username}
+                                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                                        onError={(e) => { e.target.src = '/default-avatar.png'; }}
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src="/default-avatar.png"
+                                                        alt={sub.username}
+                                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0 bg-white"
+                                                    />
+                                                )}
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-semibold text-gray-900 truncate">{sub.username}</p>
                                                     {sub.subscribed_at && <p className="text-xs text-gray-400">Abonné depuis le {new Date(sub.subscribed_at).toLocaleDateString('fr-FR')}</p>}
