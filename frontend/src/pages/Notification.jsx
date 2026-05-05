@@ -33,7 +33,8 @@ const getNotificationColor = (type) => {
     return colors[type] || 'text-gray-500 bg-gray-50';
 };
 
-const getNotificationText = (type) => {
+const getNotificationText = (notification) => {
+    if (notification.message) return notification.message;
     const texts = {
         like: 'a aimé votre vidéo',
         comment: 'a commenté votre vidéo',
@@ -41,8 +42,11 @@ const getNotificationText = (type) => {
         mention: 'vous a mentionné',
         reply: 'a répondu à votre commentaire',
         video_upload: 'a publié une nouvelle vidéo',
+        live: 'est actuellement en direct',
+        battle_challenge: 'vous provoque en duel',
+        battle_accepted: 'a accepté votre défi',
+        battle_scheduled: 'a programmé une battle',
     };
-    if (notification.message) return notification.message;
     return texts[notification.type] || 'vous a notifié';
 };
 
@@ -220,7 +224,7 @@ const Notifications = () => {
                                 >
                                     <div className="flex gap-4 items-start">
                                         <div className={`flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
-                                            {getNotificationIcon(notification.type)}
+                                            {getNotificationText(notification)}
                                         </div>
 
                                         <div className="flex-1 min-w-0 pr-8">
