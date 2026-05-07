@@ -40,14 +40,12 @@ class CommentInteractionController extends Controller
 
     public function getCommentLikeStatus(Request $request, $commentId)
     {
-        $userId = $request->user()->id;
-
-        $liked = DB::table('comment_likes')
+        $count = DB::table('comment_likes')->where('comment_id', $commentId)->count();
+        $userId = $request->user()?->id;
+        $liked = $userId ? DB::table('comment_likes')
             ->where('comment_id', $commentId)
             ->where('user_id', $userId)
-            ->exists();
-
-        $count = DB::table('comment_likes')->where('comment_id', $commentId)->count();
+            ->exists() : false;
 
         return response()->json(['liked' => $liked, 'like_count' => $count]);
     }
@@ -125,14 +123,12 @@ class CommentInteractionController extends Controller
 
     public function getReplyLikeStatus(Request $request, $replyId)
     {
-        $userId = $request->user()->id;
-
-        $liked = DB::table('reply_likes')
+        $count = DB::table('reply_likes')->where('reply_id', $replyId)->count();
+        $userId = $request->user()?->id;
+        $liked = $userId ? DB::table('reply_likes')
             ->where('reply_id', $replyId)
             ->where('user_id', $userId)
-            ->exists();
-
-        $count = DB::table('reply_likes')->where('reply_id', $replyId)->count();
+            ->exists() : false;
 
         return response()->json(['liked' => $liked, 'like_count' => $count]);
     }
