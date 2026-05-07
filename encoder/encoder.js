@@ -227,7 +227,7 @@ class VideoEncoder {
                 y='if(lt(mod(t\\,16)\\,8)\\,58\\,H-30)':\
                 shadowcolor=black:\
                 shadowx=1:shadowy=1[out]" \
-                    -map "[out]" -map 0:a? \
+                    -map "[out]" -map 0:a:0? \
                     -c:v libx264 \
                     -preset ${CONFIG.encoder.videoPreset} \
                     -crf ${CONFIG.encoder.videoCRF} \
