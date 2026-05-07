@@ -374,12 +374,13 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
                     <div className="flex items-center gap-4 mt-1 ml-2">
                         <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
                         <button
-                            onClick={handleLike}
-                            disabled={!isAuthenticated || likeLoading}
-                            className={`text-xs font-semibold flex items-center gap-1 transition-colors ${liked ? 'text-red-500' : 'text-gray-500 hover:text-gray-700'}`}
+                            onClick={isAuthenticated ? handleLike : null}
+                            disabled={likeLoading}
+                            className={`text-xs font-semibold flex items-center gap-1 transition-colors ${liked ? 'text-red-500' : 'text-gray-500 hover:text-gray-700'} ${!isAuthenticated ? 'cursor-default' : 'cursor-pointer'}`}
+                            title={!isAuthenticated ? 'Connectez-vous pour liker' : ''}
                         >
                             <Heart size={13} fill={liked ? 'currentColor' : 'none'} />
-                            {likeCount > 0 && <span>{likeCount}</span>}
+                            <span>{likeCount}</span>
                         </button>
                         <button
                             onClick={() => handleReplyClick(comment.username)}
