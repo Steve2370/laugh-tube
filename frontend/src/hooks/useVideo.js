@@ -16,17 +16,37 @@ export const useVideo = (videoId) => {
             setLoading(true);
             setError(null);
 
-            const [videoData, commentsData, reactionsData] = await Promise.all([
-                videoService.getVideo(videoId),
+            let videoData;
+            try {
+                videoData = await videoService.getVideo(videoId);
+            } catch (err) {
+                setError(err.message || 'Vidéo introuvable');
+                setLoading(false);
+                return;
+            }
+
+            const normalized = normalizeVideo(videoData.video || videoData);
+            if (!normalized) {
+                setError('Vidéo introuvable');
+                setLoading(false);
+                return;
+            }
+            setVideo(normalized);
+
+            const [commentsData, reactionsData] = await Promise.allSettled([
                 videoService.getComments(videoId),
                 videoService.getReactions(videoId)
             ]);
 
-            setVideo(normalizeVideo(videoData.video || videoData));
-            setComments(commentsData.comments || []);
-            setReactions(reactionsData);
+            if (commentsData.status === 'fulfilled') {
+                setComments(commentsData.value.comments || []);
+            }
+            if (reactionsData.status === 'fulfilled') {
+                setReactions(reactionsData.value);
+            }
+
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'Erreur inattendue');
         } finally {
             setLoading(false);
         }
