@@ -225,8 +225,15 @@ class CommentaireController
     public function getLikeStatus(int $commentId): void
     {
         try {
+            $count = $this->db->fetchOne(
+                "SELECT COUNT(*) as total FROM comment_likes WHERE comment_id = $1",
+                [$commentId]
+            );
+            $likeCount = (int)($count['total'] ?? 0);
+
             if (!$this->authMiddleware->handle()) {
-                JsonResponse::success(['liked' => false, 'like_count' => 0]);
+                JsonResponse::success(['liked' => false, 'like_count' => $likeCount]);
+                return;
             }
 
             $userId = $this->authMiddleware->getUserId();
@@ -236,14 +243,9 @@ class CommentaireController
                 [$commentId, $userId]
             );
 
-            $count = $this->db->fetchOne(
-                "SELECT COUNT(*) as total FROM comment_likes WHERE comment_id = $1",
-                [$commentId]
-            );
-
             JsonResponse::success([
                 'liked' => $liked !== null,
-                'like_count' => (int)($count['total'] ?? 0)
+                'like_count' => $likeCount
             ]);
 
         } catch (\Exception $e) {
@@ -289,8 +291,15 @@ class CommentaireController
     public function getReplyLikeStatus(int $replyId): void
     {
         try {
+            $count = $this->db->fetchOne(
+                "SELECT COUNT(*) as total FROM reply_likes WHERE reply_id = $1",
+                [$replyId]
+            );
+            $likeCount = (int)($count['total'] ?? 0);
+
             if (!$this->authMiddleware->handle()) {
-                JsonResponse::success(['liked' => false, 'like_count' => 0]);
+                JsonResponse::success(['liked' => false, 'like_count' => $likeCount]);
+                return;
             }
 
             $userId = $this->authMiddleware->getUserId();
@@ -300,14 +309,9 @@ class CommentaireController
                 [$replyId, $userId]
             );
 
-            $count = $this->db->fetchOne(
-                "SELECT COUNT(*) as total FROM reply_likes WHERE reply_id = $1",
-                [$replyId]
-            );
-
             JsonResponse::success([
                 'liked' => $liked !== null,
-                'like_count' => (int)($count['total'] ?? 0)
+                'like_count' => $likeCount
             ]);
 
         } catch (\Exception $e) {
