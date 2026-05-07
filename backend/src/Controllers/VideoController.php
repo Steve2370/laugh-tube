@@ -11,7 +11,7 @@ use App\Services\VideoService;
 use App\Utils\JsonResponse;
 use App\Utils\SecurityHelper;
 
-class VideoController
+readonly class VideoController
 {
     public function __construct(
         private VideoService $videoService,
