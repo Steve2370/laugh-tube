@@ -18,42 +18,36 @@ class CommentController extends Controller
         $video = Video::whereNull('deleted_at')->findOrFail($id);
         $userId = $request->user()?->id;
 
-        $likesTable = DB::getSchemaBuilder()->hasTable('comment_likes')
-            ? 'comment_likes'
-            : (DB::getSchemaBuilder()->hasTable('commentaire_likes')
-                ? 'commentaire_likes' : null);
+        $commentIds = Commentaire::where('video_id', $id)->pluck('id');
+
+        $likesPerComment = DB::table('comment_likes')
+            ->whereIn('comment_id', $commentIds)
+            ->selectRaw('comment_id, COUNT(*) as total')
+            ->groupBy('comment_id')
+            ->pluck('total', 'comment_id');
+
+        $likedByUser = $userId
+            ? DB::table('comment_likes')
+                ->whereIn('comment_id', $commentIds)
+                ->where('user_id', $userId)
+                ->pluck('comment_id')
+                ->flip()
+            : collect();
 
         $comments = Commentaire::with('user:id,username,avatar_url')
             ->where('video_id', $id)
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($c) use ($userId, $likesTable) {
-                $likesCount = 0;
-                $isLiked = false;
-
-                if ($likesTable) {
-                    $likesCount = DB::table($likesTable)
-                        ->where('comment_id', $c->id)
-                        ->count();
-                    if ($userId) {
-                        $isLiked = DB::table($likesTable)
-                            ->where('comment_id', $c->id)
-                            ->where('user_id', $userId)
-                            ->exists();
-                    }
-                }
-
-                return [
-                    'id' => $c->id,
-                    'content' => $c->content,
-                    'created_at' => $c->created_at,
-                    'user_id' => $c->user_id,
-                    'username' => $c->user?->username,
-                    'avatar_url' => $c->user?->avatar_url,
-                    'likes_count' => $likesCount,
-                    'is_liked' => $isLiked,
-                ];
-            });
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'content' => $c->content,
+                'created_at' => $c->created_at,
+                'user_id' => $c->user_id,
+                'username' => $c->user?->username,
+                'avatar_url' => $c->user?->avatar_url,
+                'likes_count' => (int) ($likesPerComment[$c->id] ?? 0),
+                'is_liked' => isset($likedByUser[$c->id]),
+            ]);
 
         return response()->json(['comments' => $comments]);
     }
