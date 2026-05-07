@@ -80,6 +80,7 @@ class CommentInteractionController extends Controller
                 'comment_replies.created_at',
                 'comment_replies.user_id',
                 'users.username',
+                'users.avatar_url',
             )
             ->get()
             ->map(function ($reply) {
