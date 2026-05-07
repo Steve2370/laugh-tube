@@ -18,23 +18,42 @@ class CommentController extends Controller
         $video = Video::whereNull('deleted_at')->findOrFail($id);
         $userId = $request->user()?->id;
 
+        $likesTable = DB::getSchemaBuilder()->hasTable('comment_likes')
+            ? 'comment_likes'
+            : (DB::getSchemaBuilder()->hasTable('commentaire_likes')
+                ? 'commentaire_likes' : null);
+
         $comments = Commentaire::with('user:id,username,avatar_url')
-            ->withCount('likes')
             ->where('video_id', $id)
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(fn($c) => [
-                'id' => $c->id,
-                'content' => $c->content,
-                'created_at' => $c->created_at,
-                'user_id' => $c->user_id,
-                'username' => $c->user?->username,
-                'avatar_url' => $c->user?->avatar_url,
-                'likes_count' => $c->likes_count,
-                'is_liked' => $userId
-                    ? $c->likes()->where('user_id', $userId)->exists()
-                    : false,
-            ]);
+            ->map(function ($c) use ($userId, $likesTable) {
+                $likesCount = 0;
+                $isLiked = false;
+
+                if ($likesTable) {
+                    $likesCount = DB::table($likesTable)
+                        ->where('comment_id', $c->id)
+                        ->count();
+                    if ($userId) {
+                        $isLiked = DB::table($likesTable)
+                            ->where('comment_id', $c->id)
+                            ->where('user_id', $userId)
+                            ->exists();
+                    }
+                }
+
+                return [
+                    'id' => $c->id,
+                    'content' => $c->content,
+                    'created_at' => $c->created_at,
+                    'user_id' => $c->user_id,
+                    'username' => $c->user?->username,
+                    'avatar_url' => $c->user?->avatar_url,
+                    'likes_count' => $likesCount,
+                    'is_liked' => $isLiked,
+                ];
+            });
 
         return response()->json(['comments' => $comments]);
     }
