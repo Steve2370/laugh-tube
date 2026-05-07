@@ -109,7 +109,7 @@ const ReplyItem = ({ reply, isAuthenticated, userId, onUserClick, onReply }) => 
     const [likeLoading, setLikeLoading] = useState(false);
 
     useEffect(() => {
-        if (isAuthenticated && reply.id) {
+        if (reply.id) {
             apiService.getReplyLikeStatus(reply.id)
                 .then(res => {
                     setLiked(!!res.liked);
@@ -225,7 +225,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
     }, []);
 
     useEffect(() => {
-        if (isAuthenticated && comment.id) {
+        if (comment.id) {
             apiService.getCommentLikeStatus(comment.id)
                 .then(res => { setLiked(!!res.liked); setLikeCount(res.like_count || 0); })
                 .catch(() => {});
@@ -307,7 +307,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
                 <div className="flex-1 min-w-0">
                     <div className="relative">
                         <div className="bg-gray-100 rounded-2xl px-4 py-3 inline-block max-w-full relative pr-8">
-                        <button onClick={() => onUserClick(comment.user_id, comment.username)} className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
+                            <button onClick={() => onUserClick(comment.user_id, comment.username)} className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
                                 {comment.username || 'Utilisateur'}
                             </button>
                             {editing ? (
