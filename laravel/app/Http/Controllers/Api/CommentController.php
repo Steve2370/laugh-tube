@@ -13,11 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
 {
-    public function index(int $id): JsonResponse
+    public function index(Request $request, int $id): JsonResponse
     {
         $video = Video::whereNull('deleted_at')->findOrFail($id);
+        $userId = $request->user()?->id;
 
         $comments = Commentaire::with('user:id,username,avatar_url')
+            ->withCount('likes')
             ->where('video_id', $id)
             ->orderBy('created_at', 'desc')
             ->get()
@@ -28,6 +30,10 @@ class CommentController extends Controller
                 'user_id' => $c->user_id,
                 'username' => $c->user?->username,
                 'avatar_url' => $c->user?->avatar_url,
+                'likes_count' => $c->likes_count,
+                'is_liked' => $userId
+                    ? $c->likes()->where('user_id', $userId)->exists()
+                    : false,
             ]);
 
         return response()->json(['comments' => $comments]);
@@ -110,6 +116,8 @@ class CommentController extends Controller
                 'user_id' => $comment->user_id,
                 'username' => $comment->user?->username,
                 'avatar_url' => $comment->user?->avatar_url,
+                'likes_count' => 0,
+                'is_liked' => false,
             ],
         ], 201);
     }
