@@ -9,7 +9,7 @@ use App\Services\CommentaireService;
 use App\Utils\JsonResponse;
 use App\Utils\SecurityHelper;
 
-class CommentaireController
+readonly class CommentaireController
 {
     public function __construct(
         private CommentaireService $commentaireService,
@@ -207,13 +207,15 @@ class CommentaireController
                     "DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2",
                     [$commentId, $userId]
                 );
-                JsonResponse::success(['message' => 'Like retiré', 'liked' => false]);
+                $count = $this->db->fetchOne("SELECT COUNT(*) as total FROM comment_likes WHERE comment_id = $1", [$commentId]);
+                JsonResponse::success(['message' => 'Like retiré', 'liked' => false, 'like_count' => (int)($count['total'] ?? 0)]);
             } else {
                 $this->db->execute(
                     "INSERT INTO comment_likes (comment_id, user_id, created_at) VALUES ($1, $2, NOW())",
                     [$commentId, $userId]
                 );
-                JsonResponse::success(['message' => 'Commentaire liké', 'liked' => true]);
+                $count = $this->db->fetchOne("SELECT COUNT(*) as total FROM comment_likes WHERE comment_id = $1", [$commentId]);
+                JsonResponse::success(['message' => 'Commentaire liké', 'liked' => true, 'like_count' => (int)($count['total'] ?? 0)]);
             }
 
         } catch (\Exception $e) {
