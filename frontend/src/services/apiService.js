@@ -521,7 +521,7 @@ class ApiService {
     }
 
     async getCommentLikeStatus(commentId) {
-        return this.requestV2(`/comments/${commentId}/like-status`);
+        return this.request(`/comments/${commentId}/like-status`);
     }
 
     async postReply(commentId, content) {
