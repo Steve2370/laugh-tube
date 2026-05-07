@@ -42,6 +42,11 @@ Route::prefix('v2')->group(function () {
 
     Route::get('/users/{id}/subscribers-count', [AbonnementController::class, 'count']);
 
+    // ── Routes publiques (sans auth) ──────────────────────────────────────
+    Route::get('/comments/{commentId}/replies', [CommentInteractionController::class, 'getReplies']);
+    Route::get('/comments/{commentId}/like-status', [CommentInteractionController::class, 'getCommentLikeStatus']);
+    Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
+
     Route::get('/og/video/{id}', function($id) {
         $video = \DB::table('videos')
             ->join('users', 'users.id', '=', 'videos.user_id')
@@ -132,12 +137,9 @@ Route::prefix('v2')->group(function () {
         Route::get('/users/{id}/subscribe-status', [AbonnementController::class, 'status']);
 
         Route::post('/comments/{commentId}/like', [CommentInteractionController::class, 'toggleCommentLike']);
-        Route::get('/comments/{commentId}/like-status', [CommentInteractionController::class, 'getCommentLikeStatus']);
-        Route::get('/comments/{commentId}/replies', [CommentInteractionController::class, 'getReplies']);
         Route::post('/comments/{commentId}/replies', [CommentInteractionController::class, 'postReply']);
         Route::put('/comments/{commentId}', [CommentController::class, 'update']);
         Route::post('/replies/{replyId}/like', [CommentInteractionController::class, 'toggleReplyLike']);
-        Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
 
         Route::post('/users/{id}/challenge', [BattleController::class, 'challenge']);
         Route::post('/battles/{id}/respond', [BattleController::class, 'respond']);
