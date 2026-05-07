@@ -34,6 +34,12 @@ class CommentController extends Controller
                 ->flip()
             : collect();
 
+        $repliesPerComment = DB::table('comment_replies')
+            ->whereIn('comment_id', $commentIds)
+            ->selectRaw('comment_id, COUNT(*) as total')
+            ->groupBy('comment_id')
+            ->pluck('total', 'comment_id');
+
         $comments = Commentaire::with('user:id,username,avatar_url')
             ->where('video_id', $id)
             ->orderBy('created_at', 'desc')
@@ -47,6 +53,7 @@ class CommentController extends Controller
                 'avatar_url' => $c->user?->avatar_url,
                 'likes_count' => (int) ($likesPerComment[$c->id] ?? 0),
                 'is_liked' => isset($likedByUser[$c->id]),
+                'replies_count' => (int) ($repliesPerComment[$c->id] ?? 0),
             ]);
 
         return response()->json(['comments' => $comments]);
@@ -131,6 +138,7 @@ class CommentController extends Controller
                 'avatar_url' => $comment->user?->avatar_url,
                 'likes_count' => 0,
                 'is_liked' => false,
+                'replies_count' => 0,
             ],
         ], 201);
     }
