@@ -31,6 +31,24 @@ class CommentInteractionController extends Controller
                 'created_at' => now(),
             ]);
             $liked = true;
+
+            $comment = DB::table('commentaires')->where('id', $commentId)->first();
+            if ($comment && $comment->user_id !== $userId) {
+                $actor = DB::table('users')->where('id', $userId)->first();
+                $video = DB::table('videos')->where('id', $comment->video_id)->first();
+                DB::table('notifications')->insert([
+                    'user_id' => $comment->user_id,
+                    'actor_id' => $userId,
+                    'actor_name' => $actor?->username,
+                    'type' => 'comment_like',
+                    'video_id' => $comment->video_id,
+                    'comment_id' => $commentId,
+                    'video_title' => $video?->title,
+                    'comment_preview' => substr($comment->content, 0, 100),
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
         }
 
         $count = DB::table('comment_likes')->where('comment_id', $commentId)->count();
@@ -76,9 +94,11 @@ class CommentInteractionController extends Controller
     {
         $request->validate(['content' => 'required|string|max:1000']);
 
+        $userId = $request->user()->id;
+
         $id = DB::table('comment_replies')->insertGetId([
             'comment_id' => $commentId,
-            'user_id' => $request->user()->id,
+            'user_id' => $userId,
             'content' => $request->input('content'),
             'created_at' => now(),
         ]);
@@ -88,6 +108,24 @@ class CommentInteractionController extends Controller
             ->where('comment_replies.id', $id)
             ->select('comment_replies.*', 'users.username')
             ->first();
+
+        $comment = DB::table('commentaires')->where('id', $commentId)->first();
+        if ($comment && $comment->user_id !== $userId) {
+            $actor = DB::table('users')->where('id', $userId)->first();
+            $video = DB::table('videos')->where('id', $comment->video_id)->first();
+            DB::table('notifications')->insert([
+                'user_id' => $comment->user_id,
+                'actor_id' => $userId,
+                'actor_name' => $actor?->username,
+                'type' => 'comment_reply',
+                'video_id' => $comment->video_id,
+                'comment_id' => $commentId,
+                'video_title' => $video?->title,
+                'comment_preview' => substr($request->input('content'), 0, 100),
+                'is_read' => false,
+                'created_at' => now(),
+            ]);
+        }
 
         return response()->json(['reply' => $reply], 201);
     }
