@@ -212,7 +212,7 @@ class VideoEncoder {
             const username = job.username || 'LaughTube';
             const watermarkPath = path.join(__dirname, 'watermark.png');
 
-            const encodeCmd = `ffmpeg -y -i "${inputPath}" -i "${watermarkPath}" \
+            const encodeCmd = `ffmpeg -y -ignore_unknown -i "${inputPath}" -i "${watermarkPath}" \
                 -filter_complex "\
                 [1:v]scale=200:-1[logo];\
                 [0:v][logo]overlay=\
