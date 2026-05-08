@@ -291,7 +291,7 @@ const CommentItem = ({ comment, isAuthenticated, userId, onUserClick, onReplyPos
         ? (comment.avatar_url.startsWith('http') ? comment.avatar_url : `/uploads/profiles/${comment.avatar_url}`)
         : null;
 
-    const replyCount = comment.reply_count || replies.length || 0;
+    const replyCount = comment.replies_count ?? comment.reply_count ?? replies.length ?? 0;
 
     return (
         <div className="mb-4 last:mb-0">
