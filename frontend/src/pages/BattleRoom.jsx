@@ -16,9 +16,9 @@ import {
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import Lottie from 'lottie-react';
-import heartAnim from '../animations/Valentine_Filled1.json';
-import thumbsUpAnim from '../animations/Valentine_Filled3.json';
-import lolAnim from '../animations/Valentine_Filled5.json';
+import heartAnim from '../../public/animations/Valentine_Filled1.json';
+import thumbsUpAnim from '../../public/animations/Valentine_Filled3.json';
+import lolAnim from '../../public/animations/Valentine_Filled5.json';
 
 const LIVEKIT_URL = 'wss://laughtube.ca/livekit';
 
@@ -109,9 +109,9 @@ const BattleCountdown = React.memo(({ durationMinutes, startedAt, onTimeUp }) =>
 });
 
 const ANIM_MAP = {
-    'icons8-heart': heartAnim,
-    'icons8-thumbs-up': thumbsUpAnim,
-    'icons8-lol': lolAnim,
+    'Valentine_Filled1': heartAnim,
+    'Valentine_Filled3': thumbsUpAnim,
+    'Valentine_Filled5': lolAnim,
 };
 
 const LottieIcon = ({ name, size = 40 }) => {
@@ -128,9 +128,9 @@ const LottieIcon = ({ name, size = 40 }) => {
 };
 
 const VOTE_REACTIONS = [
-    { name: 'Valentine_Filled1.json', reactionType: 'love_max', points: 5, label: '+5' },
-    { name: 'Valentine_Filled3.json', reactionType: 'love_big', points: 3, label: '+3' },
-    { name: 'Valentine_Filled5.json', reactionType: 'love_funny', points: 2, label: '+2' },
+    { name: 'Valentine_Filled1', reactionType: 'love_max', points: 5, label: '+5' },
+    { name: 'Valentine_Filled3', reactionType: 'love_big', points: 3, label: '+3' },
+    { name: 'Valentine_Filled5', reactionType: 'love_funny', points: 2, label: '+2' },
 ];
 
 const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onLeave }) => {
