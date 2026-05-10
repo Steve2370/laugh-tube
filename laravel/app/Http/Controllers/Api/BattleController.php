@@ -286,7 +286,6 @@ class BattleController extends Controller
     {
         $request->validate([
             'target_id' => 'required|integer',
-            'emoji' => 'required|string',
         ]);
 
         $user = $request->user();
@@ -296,20 +295,35 @@ class BattleController extends Controller
             return response()->json(['error' => 'Battle introuvable ou non en cours'], 404);
         }
 
-        $points = match($request->emoji) {
-            '👑' => 5,
-            '🔥' => 3,
-            '😂' => 2,
+        $reactionType = $request->input('reaction_type') ?? $request->input('emoji');
+
+        $points = match($reactionType) {
+            'love_max', '👑' => 5,
+            'love_big', '🔥' => 3,
+            'love_funny', '😂' => 2,
             default => 1,
         };
 
         DB::table('battle_votes')->updateOrInsert(
             ['battle_id' => $battleId, 'user_id' => $user->id],
-            ['target_id' => $request->target_id, 'emoji' => $request->emoji, 'points' => $points, 'created_at' => now()]
+            [
+                'target_id' => $request->target_id,
+                'emoji' => $reactionType,
+                'points' => $points,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
         );
 
-        $challengerScore = DB::table('battle_votes')->where('battle_id', $battleId)->where('target_id', $battle->challenger_id)->sum('points');
-        $challengedScore = DB::table('battle_votes')->where('battle_id', $battleId)->where('target_id', $battle->challenged_id)->sum('points');
+        $challengerScore = DB::table('battle_votes')
+            ->where('battle_id', $battleId)
+            ->where('target_id', $battle->challenger_id)
+            ->sum('points');
+
+        $challengedScore = DB::table('battle_votes')
+            ->where('battle_id', $battleId)
+            ->where('target_id', $battle->challenged_id)
+            ->sum('points');
 
         DB::table('battles')->where('id', $battleId)->update([
             'challenger_score' => $challengerScore,
