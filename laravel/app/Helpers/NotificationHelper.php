@@ -3,6 +3,8 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Api\PushNotificationService;
 
 class NotificationHelper
 {
@@ -22,5 +24,28 @@ class NotificationHelper
             'is_read' => false,
             'created_at' => now(),
         ]);
+
+        try {
+            $actorName = $data['actor_name'] ?? 'Quelqu\'un';
+            $body = match($data['type']) {
+                'like' => "$actorName a aimé votre vidéo",
+                'comment' => "$actorName a commenté votre vidéo",
+                'comment_like' => "$actorName a aimé votre commentaire",
+                'comment_reply' => "$actorName a répondu à votre commentaire",
+                'subscribe' => "$actorName s'est abonné à votre chaîne",
+                'battle_challenge' => "$actorName vous défie en battle !",
+                'battle_accepted' => "$actorName a accepté votre défi !",
+                default => "Nouvelle notification de $actorName",
+            };
+
+            (new PushNotificationService())->sendToUser(
+                $data['user_id'],
+                'LaughTube',
+                $body,
+                ['type' => $data['type'], 'video_id' => $data['video_id'] ?? null]
+            );
+        } catch (\Exception $e) {
+            Log::error('Push notification error: ' . $e->getMessage());
+        }
     }
 }
