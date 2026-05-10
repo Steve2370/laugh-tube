@@ -16,9 +16,7 @@ import {
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import lottie from 'lottie-web';
-import heartAnim from '../animations/Valentine_Filled1.json';
-import thumbsUpAnim from '../animations/Valentine_Filled3.json';
-import lolAnim from '../animations/Valentine_Filled5.json';
+
 
 const LIVEKIT_URL = 'wss://laughtube.ca/livekit';
 
@@ -108,27 +106,32 @@ const BattleCountdown = React.memo(({ durationMinutes, startedAt, onTimeUp }) =>
     );
 });
 
-const ANIM_MAP = {
-    'icons8-heart': heartAnim,
-    'icons8-thumbs-up': thumbsUpAnim,
-    'icons8-lol': lolAnim,
-};
 
 const LottieIcon = ({ name, size = 40 }) => {
     const ref = useRef(null);
     const animRef = useRef(null);
 
+    const FILE_MAP = {
+        'icons8-heart': '/animations/Valentine_Filled1.json',
+        'icons8-thumbs-up': '/animations/Valentine_Filled3.json',
+        'icons8-lol': '/animations/Valentine_Filled5.json',
+    };
+
     useEffect(() => {
-        const data = ANIM_MAP[name];
-        if (!data || !ref.current) return;
-        if (animRef.current) animRef.current.destroy();
-        animRef.current = lottie.loadAnimation({
-            container: ref.current,
-            animationData: data,
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-        });
+        const path = FILE_MAP[name];
+        if (!path || !ref.current) return;
+        fetch(path)
+            .then(r => r.json())
+            .then(data => {
+                if (animRef.current) animRef.current.destroy();
+                animRef.current = lottie.loadAnimation({
+                    container: ref.current,
+                    animationData: data,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                });
+            });
         return () => { if (animRef.current) animRef.current.destroy(); };
     }, [name]);
 
