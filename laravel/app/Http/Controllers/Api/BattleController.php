@@ -264,7 +264,7 @@ class BattleController extends Controller
 
         $token = $this->generateToken($roomName, $user->id, $user->username, true);
 
-        return response()->json(['token' => $token, 'room_name' => $roomName]);
+        return response()->json(['token' => $token, 'room_name' => $roomName, 'started_at' => now()->toISOString()]);
     }
 
     public function join(Request $request, int $battleId): JsonResponse
@@ -298,9 +298,10 @@ class BattleController extends Controller
         $reactionType = $request->input('reaction_type') ?? $request->input('emoji');
 
         $points = match($reactionType) {
-            'love_max', '👑' => 5,
-            'love_big', '🔥' => 3,
-            'love_funny', '😂' => 2,
+            'love_max', '👑', '❤️' => 5,
+            'love_big', '🔥', '💘' => 3,
+            'love_funny', '😂', '💖' => 2,
+            '💗', '💕' => 1,
             default => 1,
         };
 
@@ -308,10 +309,9 @@ class BattleController extends Controller
             ['battle_id' => $battleId, 'user_id' => $user->id],
             [
                 'target_id' => $request->target_id,
-                'emoji' => $reactionType,
-                'points' => $points,
+                'emoji'     => $reactionType,
+                'points'    => $points,
                 'created_at' => now(),
-                'updated_at' => now(),
             ]
         );
 
