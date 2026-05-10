@@ -16,9 +16,9 @@ import {
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import lottie from 'lottie-web';
-import heartAnim from '/animations/Valentine_Filled1.json';
-import thumbsUpAnim from '/animations/Valentine_Filled3.json';
-import lolAnim from '/animations/Valentine_Filled5.json';
+import heartAnim from '../animations/Valentine_Filled1.json';
+import thumbsUpAnim from '../animations/Valentine_Filled3.json';
+import lolAnim from '../animations/Valentine_Filled5.json';
 
 const LIVEKIT_URL = 'wss://laughtube.ca/livekit';
 
