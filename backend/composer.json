@@ -12,7 +12,8 @@
       "ext-ctype": "*",
       "ext-curl": "*",
       "ext-gd": "*",
-      "ext-apcu": "*"
+      "ext-apcu": "*",
+      "ext-openssl": "*"
     },
     "autoload": {
         "psr-4": {
