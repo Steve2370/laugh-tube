@@ -143,6 +143,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
     const [votedFor, setVotedFor] = useState(null);
     const commentsEndRef = useRef(null);
     const { localParticipant } = useLocalParticipant();
+    const { user } = useAuth();
 
     const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: false }]);
     const challengerTrack = tracks.find(t => String(t.participant?.identity) === String(battle.challenger_id));
