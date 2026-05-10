@@ -309,8 +309,8 @@ class BattleController extends Controller
             ['battle_id' => $battleId, 'user_id' => $user->id],
             [
                 'target_id' => $request->target_id,
-                'emoji'     => $reactionType,
-                'points'    => $points,
+                'emoji' => $reactionType,
+                'points' => $points,
                 'created_at' => now(),
             ]
         );

@@ -208,6 +208,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                         type: 'scores',
                         challenger: res.challenger_score,
                         challenged: res.challenged_score,
+                        username: user?.username || 'Spectateur',
                     })), { reliable: true });
                 } catch {}
             }
@@ -219,13 +220,13 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
         const data = {
             type: 'comment',
             text: commentInput.trim(),
-            username: localParticipant?.name || 'Anonyme',
+            username: localParticipant?.name || user?.username || 'Spectateur',
             avatar: userAvatar || null,
         };
         try { send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true }); } catch {}
         setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
         setCommentInput('');
-    }, [commentInput, localParticipant, send, userAvatar]);
+    }, [commentInput, localParticipant, user, send, userAvatar]);
 
     const ParticipantCount = () => {
         const participants = useParticipants();
