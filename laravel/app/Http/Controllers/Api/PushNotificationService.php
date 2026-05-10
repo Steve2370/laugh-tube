@@ -32,11 +32,11 @@ class PushNotificationService
             ->pluck('device_token');
 
         foreach ($tokens as $token) {
-            $this->send($token, $title, $body, $data);
+            $this->send($token, $userId, $title, $body, $data);
         }
     }
 
-    private function send(string $deviceToken, string $title, string $body, array $data = []): void
+    private function send(string $deviceToken, int $userId, string $title, string $body, array $data = []): void
     {
         if (empty($this->keyId) || empty($this->teamId) || empty($this->privateKey)) {
             Log::warning('APNs not configured');
@@ -49,11 +49,16 @@ class PushNotificationService
 
         $url = "$host/3/device/$deviceToken";
 
+        $unreadCount = DB::table('notifications')
+            ->where('user_id', $userId)
+            ->where('is_read', false)
+            ->count();
+
         $payload = json_encode([
             'aps' => [
                 'alert' => ['title' => $title, 'body' => $body],
                 'sound' => 'Funny.wav',
-                'badge' => 1,
+                'badge' => $unreadCount,
             ],
             'data' => $data,
         ]);
