@@ -20,12 +20,8 @@ class PushNotificationService
         $this->bundleId = env('APNS_BUNDLE_ID', 'ca.laughtube.ios');
         $this->production = env('APNS_PRODUCTION', false);
 
-        $keyPath = env('APNS_PRIVATE_KEY_PATH', '');
-        if ($keyPath && file_exists($keyPath)) {
-            $this->privateKey = file_get_contents($keyPath);
-        } else {
-            $this->privateKey = str_replace('\n', "\n", env('APNS_PRIVATE_KEY', ''));
-        }
+        $keyPath = '/var/www/laravel/apns_key.p8';
+        $this->privateKey = file_exists($keyPath) ? file_get_contents($keyPath) : '';
     }
 
     public function sendToUser(int $userId, string $title, string $body, array $data = []): void

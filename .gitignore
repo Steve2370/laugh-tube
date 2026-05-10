@@ -18,6 +18,7 @@ node_modules/
 
 laravel/vendor/
 laravel/.env
+laravel/apns_key.p8
 laravel/storage/logs/
 laravel/storage/framework/cache/
 laravel/storage/framework/sessions/
