@@ -136,9 +136,9 @@ const LottieIcon = ({ name, size = 40 }) => {
 };
 
 const VOTE_REACTIONS = [
-    { name: 'icons8-heart', reactionType: 'love_max', points: 5, label: '+5' },
-    { name: 'icons8-thumbs-up', reactionType: 'love_big', points: 3, label: '+3' },
-    { name: 'icons8-lol', reactionType: 'love_funny', points: 2, label: '+2' },
+    { name: 'Valentine_Filled1.json', reactionType: 'love_max', points: 5, label: '+5' },
+    { name: 'Valentine_Filled3.json', reactionType: 'love_big', points: 3, label: '+3' },
+    { name: 'Valentine_Filled5.json', reactionType: 'love_funny', points: 2, label: '+2' },
 ];
 
 const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onLeave }) => {
