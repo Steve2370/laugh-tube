@@ -15,6 +15,10 @@ import {
     RoomAudioRenderer,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
+import lottie from 'lottie-web';
+import heartAnim from '/animations/Valentine_Filled1.json';
+import thumbsUpAnim from '/animations/Valentine_Filled3.json';
+import lolAnim from '/animations/Valentine_Filled5.json';
 
 const LIVEKIT_URL = 'wss://laughtube.ca/livekit';
 
@@ -104,35 +108,31 @@ const BattleCountdown = React.memo(({ durationMinutes, startedAt, onTimeUp }) =>
     );
 });
 
+const ANIM_MAP = {
+    'icons8-heart': heartAnim,
+    'icons8-thumbs-up': thumbsUpAnim,
+    'icons8-lol': lolAnim,
+};
+
 const LottieIcon = ({ name, size = 40 }) => {
-    const canvasRef = useRef(null);
+    const ref = useRef(null);
     const animRef = useRef(null);
 
     useEffect(() => {
-        let cancelled = false;
-        import(`/animations/${name}.json`)
-            .then(mod => {
-                if (cancelled || !canvasRef.current) return;
-                import('lottie-web').then(lottie => {
-                    if (cancelled) return;
-                    if (animRef.current) animRef.current.destroy();
-                    animRef.current = lottie.default.loadAnimation({
-                        container: canvasRef.current,
-                        animationData: mod.default,
-                        renderer: 'svg',
-                        loop: true,
-                        autoplay: true,
-                    });
-                });
-            })
-            .catch(() => {});
-        return () => {
-            cancelled = true;
-            if (animRef.current) animRef.current.destroy();
-        };
+        const data = ANIM_MAP[name];
+        if (!data || !ref.current) return;
+        if (animRef.current) animRef.current.destroy();
+        animRef.current = lottie.loadAnimation({
+            container: ref.current,
+            animationData: data,
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+        });
+        return () => { if (animRef.current) animRef.current.destroy(); };
     }, [name]);
 
-    return <div ref={canvasRef} style={{ width: size, height: size }} />;
+    return <div ref={ref} style={{ width: size, height: size }} />;
 };
 
 const VOTE_REACTIONS = [
@@ -568,7 +568,7 @@ const BattleRoom = () => {
     if (token && currentBattle) {
         const isParticipant = user?.id === currentBattle.challenger_id || user?.id === currentBattle.challenged_id;
         return (
-            <div style={{ height: '100vh', background: '#000', position: 'relative' }}>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#000' }}>
                 <LiveKitRoom
                     serverUrl={LIVEKIT_URL}
                     token={token}
