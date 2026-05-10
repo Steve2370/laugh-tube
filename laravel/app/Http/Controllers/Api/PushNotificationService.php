@@ -18,8 +18,14 @@ class PushNotificationService
         $this->keyId = env('APNS_KEY_ID', '');
         $this->teamId = env('APNS_TEAM_ID', '');
         $this->bundleId = env('APNS_BUNDLE_ID', 'ca.laughtube.ios');
-        $this->privateKey = str_replace('\n', "\n", env('APNS_PRIVATE_KEY', ''));
         $this->production = env('APNS_PRODUCTION', false);
+
+        $keyPath = env('APNS_PRIVATE_KEY_PATH', '');
+        if ($keyPath && file_exists($keyPath)) {
+            $this->privateKey = file_get_contents($keyPath);
+        } else {
+            $this->privateKey = str_replace('\n', "\n", env('APNS_PRIVATE_KEY', ''));
+        }
     }
 
     public function sendToUser(int $userId, string $title, string $body, array $data = []): void
