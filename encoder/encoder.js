@@ -270,7 +270,8 @@ class VideoEncoder {
                     UPDATE videos
                     SET encoded = TRUE,
                         encoded_filename = $1,
-                        thumbnail = $2
+                        thumbnail = $2,
+                        status = 'published'
                     WHERE id = $3
                 `, [outputFilename, thumbFilename, video_id]);
 
