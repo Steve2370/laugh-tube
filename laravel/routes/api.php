@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\AbonnementController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
@@ -97,6 +98,7 @@ Route::prefix('v2')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/device-token', [DeviceTokenController::class, 'store']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/videos/{id}/signaler', [VideoController::class, 'signaler']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
