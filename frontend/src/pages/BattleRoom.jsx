@@ -109,9 +109,9 @@ const BattleCountdown = React.memo(({ durationMinutes, startedAt, onTimeUp }) =>
 });
 
 const ANIM_MAP = {
-    'Valentine_Filled1': heartAnim,
-    'Valentine_Filled3': thumbsUpAnim,
-    'Valentine_Filled5': lolAnim,
+    'icons8-heart': heartAnim,
+    'icons8-thumbs-up': thumbsUpAnim,
+    'icons8-lol': lolAnim,
 };
 
 const LottieIcon = ({ name, size = 40 }) => {
@@ -128,9 +128,9 @@ const LottieIcon = ({ name, size = 40 }) => {
 };
 
 const VOTE_REACTIONS = [
-    { name: 'Valentine_Filled1', reactionType: 'love_max', points: 5, label: '+5' },
-    { name: 'Valentine_Filled3', reactionType: 'love_big', points: 3, label: '+3' },
-    { name: 'Valentine_Filled5', reactionType: 'love_funny', points: 2, label: '+2' },
+    { name: 'Valentine_Filled1.json', reactionType: 'love_max', points: 5, label: '+5' },
+    { name: 'Valentine_Filled3.json', reactionType: 'love_big', points: 3, label: '+3' },
+    { name: 'Valentine_Filled5.json', reactionType: 'love_funny', points: 2, label: '+2' },
 ];
 
 const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onLeave }) => {
@@ -152,6 +152,23 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
     const setCommentsRef = useRef(setComments);
     setScoresRef.current = setScores;
     setCommentsRef.current = setComments;
+
+    // Polling scores depuis l'API toutes les 5s pour sync iOS ↔ Web
+    useEffect(() => {
+        const poll = setInterval(async () => {
+            try {
+                const res = await apiService.requestV2('/battles');
+                const found = (res.battles || []).find(b => b.id === battle.id);
+                if (found) {
+                    setScoresRef.current({
+                        challenger: found.challenger_score || 0,
+                        challenged: found.challenged_score || 0,
+                    });
+                }
+            } catch {}
+        }, 5000);
+        return () => clearInterval(poll);
+    }, [battle.id]);
 
     const { send } = useDataChannel('battle', (msg) => {
         try {
@@ -224,8 +241,8 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
     const challengerPct = Math.round((scores.challenger / total) * 100);
     const challengedPct = 100 - challengerPct;
 
-    const canVoteChallenger = !isParticipant && userId !== battle.challenger_id && !votedFor;
-    const canVoteChallenged = !isParticipant && userId !== battle.challenged_id && !votedFor;
+    const canVoteChallenger = !isParticipant && !votedFor;
+    const canVoteChallenged = !isParticipant && !votedFor;
 
     return (
         <div className="relative w-full h-screen bg-black overflow-hidden flex flex-col">
@@ -501,12 +518,22 @@ const BattleRoom = () => {
 
     const handleStop = useCallback(async () => {
         try {
-            await apiService.requestV2(`/battles/${currentBattle.id}/stop`, { method: 'POST' });
-        } catch { }
-        finally {
+            const res = await apiService.requestV2(`/battles/${currentBattle.id}/stop`, { method: 'POST' });
+            const final = await apiService.requestV2(`/battles/${currentBattle.id}`).catch(() => null);
+            if (final) {
+                toast.success(
+                    `Battle terminée ! ${res.winner_id === currentBattle.challenger_id
+                        ? currentBattle.challenger_username
+                        : currentBattle.challenged_username} remporte la victoire ! 🏆`
+                );
+            } else {
+                toast.success('Battle terminée !');
+            }
+        } catch {
+            toast.success('Battle terminée !');
+        } finally {
             setToken(null);
             setCurrentBattle(null);
-            toast.success('Battle terminée !');
             loadBattles();
             loadMyBattles();
         }
