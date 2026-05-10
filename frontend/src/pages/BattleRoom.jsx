@@ -196,12 +196,22 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
         }));
         setVotedFor(targetId);
 
+        const targetName = isChallenger ? battle.challenger_username : battle.challenged_username;
+        const label = reactionType === 'love_max' ? '(+5)' : reactionType === 'love_big' ? '(+3)' : '(+2)';
+        const voteMsg = {
+            type: 'comment',
+            text: `a voté pour ${targetName} ${label}`,
+            username: localParticipant?.name || user?.username || 'Spectateur',
+            avatar: userAvatar || null,
+        };
+        try { send(new TextEncoder().encode(JSON.stringify(voteMsg)), { reliable: true }); } catch {}
+        setComments(prev => [...prev.slice(-50), { ...voteMsg, id: Date.now() + Math.random() }]);
+
         try {
             const res = await apiService.requestV2(`/battles/${battle.id}/vote`, {
                 method: 'POST',
                 body: JSON.stringify({ target_id: targetId, reaction_type: reactionType }),
             });
-
             if (res.challenger_score !== undefined) {
                 setScores({ challenger: res.challenger_score, challenged: res.challenged_score });
                 try {
@@ -209,13 +219,11 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                         type: 'scores',
                         challenger: res.challenger_score,
                         challenged: res.challenged_score,
-                        username: user?.username || 'Spectateur',
                     })), { reliable: true });
                 } catch {}
             }
         } catch {}
     };
-
     const sendComment = useCallback(() => {
         if (!commentInput.trim()) return;
         const data = {
