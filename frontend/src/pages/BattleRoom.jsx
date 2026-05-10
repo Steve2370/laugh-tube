@@ -55,46 +55,13 @@ const Countdown = ({ scheduledAt }) => {
     return <span className="font-mono font-bold text-lg">{timeLeft}</span>;
 };
 
-const BattleEmojiPicker = ({ onSend }) => {
-    const [open, setOpen] = useState(false);
-    const ref = useRef(null);
-
-    useEffect(() => {
-        const handleClick = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-        };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
-
-    return (
-        <div className="relative" ref={ref}>
-            {open && (
-                <div className="absolute bottom-12 right-0" style={{ zIndex: 100 }}>
-                    <EmojiPickerLib
-                        onEmojiClick={(emojiData) => { onSend(emojiData.emoji); setOpen(false); }}
-                        theme="dark"
-                        height={350}
-                        width={300}
-                        lazyLoadEmojis={true}
-                    />
-                </div>
-            )}
-            <button
-                onClick={() => setOpen(!open)}
-                className="w-10 h-10 flex items-center justify-center bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full text-xl transition-all"
-            >
-                😊
-            </button>
-        </div>
-    );
-};
-
 const BattleCountdown = React.memo(({ durationMinutes, startedAt, onTimeUp }) => {
     const getSecondsLeft = () => {
-        if (!durationMinutes) return 0;
+        if (!durationMinutes || !startedAt) return durationMinutes * 60 || 0;
+        const startTime = new Date(startedAt).getTime();
+        if (isNaN(startTime)) return durationMinutes * 60; // ← fix NaN
         const totalSeconds = durationMinutes * 60;
-        const elapsedSeconds = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
         return Math.max(0, totalSeconds - elapsedSeconds);
     };
 
@@ -137,6 +104,43 @@ const BattleCountdown = React.memo(({ durationMinutes, startedAt, onTimeUp }) =>
     );
 });
 
+const LottieIcon = ({ name, size = 40 }) => {
+    const canvasRef = useRef(null);
+    const animRef = useRef(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        import(`/animations/${name}.json`)
+            .then(mod => {
+                if (cancelled || !canvasRef.current) return;
+                import('lottie-web').then(lottie => {
+                    if (cancelled) return;
+                    if (animRef.current) animRef.current.destroy();
+                    animRef.current = lottie.default.loadAnimation({
+                        container: canvasRef.current,
+                        animationData: mod.default,
+                        renderer: 'svg',
+                        loop: true,
+                        autoplay: true,
+                    });
+                });
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+            if (animRef.current) animRef.current.destroy();
+        };
+    }, [name]);
+
+    return <div ref={canvasRef} style={{ width: size, height: size }} />;
+};
+
+const VOTE_REACTIONS = [
+    { name: 'icons8-heart', reactionType: 'love_max', points: 5, label: '+5' },
+    { name: 'icons8-thumbs-up', reactionType: 'love_big', points: 3, label: '+3' },
+    { name: 'icons8-lol', reactionType: 'love_funny', points: 2, label: '+2' },
+];
+
 const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onLeave }) => {
     const [scores, setScores] = useState({
         challenger: battle.challenger_score || 0,
@@ -144,7 +148,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
     });
     const [comments, setComments] = useState([]);
     const [commentInput, setCommentInput] = useState('');
-    const [myVote, setMyVote] = useState(null);
+    const [votedFor, setVotedFor] = useState(null);
     const commentsEndRef = useRef(null);
     const { localParticipant } = useLocalParticipant();
 
@@ -168,21 +172,36 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
         } catch {}
     });
 
-    const vote = async (targetId, emoji, points) => {
+    useEffect(() => {
+        commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [comments]);
+
+    const vote = async (targetId, reactionType, points) => {
+        if (isParticipant || votedFor) return;
+
+        const isChallenger = targetId === battle.challenger_id;
+        setScores(prev => ({
+            challenger: isChallenger ? prev.challenger + points : prev.challenger,
+            challenged: !isChallenger ? prev.challenged + points : prev.challenged,
+        }));
+        setVotedFor(targetId);
+
         try {
             const res = await apiService.requestV2(`/battles/${battle.id}/vote`, {
                 method: 'POST',
-                body: JSON.stringify({ target_id: targetId, emoji }),
+                body: JSON.stringify({ target_id: targetId, reaction_type: reactionType }),
             });
-            setScores({ challenger: res.challenger_score, challenged: res.challenged_score });
-            setMyVote(targetId);
-            try {
-                send(new TextEncoder().encode(JSON.stringify({
-                    type: 'scores',
-                    challenger: res.challenger_score,
-                    challenged: res.challenged_score,
-                })), { reliable: true });
-            } catch {}
+
+            if (res.challenger_score !== undefined) {
+                setScores({ challenger: res.challenger_score, challenged: res.challenged_score });
+                try {
+                    send(new TextEncoder().encode(JSON.stringify({
+                        type: 'scores',
+                        challenger: res.challenger_score,
+                        challenged: res.challenged_score,
+                    })), { reliable: true });
+                } catch {}
+            }
         } catch {}
     };
 
@@ -192,7 +211,7 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
             type: 'comment',
             text: commentInput.trim(),
             username: localParticipant?.name || 'Anonyme',
-            avatar: userAvatar || null
+            avatar: userAvatar || null,
         };
         try { send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true }); } catch {}
         setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
@@ -202,57 +221,45 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
     const ParticipantCount = () => {
         const participants = useParticipants();
         return (
-            <div className="flex items-center gap-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
-                <Users size={12} />
-                <span>{participants.length}</span>
+            <div className="flex items-center gap-1.5 bg-white/10 text-white text-xs px-2.5 py-1 rounded-full">
+                <Users size={11} />
+                <span className="font-semibold">{participants.length}</span>
             </div>
         );
     };
 
-    const VOTE_EMOJIS = [
-        { emoji: '🔥', points: 3, label: 'Feu' },
-        { emoji: '😂', points: 2, label: 'Rires' },
-        { emoji: '👑', points: 5, label: 'Roi' },
-        { emoji: '👏', points: 1, label: 'Bravo' },
-        { emoji: '💯', points: 1, label: 'Parfait' },
-    ];
-
-    const totalScore = scores.challenger + scores.challenged || 1;
-    const challengerPct = Math.round((scores.challenger / totalScore) * 100);
+    const total = scores.challenger + scores.challenged || 1;
+    const challengerPct = Math.round((scores.challenger / total) * 100);
     const challengedPct = 100 - challengerPct;
 
+    const canVoteChallenger = !isParticipant && userId !== battle.challenger_id && !votedFor;
+    const canVoteChallenged = !isParticipant && userId !== battle.challenged_id && !votedFor;
+
     return (
-        <div className="relative w-full h-screen bg-black overflow-hidden">
+        <div className="relative w-full h-screen bg-black overflow-hidden flex flex-col">
             <RoomAudioRenderer />
 
-            <div className="absolute inset-0 flex">
-                <div className="relative flex-1 border-r-2 border-white border-opacity-30">
+            <div className="relative flex flex-1 min-h-0">
+                {/* Gauche */}
+                <div className="relative flex-1 border-r border-white/20">
                     {challengerTrack ? (
                         <VideoTrack trackRef={challengerTrack} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                         <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center gap-3">
                             <Avatar url={getAvatarUrl(battle.challenger_avatar)} username={battle.challenger_username} size="lg" />
-                            <p className="text-white font-bold">{battle.challenger_username}</p>
+                            <p className="text-white/60 text-sm">En attente…</p>
                         </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 pointer-events-none" />
-                    <div className="absolute bottom-32 left-0 right-0 text-center">
-                        <p className="text-white font-black text-lg drop-shadow">{battle.challenger_username}</p>
-                        <p className="text-yellow-400 font-bold text-2xl">{scores.challenger} pts</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+                    <div className="absolute bottom-2 left-0 right-0 text-center">
+                        <p className="text-white font-bold text-sm drop-shadow">{battle.challenger_username}</p>
+                        <p className="font-black text-2xl drop-shadow"
+                           style={{ color: '#60a5fa', textShadow: '0 0 20px rgba(96,165,250,0.5)' }}>
+                            {scores.challenger}
+                        </p>
+                        <p className="text-white/40 text-xs">pts</p>
                     </div>
-                    {!isParticipant && userId !== battle.challenger_id && (
-                        <div className="absolute bottom-20 left-0 right-0 flex justify-center gap-2">
-                            {VOTE_EMOJIS.map(v => (
-                                <button
-                                    key={v.emoji}
-                                    onClick={() => vote(battle.challenger_id, v.emoji, v.points)}
-                                    className={`text-xl p-1.5 rounded-full transition-all hover:scale-125 ${myVote === battle.challenger_id ? 'bg-white bg-opacity-30' : 'bg-black bg-opacity-30'}`}
-                                >
-                                    {v.emoji}
-                                </button>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 <div className="relative flex-1">
@@ -261,96 +268,150 @@ const BattleLiveView = ({ battle, isParticipant, userId, userAvatar, onStop, onL
                     ) : (
                         <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center gap-3">
                             <Avatar url={getAvatarUrl(battle.challenged_avatar)} username={battle.challenged_username} size="lg" />
-                            <p className="text-white font-bold">{battle.challenged_username}</p>
+                            <p className="text-white/60 text-sm">En attente…</p>
                         </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 pointer-events-none" />
-                    <div className="absolute bottom-32 left-0 right-0 text-center">
-                        <p className="text-white font-black text-lg drop-shadow">{battle.challenged_username}</p>
-                        <p className="text-yellow-400 font-bold text-2xl">{scores.challenged} pts</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-2 left-0 right-0 text-center">
+                        <p className="text-white font-bold text-sm drop-shadow">{battle.challenged_username}</p>
+                        <p className="font-black text-2xl drop-shadow"
+                           style={{ color: '#fb923c', textShadow: '0 0 20px rgba(251,146,60,0.5)' }}>
+                            {scores.challenged}
+                        </p>
+                        <p className="text-white/40 text-xs">pts</p>
                     </div>
-                    {!isParticipant && userId !== battle.challenged_id && (
-                        <div className="absolute bottom-20 left-0 right-0 flex justify-center gap-2">
-                            {VOTE_EMOJIS.map(v => (
-                                <button
-                                    key={v.emoji}
-                                    onClick={() => vote(battle.challenged_id, v.emoji, v.points)}
-                                    className={`text-xl p-1.5 rounded-full transition-all hover:scale-125 ${myVote === battle.challenged_id ? 'bg-white bg-opacity-30' : 'bg-black bg-opacity-30'}`}
-                                >
-                                    {v.emoji}
-                                </button>
-                            ))}
+                </div>
+
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                    <div style={{
+                        background: 'radial-gradient(circle, rgba(239,68,68,0.3) 0%, transparent 70%)',
+                        width: 60, height: 60,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                        <span className="text-white font-black text-xl drop-shadow-lg">VS</span>
+                    </div>
+                </div>
+
+                <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 pt-3">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 bg-red-600/80 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full border border-red-500/50">
+                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                            <span className="font-black tracking-wider">BATTLE</span>
                         </div>
-                    )}
+                        <ParticipantCount />
+                    </div>
+                    <button
+                        onClick={isParticipant ? onStop : onLeave}
+                        className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 transition-all"
+                    >
+                        <X size={14} className="text-white" />
+                    </button>
                 </div>
             </div>
 
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                <div className="bg-red-600 rounded-full w-12 h-12 flex items-center justify-center shadow-2xl border-2 border-white">
-                    <Swords size={20} className="text-white" />
+            <div className="bg-black/80 backdrop-blur-sm px-4 py-2 flex items-center gap-3">
+                <span className="font-black text-sm w-8 text-right" style={{ color: '#60a5fa' }}>{challengerPct}%</span>
+                <div className="flex-1 h-2 rounded-full overflow-hidden bg-white/10">
+                    <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                            width: `${challengerPct}%`,
+                            background: 'linear-gradient(to right, #3b82f6, #60a5fa)',
+                        }}
+                    />
+                </div>
+                <div className="flex-1 h-2 rounded-full overflow-hidden bg-white/10 flex justify-end">
+                    <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                            width: `${challengedPct}%`,
+                            background: 'linear-gradient(to left, #f97316, #fb923c)',
+                        }}
+                    />
+                </div>
+                <span className="font-black text-sm w-8" style={{ color: '#fb923c' }}>{challengedPct}%</span>
+            </div>
+
+            <div className="bg-black/60 backdrop-blur-sm px-3 py-2 flex gap-2">
+
+                <div className="flex-1 rounded-xl p-2" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <Avatar url={getAvatarUrl(battle.challenger_avatar)} username={battle.challenger_username} size="sm" />
+                        <span className="font-bold text-xs truncate" style={{ color: '#60a5fa' }}>{battle.challenger_username}</span>
+                    </div>
+                    <div className="flex gap-1">
+                        {VOTE_REACTIONS.map(r => (
+                            <button
+                                key={r.reactionType}
+                                onClick={() => vote(battle.challenger_id, r.reactionType, r.points)}
+                                disabled={!canVoteChallenger}
+                                className={`flex-1 flex flex-col items-center rounded-lg py-1 transition-all ${
+                                    canVoteChallenger ? 'hover:scale-110 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                                } ${votedFor === battle.challenger_id ? 'ring-1 ring-blue-400' : ''}`}
+                                style={{ background: 'rgba(59,130,246,0.15)' }}
+                            >
+                                <LottieIcon name={r.name} size={34} />
+                                <span className="text-xs font-bold text-blue-300">{r.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex-1 rounded-xl p-2" style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <Avatar url={getAvatarUrl(battle.challenged_avatar)} username={battle.challenged_username} size="sm" />
+                        <span className="font-bold text-xs truncate" style={{ color: '#fb923c' }}>{battle.challenged_username}</span>
+                    </div>
+                    <div className="flex gap-1">
+                        {VOTE_REACTIONS.map(r => (
+                            <button
+                                key={r.reactionType}
+                                onClick={() => vote(battle.challenged_id, r.reactionType, r.points)}
+                                disabled={!canVoteChallenged}
+                                className={`flex-1 flex flex-col items-center rounded-lg py-1 transition-all ${
+                                    canVoteChallenged ? 'hover:scale-110 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                                } ${votedFor === battle.challenged_id ? 'ring-1 ring-orange-400' : ''}`}
+                                style={{ background: 'rgba(249,115,22,0.15)' }}
+                            >
+                                <LottieIcon name={r.name} size={34} />
+                                <span className="text-xs font-bold text-orange-300">{r.label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            <div className="absolute top-0 left-0 right-0 z-30 px-4" style={{ paddingTop: '72px' }}>
-                <div className="bg-black bg-opacity-60 rounded-2xl p-3">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-white font-bold text-xs">{battle.challenger_username}</span>
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1">
-                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                                <span className="text-white text-xs font-bold">EN DIRECT</span>
-                            </div>
-                            <ParticipantCount />
-                        </div>
-                        <span className="text-white font-bold text-xs">{battle.challenged_username}</span>
-                    </div>
-                    <div className="flex rounded-full overflow-hidden h-3">
-                        <div className="bg-blue-500 transition-all duration-500" style={{ width: `${challengerPct}%` }} />
-                        <div className="bg-gray-500 transition-all duration-500" style={{ width: `${challengedPct}%` }} />
-                    </div>
-                    <div className="flex justify-between mt-1">
-                        <span className="text-blue-400 text-xs font-bold">{challengerPct}%</span>
-                        <span className="text-gray-400 text-xs font-bold">{challengedPct}%</span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="absolute left-4 right-4 flex flex-col gap-1 z-10" style={{ bottom: '90px', maxHeight: '150px', overflow: 'hidden' }}>
-                {comments.slice(-6).map(c => (
-                    <div key={c.id} className="flex items-center gap-2">
+            <div className="px-3 pt-1 pb-0 flex-1 min-h-0 overflow-y-auto flex flex-col-reverse" style={{ maxHeight: 100 }}>
+                <div ref={commentsEndRef} />
+                {[...comments].reverse().slice(0, 8).reverse().map(c => (
+                    <div key={c.id} className="flex items-center gap-1.5 mb-1">
                         {c.avatar ? (
-                            <img src={c.avatar} alt={c.username} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                            <img src={c.avatar} className="w-5 h-5 rounded-full object-cover flex-shrink-0" alt="" />
                         ) : (
-                            <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            <div className="w-5 h-5 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                 {c.username?.charAt(0).toUpperCase()}
                             </div>
                         )}
                         <span className="text-yellow-400 font-bold text-xs shrink-0">{c.username}</span>
-                        <span className="text-white text-xs">{c.text}</span>
+                        <span className="text-white/80 text-xs">{c.text}</span>
                     </div>
                 ))}
-                <div ref={commentsEndRef} />
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-2 z-30 flex gap-2">
+            <div className="px-3 pb-4 pt-2 flex gap-2 bg-black/60 backdrop-blur-sm">
                 <input
                     type="text"
                     value={commentInput}
                     onChange={e => setCommentInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && sendComment()}
-                    placeholder="Commenter..."
-                    className="flex-1 bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-gray-300 px-4 py-2.5 rounded-full text-sm focus:outline-none"
+                    placeholder="Commenter…"
+                    className="flex-1 bg-white/10 text-white placeholder-white/40 px-3 py-2 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-white/30"
                 />
-                <BattleEmojiPicker onSend={(emoji) => {
-                    const data = { type: 'comment', text: emoji, username: localParticipant?.name || 'Anonyme', avatar: userAvatar || null };
-                    try { send(new TextEncoder().encode(JSON.stringify(data)), { reliable: true }); } catch {}
-                    setComments(prev => [...prev.slice(-50), { ...data, id: Date.now() + Math.random() }]);
-                }} />
-                <button onClick={sendComment} className="bg-blue-500 text-white font-bold px-4 py-2.5 rounded-full text-sm">
-                    Envoyer
-                </button>
-                <button onClick={isParticipant ? onStop : onLeave} className="bg-red-600 text-white font-bold px-4 py-2.5 rounded-full text-sm flex items-center gap-1">
-                    <X size={14} /> {isParticipant ? 'Terminer' : 'Quitter'}
+                <button
+                    onClick={sendComment}
+                    className="bg-white/15 hover:bg-white/25 text-white px-3 py-2 rounded-full text-sm transition-all"
+                >
+                    ↑
                 </button>
             </div>
         </div>
@@ -436,7 +497,12 @@ const BattleRoom = () => {
     const handleStart = async (battle) => {
         try {
             const res = await apiService.requestV2(`/battles/${battle.id}/start`, { method: 'POST' });
-            setCurrentBattle({ ...battle, room_name: res.room_name, duration_minutes: battle.duration_minutes });
+            setCurrentBattle({
+                ...battle,
+                room_name: res.room_name,
+                duration_minutes: battle.duration_minutes,
+                started_at: res.started_at || new Date().toISOString(), // ← fix NaN:NaN
+            });
             setToken(res.token);
         } catch { toast.error('Erreur lors du démarrage de la battle'); }
     };
