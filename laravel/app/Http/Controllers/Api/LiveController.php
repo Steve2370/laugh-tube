@@ -51,14 +51,12 @@ class LiveController extends Controller
             ->pluck('subscriber_id');
 
         foreach ($abonnes as $abonneId) {
-            DB::table('notifications')->insert([
+            NotificationHelper::send([
                 'user_id' => $abonneId,
                 'actor_id' => $user->id,
                 'actor_name' => $user->username,
-                'type' => 'live',
+                'type' => 'live_started',
                 'message' => $user->username . ' est en live !',
-                'is_read' => false,
-                'created_at' => now(),
             ]);
         }
 

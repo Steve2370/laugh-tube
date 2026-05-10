@@ -60,14 +60,12 @@ class BattleController extends Controller
             'updated_at' => now(),
         ]);
 
-        DB::table('notifications')->insert([
+        NotificationHelper::send([
             'user_id' => $challengedId,
             'actor_id' => $challenger->id,
             'actor_name' => $challenger->username,
             'type' => 'battle_challenge',
             'message' => $challenger->username . ' te provoque en duel dans la Battle Room !',
-            'is_read' => false,
-            'created_at' => now(),
         ]);
 
         return response()->json([
@@ -99,14 +97,12 @@ class BattleController extends Controller
 
         DB::table('battles')->where('id', $battleId)->update(['status' => 'accepted', 'updated_at' => now()]);
 
-        DB::table('notifications')->insert([
+        NotificationHelper::send([
             'user_id' => $battle->challenger_id,
             'actor_id' => $user->id,
             'actor_name' => $user->username,
             'type' => 'battle_accepted',
             'message' => $user->username . ' a accepté ton défi !',
-            'is_read' => false,
-            'created_at' => now(),
         ]);
 
         return response()->json(['success' => true, 'message' => 'Défi accepté !', 'battle_id' => $battleId]);
