@@ -22,4 +22,4 @@ laravel/apns_key.p8
 laravel/storage/logs/
 laravel/storage/framework/cache/
 laravel/storage/framework/sessions/
-laravel/storage/framework/views/
+laravel/storage/framework/views/frontend/public/*.mp4
