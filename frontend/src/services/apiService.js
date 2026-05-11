@@ -428,7 +428,7 @@ class ApiService {
         const token = localStorage.getItem('access_token');
         if (!token) throw new Error('Non authentifié');
 
-        const response = await fetch(`${this.baseURLV2}/api/v2/videos/upload`, {
+        const response = await fetch(`https://api.laughtube.ca/api/v2/videos/upload`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData,
