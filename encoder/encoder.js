@@ -257,8 +257,14 @@ class VideoEncoder {
                     -vframes 1 \
                     -vf "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" \
                     -q:v 2 \
-                    "${thumbPath}" 2>&1`;
+                    -f image2 "${thumbPath}" 2>&1`;
                 await execCommand(thumbCmd);
+
+                const thumbPathJpeg = thumbPath.replace('_thumb.jpg', '_thumb.jpeg');
+                if (!await fileExists(thumbPath) && await fileExists(thumbPathJpeg)) {
+                    await fs.rename(thumbPathJpeg, thumbPath);
+                }
+
                 logSuccess(`Worker ${this.workerId} - Thumbnail créé`);
             }
 
