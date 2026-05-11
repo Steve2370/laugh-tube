@@ -35,6 +35,7 @@ class NotificationHelper
                 'subscribe' => "$actorName s'est abonné à votre chaîne",
                 'battle_challenge' => "$actorName vous défie en battle !",
                 'battle_accepted' => "$actorName a accepté votre défi !",
+                'mention' => "$actorName vous a mentionné dans un commentaire",
                 default => "Nouvelle notification de $actorName",
             };
 
