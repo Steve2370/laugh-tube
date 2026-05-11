@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +37,7 @@ class CommentInteractionController extends Controller
             if ($comment && $comment->user_id !== $userId) {
                 $actor = DB::table('users')->where('id', $userId)->first();
                 $video = DB::table('videos')->where('id', $comment->video_id)->first();
-                DB::table('notifications')->insert([
+                NotificationHelper::send([
                     'user_id' => $comment->user_id,
                     'actor_id' => $userId,
                     'actor_name' => $actor?->username,
@@ -45,8 +46,6 @@ class CommentInteractionController extends Controller
                     'comment_id' => $commentId,
                     'video_title' => $video?->title,
                     'comment_preview' => substr($comment->content, 0, 100),
-                    'is_read' => false,
-                    'created_at' => now(),
                 ]);
             }
         }
@@ -114,7 +113,7 @@ class CommentInteractionController extends Controller
         if ($comment && $comment->user_id !== $userId) {
             $actor = DB::table('users')->where('id', $userId)->first();
             $video = DB::table('videos')->where('id', $comment->video_id)->first();
-            DB::table('notifications')->insert([
+            NotificationHelper::send([
                 'user_id' => $comment->user_id,
                 'actor_id' => $userId,
                 'actor_name' => $actor?->username,
@@ -123,8 +122,6 @@ class CommentInteractionController extends Controller
                 'comment_id' => $commentId,
                 'video_title' => $video?->title,
                 'comment_preview' => substr($request->input('content'), 0, 100),
-                'is_read' => false,
-                'created_at' => now(),
             ]);
         }
 
@@ -153,6 +150,23 @@ class CommentInteractionController extends Controller
                 'created_at' => now(),
             ]);
             $liked = true;
+
+            $reply = DB::table('comment_replies')->where('id', $replyId)->first();
+            if ($reply && $reply->user_id !== $userId) {
+                $actor = DB::table('users')->where('id', $userId)->first();
+                $comment = DB::table('commentaires')->where('id', $reply->comment_id)->first();
+                $video = $comment ? DB::table('videos')->where('id', $comment->video_id)->first() : null;
+                NotificationHelper::send([
+                    'user_id' => $reply->user_id,
+                    'actor_id' => $userId,
+                    'actor_name' => $actor?->username,
+                    'type' => 'comment_like',
+                    'video_id' => $video?->id,
+                    'comment_id' => $reply->comment_id,
+                    'video_title' => $video?->title,
+                    'comment_preview' => substr($reply->content, 0, 100),
+                ]);
+            }
         }
 
         $count = DB::table('reply_likes')->where('reply_id', $replyId)->count();
@@ -181,7 +195,7 @@ class CommentInteractionController extends Controller
 
         $video = DB::table('videos')->where('id', $comment->video_id)->first();
 
-        DB::table('notifications')->insert([
+        NotificationHelper::send([
             'user_id' => $request->mentioned_user_id,
             'actor_id' => $request->user()->id,
             'actor_name' => $request->user()->username,
@@ -190,8 +204,6 @@ class CommentInteractionController extends Controller
             'comment_id' => $commentId,
             'video_title' => $video?->title,
             'comment_preview' => substr($comment->content, 0, 100),
-            'is_read' => false,
-            'created_at' => now(),
         ]);
 
         return response()->json(['message' => 'Notification envoyée']);
