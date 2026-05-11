@@ -230,7 +230,9 @@ const TikTokLiveView = ({ isStreaming, streamerName, streamerAvatar, streamerTit
                 {comments.slice(-8).map(c => (
                     <div key={c.id} className="flex items-center gap-2">
                         {c.type === 'join' ? (
-                            <span className="text-green-400 text-xs italic">{c.text}</span>
+                            <span className="text-green-400 text-xs italic">
+                                <span className="font-bold">@{c.username}</span> {c.text}
+                            </span>
                         ) : (
                             <>
                                 {c.avatar ? (
