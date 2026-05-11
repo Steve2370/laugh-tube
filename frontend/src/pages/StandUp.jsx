@@ -326,7 +326,7 @@ const StandUp = () => {
             setToken(response.token);
             setLiveId(response.live_id);
             setIsStreaming(true);
-            toast.success('Live démarré ! Tes abonnés ont été notifiés 🎤');
+            toast.success('Live démarré ! Tes abonnés ont été notifiés');
         } catch {
             toast.error('Erreur lors du démarrage du live');
         } finally {
