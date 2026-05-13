@@ -5,7 +5,7 @@ const AdPlayer = ({ onComplete }) => {
     const [ad, setAd] = useState(null);
     const [countdown, setCountdown] = useState(null);
     const [canSkip, setCanSkip] = useState(false);
-    const [muted, setMuted] = useState(true);
+    const [muted, setMuted] = useState(false);
     const [progress, setProgress] = useState(0);
     const videoRef = useRef(null);
     const timerRef = useRef(null);
