@@ -54,8 +54,8 @@ const AdPlayer = ({ onComplete }) => {
     if (!ad) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col">
-            {/* Vidéo */}
+        <div className="relative w-full aspect-video bg-black flex flex-col overflow-hidden rounded-2xl">
+        {/* Vidéo */}
             <div className="relative flex-1 cursor-pointer" onClick={handleClick}>
                 <video
                     ref={videoRef}
@@ -79,7 +79,6 @@ const AdPlayer = ({ onComplete }) => {
                     <span className="text-gray-300 text-xs">{ad.advertiser_name}</span>
                 </div>
 
-                {/* Bouton visite */}
                 <button
                     onClick={handleClick}
                     className="absolute bottom-6 left-4 bg-white text-black px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-gray-100"
@@ -88,7 +87,6 @@ const AdPlayer = ({ onComplete }) => {
                     Visiter le site
                 </button>
 
-                {/* Son */}
                 <button
                     onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
                     className="absolute bottom-6 right-4 bg-black/60 p-2 rounded-full text-white"
@@ -97,7 +95,6 @@ const AdPlayer = ({ onComplete }) => {
                 </button>
             </div>
 
-            {/* Bouton Skip */}
             <div className="absolute top-4 right-4">
                 {canSkip ? (
                     <button
