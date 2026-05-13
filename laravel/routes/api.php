@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\AbonnementController;
 use App\Http\Controllers\Api\AdminController;
@@ -47,6 +48,8 @@ Route::prefix('v2')->group(function () {
     Route::get('/comments/{commentId}/replies', [CommentInteractionController::class, 'getReplies']);
     Route::get('/comments/{commentId}/like-status', [CommentInteractionController::class, 'getCommentLikeStatus']);
     Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
+    Route::get('/ads/random', [AdController::class, 'random']);
+    Route::post('/ads/{id}/click', [AdController::class, 'click']);
 
     Route::get('/og/video/{id}', function($id) {
         $video = \DB::table('videos')
@@ -176,6 +179,11 @@ Route::prefix('v2')->group(function () {
         Route::get('/messages', [AdminController::class, 'getMessages']);
         Route::post('/messages', [AdminController::class, 'sendMessage']);
         Route::post('/admin/messages/all', [AdminController::class, 'sendMessageAll']);
+
+        Route::get('/ads', [AdController::class, 'index']);
+        Route::post('/ads', [AdController::class, 'store']);
+        Route::patch('/ads/{id}/toggle', [AdController::class, 'toggle']);
+        Route::delete('/ads/{id}', [AdController::class, 'destroy']);
     });
 
 });
