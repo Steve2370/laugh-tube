@@ -1,20 +1,21 @@
 import React, { useRef, useEffect, useState } from 'react';
 import apiService from '../services/apiService.js';
+import AdPlayer from './AdPlayer.jsx';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
 const VideoPlayer = ({
-    src,
-    poster,
-    videoId = null,
-    onPlay,
-    onTimeUpdate,
-    onEnded,
-    onViewRecorded,
-    onError,
-    onLoadedMetadata,
-    autoPlay = true,
-    className = ""
-}) => {
+                         src,
+                         poster,
+                         videoId = null,
+                         onPlay,
+                         onTimeUpdate,
+                         onEnded,
+                         onViewRecorded,
+                         onError,
+                         onLoadedMetadata,
+                         autoPlay = true,
+                         className = ""
+                     }) => {
     const videoRef = useRef(null);
     const viewedRef = useRef(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -27,6 +28,7 @@ const VideoPlayer = ({
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [showAd, setShowAd] = useState(true);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -256,6 +258,10 @@ const VideoPlayer = ({
                 </div>
             </div>
         );
+    }
+
+    if (showAd) {
+        return <AdPlayer onComplete={() => setShowAd(false)} />;
     }
 
     return (
