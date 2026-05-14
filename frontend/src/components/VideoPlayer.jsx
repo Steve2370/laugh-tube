@@ -29,6 +29,7 @@ const VideoPlayer = ({
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [showAd, setShowAd] = useState(true);
+    const [adDone, setAdDone] = useState(false);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -261,7 +262,7 @@ const VideoPlayer = ({
     }
 
     if (showAd) {
-        return <AdPlayer onComplete={() => setShowAd(false)} />;
+        return <AdPlayer onComplete={() => { setShowAd(false); setAdDone(true); }} />;
     }
 
     return (
@@ -289,6 +290,7 @@ const VideoPlayer = ({
             )}
 
             <video
+                key={adDone ? 'after-ad' : 'normal'}
                 ref={videoRef}
                 className="w-full aspect-video"
                 src={src}
