@@ -28,7 +28,12 @@ const VideoPlayer = ({
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const [showAd, setShowAd] = useState(true);
+    const getShowAd = () => {
+        const count = parseInt(localStorage.getItem('video_count') || '0') + 1;
+        localStorage.setItem('video_count', count.toString());
+        return count % 5 === 1;
+    };
+    const [showAd, setShowAd] = useState(() => getShowAd());
     const [adDone, setAdDone] = useState(false);
 
     useEffect(() => {
