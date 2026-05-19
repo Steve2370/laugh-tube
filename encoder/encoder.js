@@ -29,7 +29,7 @@ const CONFIG = {
         videoCRF: Number(process.env.VIDEO_CRF) || 23,
         audioBitrate: process.env.AUDIO_BITRATE || '128k',
 
-        encodingTimeout: Number(process.env.ENCODING_TIMEOUT) || 600000,
+        encodingTimeout: Number(process.env.ENCODING_TIMEOUT) || 1800000,
     },
     logging: {
         verbose: process.env.VERBOSE === 'true',
