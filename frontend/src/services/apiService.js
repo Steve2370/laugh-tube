@@ -386,7 +386,7 @@ class ApiService {
      * @param {number} id
      */
     async getVideo(id) {
-        const response = await this.request(`/videos/${id}`);
+        const response = await this.requestV2(`/videos/${id}`);
         return response.data || response.video || response;
     }
 
