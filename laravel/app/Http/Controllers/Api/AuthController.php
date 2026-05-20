@@ -194,4 +194,29 @@ class AuthController extends Controller
 
         return $username;
     }
+
+    public function verifyEmail(Request $request): JsonResponse
+    {
+        $token = $request->query('token');
+
+        if (!$token) {
+            return response()->json(['error' => 'Token manquant'], 400);
+        }
+
+        $user = User::where('verification_token', $token)
+            ->where('verification_token_expires', '>', now())
+            ->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'Token invalide ou expiré'], 400);
+        }
+
+        $user->update([
+            'email_verified' => true,
+            'verification_token' => null,
+            'verification_token_expires' => null,
+        ]);
+
+        return response()->json(['message' => 'Email vérifié avec succès']);
+    }
 }
