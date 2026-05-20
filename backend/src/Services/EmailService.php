@@ -237,6 +237,8 @@ HTML;
     <div class="feature"><strong>Partager vos vidéos</strong><br>Uploadez vos punchlines avec la communauté.</div>
     <div class="feature"><strong>Suivre des créateurs</strong><br>Découvrez du contenu hilarant de créateurs talentueux.</div>
     <div class="feature"><strong>Commenter et interagir</strong><br>Rejoignez les discussions et connectez-vous avec d'autres fans.</div>
+    <div class="feature"><strong>Participez à des Stand-Up en live</strong><br>Les Humoristes peuvent faire leur performances en live.</div>
+    <div class="feature"><strong>Assistez ou participez à des Battles</strong><br>deux humoristes s'affrontent dans un clash divertissant.</div>
     <div class="feature"><strong>Sécurité renforcée</strong><br>Activez la 2FA pour protéger votre compte.</div>
     <p style="text-align:center;"><a href="{$siteUrl}" class="btn">Commencer maintenant</a></p>
   </div>
