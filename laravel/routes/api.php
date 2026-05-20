@@ -41,10 +41,10 @@ Route::prefix('v2')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+    Route::post('/auth/apple', [AuthController::class, 'handleAppleToken']);
 
     Route::get('/users/{id}/subscribers-count', [AbonnementController::class, 'count']);
 
-    // ── Routes publiques (sans auth) ──────────────────────────────────────
     Route::get('/comments/{commentId}/replies', [CommentInteractionController::class, 'getReplies']);
     Route::get('/comments/{commentId}/like-status', [CommentInteractionController::class, 'getCommentLikeStatus']);
     Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
@@ -103,8 +103,6 @@ Route::prefix('v2')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/device-token', [DeviceTokenController::class, 'store']);
         Route::get('/me', [AuthController::class, 'me']);
-        Route::post('/auth/apple/callback', [AuthController::class, 'handleAppleCallback']);
-        Route::post('/auth/apple', [AuthController::class, 'handleAppleToken']);
         Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
         Route::post('/videos/{id}/signaler', [VideoController::class, 'signaler']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
