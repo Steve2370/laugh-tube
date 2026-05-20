@@ -55,7 +55,7 @@ class LogRepository {
                 'updated_at' => now(),
             ]);
         } catch (\Exception $e) {
-            Log::warning('logEmail failed: ' . $e->getMessage());
+    Log::warning('logEmail failed: ' . $e->getMessage());
             return null;
         }
     }
