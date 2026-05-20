@@ -22,15 +22,15 @@ const FloatingBubbles = () => {
         <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
             <style>{`
                 @keyframes bubbleRise {
-                    0%   { transform: translateY(100vh) scale(0.8); opacity: 0; }
-                    8%   { opacity: 1; }
-                    85%  { opacity: 1; }
+                    0% { transform: translateY(100vh) scale(0.8); opacity: 0; }
+                    8% { opacity: 1; }
+                    85% { opacity: 1; }
                     100% { transform: translateY(-200px) scale(1.05); opacity: 0; }
                 }
                 @keyframes bubbleWobble {
                     0%,100% { margin-left: 0; }
-                    25%     { margin-left: 14px; }
-                    75%     { margin-left: -14px; }
+                    25% { margin-left: 14px; }
+                    75% { margin-left: -14px; }
                 }
                 .bubble-item {
                     animation: bubbleRise var(--dur) ease-in var(--delay) infinite,
