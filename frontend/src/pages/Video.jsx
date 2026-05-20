@@ -790,6 +790,10 @@ const Video = () => {
                                 videoId={video?.id}
                                 onViewRecorded={handleViewRecorded}
                                 poster={video?.thumbnail ? `/uploads/thumbnails/${video.thumbnail}` : undefined}
+                                nextVideo={relatedVideos?.[0] ?? null}
+                                onNextVideo={(video) => {
+                                    window.location.hash = `#/video?id=${video.id}`;
+                                }}
                             />
                         </div>
 
