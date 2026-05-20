@@ -75,25 +75,24 @@ export const AuthProvider = ({ children }) => {
         }
     }, [checkAuth]);
 
+
     const register = useCallback(async (username, email, password) => {
         try {
             setLoading(true);
             setError(null);
             const response = await apiService.register(username, email, password);
-            if (response?.token) {
-                apiService.setToken(response.token);
-                if (response.user) apiService.setUser(response.user);
-            } else if (!response?.requires_verification) {
-                try {
-                    const loginResp = await apiService.login(email, password);
-                    if (loginResp?.token) {
-                        apiService.setToken(loginResp.token);
-                        if (loginResp.user) apiService.setUser(loginResp.user);
-                    }
-                } catch (_) {}
+
+            const accessToken = response.token || response.data?.token;
+            if (accessToken) {
+                localStorage.setItem('access_token', accessToken);
+                localStorage.setItem('authToken', accessToken);
+                localStorage.setItem('token', accessToken);
             }
-            await new Promise(resolve => setTimeout(resolve, 100));
-            await checkAuth();
+
+            try {
+                await checkAuth();
+            } catch (_) {}
+
             return { success: true };
         } catch (err) {
             setError(err.message);
