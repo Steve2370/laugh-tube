@@ -26,11 +26,14 @@ import {
     Heart,
     Reply,
     ChevronDown,
+    Play,
+    Pause,
     Pencil,
     MoreHorizontal,
     Trash2,
     ChevronUp,
-    Flag, Mailbox, Bird,
+    Flag,
+    Mailbox, Bird,
 } from 'lucide-react';
 import videoService from "../services/videoService.js";
 
