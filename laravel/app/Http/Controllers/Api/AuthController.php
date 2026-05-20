@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\EmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
+    public function __construct(private EmailService $emailService) {}
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -20,15 +24,35 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        $verificationToken = Str::random(64);
+
         $user = User::create([
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password_hash' => Hash::make($validated['password']),
             'email_verified' => false,
+            'verification_token' => $verificationToken,
+            'verification_token_expires'  => now()->addDays(7),
             'role' => 'membre',
         ]);
 
-        $token = $user->createToken('auth_token', ['*'], now()->addHour())->plainTextToken;
+        try {
+            $this->emailService->sendVerificationEmail(
+                $user->id,
+                $user->email,
+                $user->username,
+                $verificationToken
+            );
+            $this->emailService->sendWelcomeEmail(
+                $user->id,
+                $user->email,
+                $user->username
+            );
+        } catch (\Exception $e) {
+            Log::error('Email failed on register: ' . $e->getMessage());
+        }
+
+        $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'message' => 'Compte créé avec succès',
@@ -37,6 +61,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'username' => $user->username,
                 'email' => $user->email,
+                'email_verified' => false,
             ],
         ], 201);
     }
@@ -61,7 +86,7 @@ class AuthController extends Controller
         }
 
         $user->tokens()->delete();
-        $token = $user->createToken('auth_token', ['*'], now()->addHour())->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'message' => 'Connexion réussie',
@@ -75,17 +100,16 @@ class AuthController extends Controller
         ]);
     }
 
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['message' => 'Déconnexion réussie']);
     }
 
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
-
         return response()->json([
             'user' => [
                 'id' => $user->id,
@@ -115,24 +139,36 @@ class AuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
+            $isNewUser = false;
             $user = User::withTrashed()->where('email', strtolower($googleUser->getEmail()))->first();
+
             if ($user) {
-                if ($user->trashed()) {
-                    $user->restore();
-                }
+                if ($user->trashed()) $user->restore();
             } else {
+                $isNewUser = true;
                 $username = $this->generateUsername($googleUser->getName());
                 $user = User::create([
                     'username' => $username,
                     'email' => strtolower($googleUser->getEmail()),
-                    'password_hash' => Hash::make(str()->random(32)),
+                    'password_hash' => Hash::make(Str::random(32)),
                     'avatar_url' => $googleUser->getAvatar(),
                     'email_verified' => true,
                     'role' => 'membre',
                 ]);
+
+                try {
+                    $this->emailService->sendWelcomeEmail(
+                        $user->id,
+                        $user->email,
+                        $user->username
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Welcome email failed (Google): ' . $e->getMessage());
+                }
             }
+
             $user->tokens()->delete();
-            $token = $user->createToken('auth_token', ['*'], now()->addHour())->plainTextToken;
+            $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
 
             $state = $request->get('state', '');
             if (str_contains($state, 'ios') || str_contains($state, 'mobile') || $request->get('mobile') === '1') {
@@ -150,11 +186,10 @@ class AuthController extends Controller
         $base = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $name));
         $base = $base ?: 'user';
         $username = $base;
-        $counter  = 1;
+        $counter = 1;
 
         while (User::where('username', $username)->exists()) {
-            $username = $base . $counter;
-            $counter++;
+            $username = $base . $counter++;
         }
 
         return $username;
