@@ -103,6 +103,8 @@ Route::prefix('v2')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/device-token', [DeviceTokenController::class, 'store']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::post('/auth/apple/callback', [AuthController::class, 'handleAppleCallback']);
+        Route::post('/auth/apple', [AuthController::class, 'handleAppleToken']);
         Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
         Route::post('/videos/{id}/signaler', [VideoController::class, 'signaler']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);

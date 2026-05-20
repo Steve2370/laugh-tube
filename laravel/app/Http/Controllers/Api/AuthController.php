@@ -219,4 +219,110 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Email vérifié avec succès']);
     }
+
+    public function handleAppleCallback(Request $request): JsonResponse
+    {
+        try {
+            $appleUser = Socialite::driver('apple')->stateless()->user();
+
+            $user = User::withTrashed()->where('email', strtolower($appleUser->getEmail()))->first();
+
+            if ($user) {
+                if ($user->trashed()) $user->restore();
+            } else {
+                $username = $this->generateUsername($appleUser->getName() ?? $appleUser->getEmail());
+                $user = User::create([
+                    'username' => $username,
+                    'email' => strtolower($appleUser->getEmail()),
+                    'password_hash' => Hash::make(Str::random(32)),
+                    'email_verified' => true,
+                    'role' => 'membre',
+                ]);
+
+                try {
+                    $this->emailService->sendWelcomeEmail(
+                        $user->id,
+                        $user->email,
+                        $user->username
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Welcome email failed (Apple): ' . $e->getMessage());
+                }
+            }
+
+            $user->tokens()->delete();
+            $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+
+            return response()->json([
+                'token' => $token,
+                'user_id' => $user->id,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function handleAppleToken(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'identity_token' => 'required|string',
+            'user_id' => 'required|string',
+            'email' => 'nullable|email',
+            'full_name' => 'nullable|string',
+        ]);
+
+        try {
+            $tokenParts = explode('.', $validated['identity_token']);
+            $payload = json_decode(base64_decode(str_pad(
+                strtr($tokenParts[1], '-_', '+/'),
+                strlen($tokenParts[1]) % 4,
+                '='
+            )), true);
+
+            $appleUserId = $payload['sub'] ?? $validated['user_id'];
+            $email = $payload['email'] ?? $validated['email'] ?? null;
+
+            if (!$email) {
+                return response()->json(['error' => 'Email requis'], 400);
+            }
+
+            $user = User::withTrashed()->where('email', strtolower($email))->first();
+
+            if ($user) {
+                if ($user->trashed()) $user->restore();
+            } else {
+                $username = $this->generateUsername($validated['full_name'] ?? $email);
+                $user = User::create([
+                    'username' => $username,
+                    'email' => strtolower($email),
+                    'password_hash' => Hash::make(Str::random(32)),
+                    'email_verified' => true,
+                    'role' => 'membre',
+                ]);
+
+                try {
+                    $this->emailService->sendWelcomeEmail($user->id, $user->email, $user->username);
+                } catch (\Exception $e) {
+                    Log::error('Welcome email failed (Apple): ' . $e->getMessage());
+                }
+            }
+
+            $user->tokens()->delete();
+            $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+
+            return response()->json([
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
 }

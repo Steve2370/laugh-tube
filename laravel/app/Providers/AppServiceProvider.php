@@ -6,6 +6,9 @@ use App\Repositories\LogRepository;
 use App\Services\EmailService;
 use App\Services\ResendEmailProvider;
 use Illuminate\Support\ServiceProvider;
+use SocialiteProviders\Apple\AppleExtendSocialite;
+use SocialiteProviders\Apple\Provider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Event::listen(function (SocialiteWasCalled $event) {
+            $event->extendSocialite('apple', Provider::class);
+        });
     }
 }
