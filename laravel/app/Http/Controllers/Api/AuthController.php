@@ -274,6 +274,9 @@ class AuthController extends Controller
 
         try {
             $tokenParts = explode('.', $validated['identity_token']);
+            if (count($tokenParts) < 3) {
+                return response()->json(['error' => 'Token Apple invalide'], 400);
+            }
             $payload = json_decode(base64_decode(str_pad(
                 strtr($tokenParts[1], '-_', '+/'),
                 strlen($tokenParts[1]) % 4,
