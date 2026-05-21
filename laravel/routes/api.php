@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\LiveController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProfileUploadController;
+use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\VideoController;
 use Illuminate\Support\Facades\Route;
 
@@ -106,6 +107,11 @@ Route::prefix('v2')->group(function () {
         Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
         Route::post('/videos/{id}/signaler', [VideoController::class, 'signaler']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
+
+        Route::get('/auth/2fa/status', [TwoFactorController::class, 'status']);
+        Route::post('/auth/2fa/enable', [TwoFactorController::class, 'enable']);
+        Route::post('/auth/2fa/verify', [TwoFactorController::class, 'verify']);
+        Route::post('/auth/2fa/disable', [TwoFactorController::class, 'disable']);
 
         Route::post('/lives/start', [LiveController::class, 'start']);
         Route::post('/lives/{id}/stop', [LiveController::class, 'stop']);
