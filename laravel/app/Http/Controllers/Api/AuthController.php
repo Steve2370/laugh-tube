@@ -139,13 +139,11 @@ class AuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
-            $isNewUser = false;
             $user = User::withTrashed()->where('email', strtolower($googleUser->getEmail()))->first();
 
             if ($user) {
                 if ($user->trashed()) $user->restore();
             } else {
-                $isNewUser = true;
                 $username = $this->generateUsername($googleUser->getName());
                 $user = User::create([
                     'username' => $username,
@@ -155,27 +153,34 @@ class AuthController extends Controller
                     'email_verified' => true,
                     'role' => 'membre',
                 ]);
-
                 try {
-                    $this->emailService->sendWelcomeEmail(
-                        $user->id,
-                        $user->email,
-                        $user->username
-                    );
+                    $this->emailService->sendWelcomeEmail($user->id, $user->email, $user->username);
                 } catch (\Exception $e) {
                     Log::error('Welcome email failed (Google): ' . $e->getMessage());
                 }
             }
 
+            $state = $request->get('state', '');
+            $isMobile = str_contains($state, 'ios') || str_contains($state, 'mobile') || $request->get('mobile') === '1';
+
+            if ($user->two_fa_enabled && $user->two_fa_secret) {
+                $user->tokens()->where('name', '2fa_pending')->delete();
+                $tempToken = $user->createToken('2fa_pending', ['*'], now()->addMinutes(10))->plainTextToken;
+
+                if ($isMobile) {
+                    return redirect('laughtube://auth/callback?requires_2fa=true&temp_token=' . $tempToken . '&user_id=' . $user->id);
+                }
+                return redirect('https://www.laughtube.ca/#/auth/google/callback?requires_2fa=true&temp_token=' . $tempToken . '&user_id=' . $user->id);
+            }
+
             $user->tokens()->delete();
             $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
 
-            $state = $request->get('state', '');
-            if (str_contains($state, 'ios') || str_contains($state, 'mobile') || $request->get('mobile') === '1') {
+            if ($isMobile) {
                 return redirect('laughtube://auth/callback?token=' . $token . '&user_id=' . $user->id);
             }
-
             return redirect('https://www.laughtube.ca/#/auth/google/callback?token=' . $token . '&user_id=' . $user->id);
+
         } catch (\Exception $e) {
             return redirect('https://www.laughtube.ca/#/login?error=' . urlencode($e->getMessage()));
         }
@@ -283,7 +288,6 @@ class AuthController extends Controller
                 '='
             )), true);
 
-            $appleUserId = $payload['sub'] ?? $validated['user_id'];
             $email = $payload['email'] ?? $validated['email'] ?? null;
 
             if (!$email) {
@@ -303,7 +307,6 @@ class AuthController extends Controller
                     'email_verified' => true,
                     'role' => 'membre',
                 ]);
-
                 try {
                     $this->emailService->sendWelcomeEmail($user->id, $user->email, $user->username);
                 } catch (\Exception $e) {
@@ -311,12 +314,23 @@ class AuthController extends Controller
                 }
             }
 
+            if ($user->two_fa_enabled && $user->two_fa_secret) {
+                $user->tokens()->where('name', '2fa_pending')->delete();
+                $tempToken = $user->createToken('2fa_pending', ['*'], now()->addMinutes(10))->plainTextToken;
+
+                return response()->json([
+                    'requires_2fa' => true,
+                    'temp_token' => $tempToken,
+                    'user_id' => $user->id,
+                ]);
+            }
+
             $user->tokens()->delete();
             $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
 
             return response()->json([
                 'token' => $token,
-                'user' => [
+                'user'  => [
                     'id' => $user->id,
                     'username' => $user->username,
                     'email' => $user->email,

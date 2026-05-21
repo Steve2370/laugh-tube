@@ -97,4 +97,44 @@ class TwoFactorController extends Controller
 
         return response()->json(['success' => true, 'message' => '2FA désactivé']);
     }
+
+    public function verifyLogin(Request $request): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string|size:6',
+            'temp_token' => 'required|string',
+            'user_id' => 'required|integer',
+        ]);
+
+        $user = User::find($request->user_id);
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur introuvable'], 404);
+        }
+
+        $tokenValid = $user->tokens()
+            ->where('name', '2fa_pending')
+            ->where('expires_at', '>', now())
+            ->exists();
+
+        if (!$tokenValid) {
+            return response()->json(['error' => 'Token expiré'], 401);
+        }
+
+        if (!$this->google2fa->verifyKey($user->two_fa_secret, $request->code)) {
+            return response()->json(['error' => 'Code invalide'], 400);
+        }
+
+        $user->tokens()->where('name', '2fa_pending')->delete();
+        $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'user'  => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+        ]);
+    }
 }
