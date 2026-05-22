@@ -112,6 +112,7 @@ Route::prefix('v2')->group(function () {
         Route::post('/auth/2fa/enable', [TwoFactorController::class, 'enable']);
         Route::post('/auth/2fa/verify', [TwoFactorController::class, 'verify']);
         Route::post('/auth/2fa/disable', [TwoFactorController::class, 'disable']);
+        Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin']);
 
         Route::post('/lives/start', [LiveController::class, 'start']);
         Route::post('/lives/{id}/stop', [LiveController::class, 'stop']);
