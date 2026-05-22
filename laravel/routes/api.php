@@ -100,11 +100,13 @@ Route::prefix('v2')->group(function () {
         return response($html, 200)->header('Content-Type', 'text/html');
     });
 
+    Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+    Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin']);
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/device-token', [DeviceTokenController::class, 'store']);
         Route::get('/me', [AuthController::class, 'me']);
-        Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
         Route::post('/videos/{id}/signaler', [VideoController::class, 'signaler']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
 
@@ -112,7 +114,6 @@ Route::prefix('v2')->group(function () {
         Route::post('/auth/2fa/enable', [TwoFactorController::class, 'enable']);
         Route::post('/auth/2fa/verify', [TwoFactorController::class, 'verify']);
         Route::post('/auth/2fa/disable', [TwoFactorController::class, 'disable']);
-        Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin']);
 
         Route::post('/lives/start', [LiveController::class, 'start']);
         Route::post('/lives/{id}/stop', [LiveController::class, 'stop']);
