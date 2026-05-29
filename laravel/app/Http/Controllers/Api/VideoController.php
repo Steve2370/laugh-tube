@@ -13,7 +13,7 @@ class VideoController extends Controller
 {
     public function index(): JsonResponse
     {
-        $videos = Video::with('user:id,username')
+        $videos = Video::with('user:id,username,avatar_url')
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
                 $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
@@ -33,7 +33,7 @@ class VideoController extends Controller
         $limit = min((int) $request->get('limit', 10), 50);
         $period = min((int) $request->get('period', 7), 30);
 
-        $videos = Video::with('user:id,username')
+        $videos = Video::with('user:id,username,avatar_url')
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
                 $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
@@ -63,7 +63,7 @@ class VideoController extends Controller
     {
         $limit = min((int) $request->get('limit', 10), 50);
 
-        $videos = Video::with('user:id,username')
+        $videos = Video::with('user:id,username,avatar_url')
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
                 $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
@@ -85,7 +85,7 @@ class VideoController extends Controller
     {
         $limit = min((int) $request->get('limit', 20), 50);
 
-        $videos = Video::with('user:id,username')
+        $videos = Video::with('user:id,username,avatar_url')
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
                 $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
