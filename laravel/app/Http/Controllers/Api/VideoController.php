@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\BlockHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Video;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +15,9 @@ class VideoController extends Controller
     {
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
+            ->when(auth()->check(), function($q) {
+                $q->whereNotIn('user_id', BlockHelper::blockedUserIds(auth()->id()));
+            })
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($v) => $this->formatVideo($v));
@@ -28,6 +32,9 @@ class VideoController extends Controller
 
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
+            ->when(auth()->check(), function($q) {
+                $q->whereNotIn('user_id', BlockHelper::blockedUserIds(auth()->id()));
+            })
             ->withCount([
                 'views as recent_views' => fn($q) =>
                 $q->where('viewed_at', '>=', now()->subDays($period)),
@@ -52,6 +59,9 @@ class VideoController extends Controller
 
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
+            ->when(auth()->check(), function($q) {
+                $q->whereNotIn('user_id', BlockHelper::blockedUserIds(auth()->id()));
+            })
             ->withCount(['views', 'likes'])
             ->orderByRaw('((SELECT COUNT(*) FROM video_views WHERE video_views.video_id = videos.id) + (SELECT COUNT(*) FROM likes WHERE likes.video_id = videos.id) * 3) DESC')
             ->orderBy('created_at', 'desc')
@@ -68,6 +78,9 @@ class VideoController extends Controller
 
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
+            ->when(auth()->check(), function($q) {
+                $q->whereNotIn('user_id', BlockHelper::blockedUserIds(auth()->id()));
+            })
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get()

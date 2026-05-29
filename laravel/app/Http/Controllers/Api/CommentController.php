@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\BlockHelper;
 use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Commentaire;
@@ -65,6 +66,14 @@ class CommentController extends Controller
         $validated = $request->validate([
             'content' => 'required|string|min:1|max:2000',
         ]);
+
+        $videoOwnerId = DB::table('videos')->where('id', $id)->value('user_id');
+        $blockedIds = BlockHelper::blockedUserIds($request->user()->id);
+
+        if (in_array($videoOwnerId, $blockedIds)) {
+            return response()->json(['error' => 'Action non autorisée'], 403);
+        }
+
         $comment = Commentaire::create([
             'video_id' => $id,
             'user_id' => $request->user()->id,
