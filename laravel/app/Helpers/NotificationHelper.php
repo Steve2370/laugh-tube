@@ -12,6 +12,19 @@ class NotificationHelper
     {
         if ($data['user_id'] === $data['actor_id']) return;
 
+        $isBlocked = DB::table('blocks')
+            ->where(function($q) use ($data) {
+                $q->where('blocker_id', $data['actor_id'])
+                    ->where('blocked_id', $data['user_id']);
+            })
+            ->orWhere(function($q) use ($data) {
+                $q->where('blocker_id', $data['user_id'])
+                    ->where('blocked_id', $data['actor_id']);
+            })
+            ->exists();
+
+        if ($isBlocked) return;
+
         DB::table('notifications')->insert([
             'user_id' => $data['user_id'],
             'actor_id' => $data['actor_id'],
@@ -41,7 +54,7 @@ class NotificationHelper
 
             (new PushNotificationService())->sendToUser(
                 $data['user_id'],
-                'LaughTube',
+                'Tube à rire',
                 $body,
                 ['type' => $data['type'], 'video_id' => $data['video_id'] ?? null]
             );
