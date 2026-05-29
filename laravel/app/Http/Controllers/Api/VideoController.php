@@ -15,8 +15,11 @@ class VideoController extends Controller
     {
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
-            ->when(auth()->check(), function($q) {
-                $q->whereNotIn('user_id', BlockHelper::blockedUserIds(auth()->id()));
+            ->when(request()->bearerToken(), function($q) {
+                $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
+                if ($user) {
+                    $q->whereNotIn('user_id', BlockHelper::blockedUserIds($user->id));
+                }
             })
             ->orderBy('created_at', 'desc')
             ->get()
@@ -32,8 +35,11 @@ class VideoController extends Controller
 
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
-            ->when(auth()->check(), function($q) {
-                $q->whereNotIn('user_id', BlockHelper::blockedUserIds(auth()->id()));
+            ->when(request()->bearerToken(), function($q) {
+                $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
+                if ($user) {
+                    $q->whereNotIn('user_id', BlockHelper::blockedUserIds($user->id));
+                }
             })
             ->withCount([
                 'views as recent_views' => fn($q) =>
@@ -59,8 +65,11 @@ class VideoController extends Controller
 
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
-            ->when(auth()->check(), function($q) {
-                $q->whereNotIn('user_id', BlockHelper::blockedUserIds(auth()->id()));
+            ->when(request()->bearerToken(), function($q) {
+                $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
+                if ($user) {
+                    $q->whereNotIn('user_id', BlockHelper::blockedUserIds($user->id));
+                }
             })
             ->withCount(['views', 'likes'])
             ->orderByRaw('((SELECT COUNT(*) FROM video_views WHERE video_views.video_id = videos.id) + (SELECT COUNT(*) FROM likes WHERE likes.video_id = videos.id) * 3) DESC')
@@ -78,8 +87,11 @@ class VideoController extends Controller
 
         $videos = Video::with('user:id,username')
             ->whereNull('deleted_at')
-            ->when(auth()->check(), function($q) {
-                $q->whereNotIn('user_id', BlockHelper::blockedUserIds(auth()->id()));
+            ->when(request()->bearerToken(), function($q) {
+                $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
+                if ($user) {
+                    $q->whereNotIn('user_id', BlockHelper::blockedUserIds($user->id));
+                }
             })
             ->orderBy('created_at', 'desc')
             ->limit($limit)
