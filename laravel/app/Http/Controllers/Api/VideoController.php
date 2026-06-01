@@ -15,7 +15,7 @@ class VideoController extends Controller
     public function index(): JsonResponse
     {
         $videos = Video::with('user:id,username,avatar_url')
-            ->withCount('commentaires')
+            ->withCount(['commentaires', 'likes'])
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
                 $user = PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
@@ -36,7 +36,7 @@ class VideoController extends Controller
         $period = min((int) $request->get('period', 7), 30);
 
         $videos = Video::with('user:id,username,avatar_url')
-            ->withCount('commentaires')
+            ->withCount(['commentaires', 'likes'])
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
                 $user = PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
@@ -67,7 +67,7 @@ class VideoController extends Controller
         $limit = min((int) $request->get('limit', 10), 50);
 
         $videos = Video::with('user:id,username,avatar_url')
-            ->withCount('commentaires')
+            ->withCount(['commentaires', 'likes'])
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
                 $user = PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
@@ -90,7 +90,7 @@ class VideoController extends Controller
         $limit = min((int) $request->get('limit', 20), 50);
 
         $videos = Video::with('user:id,username,avatar_url')
-            ->withCount('commentaires')
+            ->withCount(['commentaires', 'likes'])
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
                 $user = PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
@@ -109,7 +109,7 @@ class VideoController extends Controller
     public function show(int $id): JsonResponse
     {
         $video = Video::with('user:id,username,avatar_url')
-            ->withCount('commentaires')
+            ->withCount(['commentaires', 'likes'])
             ->whereNull('deleted_at')
             ->findOrFail($id);
 
@@ -150,7 +150,7 @@ class VideoController extends Controller
             'recent_views' => $video->recent_views ?? null,
             'recent_likes' => $video->recent_likes ?? null,
             'views_count' => $video->views_count  ?? null,
-            'likes_count' => $video->likes_count  ?? null,
+            'likes_count' => $video->likes_count ?? 0,
             'comments_count' => $video->commentaires_count ?? 0,
         ];
     }
