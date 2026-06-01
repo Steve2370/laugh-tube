@@ -8,15 +8,17 @@ use App\Models\Video;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class VideoController extends Controller
 {
     public function index(): JsonResponse
     {
         $videos = Video::with('user:id,username,avatar_url')
+            ->withCount('commentaires')
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
-                $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
+                $user = PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
                 if ($user) {
                     $q->whereNotIn('user_id', BlockHelper::blockedUserIds($user->id));
                 }
@@ -34,9 +36,10 @@ class VideoController extends Controller
         $period = min((int) $request->get('period', 7), 30);
 
         $videos = Video::with('user:id,username,avatar_url')
+            ->withCount('commentaires')
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
-                $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
+                $user = PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
                 if ($user) {
                     $q->whereNotIn('user_id', BlockHelper::blockedUserIds($user->id));
                 }
@@ -64,9 +67,10 @@ class VideoController extends Controller
         $limit = min((int) $request->get('limit', 10), 50);
 
         $videos = Video::with('user:id,username,avatar_url')
+            ->withCount('commentaires')
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
-                $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
+                $user = PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
                 if ($user) {
                     $q->whereNotIn('user_id', BlockHelper::blockedUserIds($user->id));
                 }
@@ -86,9 +90,10 @@ class VideoController extends Controller
         $limit = min((int) $request->get('limit', 20), 50);
 
         $videos = Video::with('user:id,username,avatar_url')
+            ->withCount('commentaires')
             ->whereNull('deleted_at')
             ->when(request()->bearerToken(), function($q) {
-                $user = \Laravel\Sanctum\PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
+                $user = PersonalAccessToken::findToken(request()->bearerToken())?->tokenable;
                 if ($user) {
                     $q->whereNotIn('user_id', BlockHelper::blockedUserIds($user->id));
                 }
@@ -104,6 +109,7 @@ class VideoController extends Controller
     public function show(int $id): JsonResponse
     {
         $video = Video::with('user:id,username,avatar_url')
+            ->withCount('commentaires')
             ->whereNull('deleted_at')
             ->findOrFail($id);
 
@@ -145,6 +151,7 @@ class VideoController extends Controller
             'recent_likes' => $video->recent_likes ?? null,
             'views_count' => $video->views_count  ?? null,
             'likes_count' => $video->likes_count  ?? null,
+            'comments_count' => $video->commentaires_count ?? 0,
         ];
     }
 
