@@ -323,14 +323,13 @@ const Home = () => {
     const displayVideos = useMemo(() => (Array.isArray(videos) ? videos : []), [videos]);
 
     const handleFilterChange = async (newFilter) => {
-        setFilter(newFilter);
-        setSearchTerm("");
-
         if (newFilter === "jokair") {
             window.location.hash = "#/jokair";
             return;
         }
 
+        setFilter(newFilter);
+        setSearchTerm("");
         if (newFilter === "all") return;
 
         const reqId = ++reqIdRef.current;
