@@ -37,7 +37,7 @@ const CountdownBlock = ({ value, label }) => (
         padding: '10px 16px',
         minWidth: 56,
     }}>
-        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, lineHeight: 1, color: '#fff' }}>
+        <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 32, lineHeight: 1, color: '#fff' }}>
             {String(value).padStart(2, '0')}
         </div>
         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>
@@ -100,7 +100,7 @@ const LeaderboardRow = ({ entry, rank, onVideoClick }) => {
             whileTap={{ scale: 0.99 }}
         >
             <div style={{
-                fontFamily: "'Bebas Neue', sans-serif",
+                fontFamily: "'Poppins', sans-serif",
                 fontSize: rank <= 3 ? 24 : 16,
                 color: colors.accent,
                 minWidth: 28, textAlign: 'center',
@@ -135,7 +135,7 @@ const LeaderboardRow = ({ entry, rank, onVideoClick }) => {
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <div style={{
-                    fontFamily: "'Bebas Neue', sans-serif",
+                    fontFamily: "'Poppins', sans-serif",
                     fontSize: 20, color: colors.accent, lineHeight: 1,
                 }}>
                     {parseFloat(entry.score || 0).toFixed(1)}
@@ -422,9 +422,9 @@ const JokairPage = () => {
     );
 
     return (
-        <div style={{ minHeight: '100vh', background: '#0A0A0F', paddingTop: 80, fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ minHeight: '100vh', background: '#0A0A0F', paddingTop: 80, fontFamily: "'Poppins', sans-serif" }}>
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600&display=swap');
                 @keyframes jkPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
                 @keyframes spin { to { transform:rotate(360deg) } }
             `}</style>
@@ -447,7 +447,7 @@ const JokairPage = () => {
                     </div>
 
                     <h1 style={{
-                        fontFamily: "'Bebas Neue', sans-serif",
+                        fontFamily: "'Poppins', sans-serif",
                         fontSize: 'clamp(56px, 12vw, 88px)',
                         lineHeight: 0.9, letterSpacing: '0.02em',
                         color: '#fff', margin: '0 0 6px',
@@ -473,7 +473,7 @@ const JokairPage = () => {
                             }}>
                                 <span style={{ color }}>{icon}</span>
                                 <div>
-                                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 26, lineHeight: 1, color }}>{amount}</div>
+                                    <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 26, lineHeight: 1, color }}>{amount}</div>
                                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{place} place{place === '1er' ? ' + trophée gravé' : ''}</div>
                                 </div>
                             </div>
@@ -487,11 +487,11 @@ const JokairPage = () => {
                             </div>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <CountdownBlock value={countdown.days}    label="jours" />
-                                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, color: '#CC0000', marginBottom: 10 }}>:</span>
+                                <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, color: '#CC0000', marginBottom: 10 }}>:</span>
                                 <CountdownBlock value={countdown.hours}   label="heures" />
-                                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, color: '#CC0000', marginBottom: 10 }}>:</span>
+                                <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, color: '#CC0000', marginBottom: 10 }}>:</span>
                                 <CountdownBlock value={countdown.minutes} label="min" />
-                                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, color: '#CC0000', marginBottom: 10 }}>:</span>
+                                <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, color: '#CC0000', marginBottom: 10 }}>:</span>
                                 <CountdownBlock value={countdown.seconds} label="sec" />
                             </div>
                         </div>
