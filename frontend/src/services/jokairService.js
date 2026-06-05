@@ -3,7 +3,7 @@ import apiService from './apiService.js';
 class JokairService {
     constructor() {
         this.cache = new Map();
-        this.cacheDuration = 60 * 60 * 1000; 
+        this.cacheDuration = 60 * 60 * 1000;
     }
 
     async getActiveContest() {
@@ -11,7 +11,7 @@ class JokairService {
             const cached = this._getFromCache('active_contest');
             if (cached) return cached;
 
-            const response = await apiService.request('/jokair/active');
+            const response = await apiService.requestV2('/jokair/active');
             this._setInCache('active_contest', response);
             return response;
         } catch (error) {
@@ -25,7 +25,7 @@ class JokairService {
             const cached = this._getFromCache('hall_of_fame');
             if (cached) return cached;
 
-            const response = await apiService.request('/jokair/hall-of-fame');
+            const response = await apiService.requestV2('/jokair/hall-of-fame');
             this._setInCache('hall_of_fame', response);
             return Array.isArray(response) ? response : [];
         } catch (error) {
@@ -42,7 +42,7 @@ class JokairService {
             const cached = this._getFromCache(cacheKey);
             if (cached) return cached;
 
-            const response = await apiService.request(`/jokair/${contestId}/leaderboard`);
+            const response = await apiService.requestV2(`/jokair/${contestId}/leaderboard`);
             const result = Array.isArray(response) ? response : [];
             this._setInCache(cacheKey, result);
             return result;
@@ -56,7 +56,7 @@ class JokairService {
         try {
             if (!contestId || !videoId) throw new Error('Contest ID et Video ID requis');
 
-            const response = await apiService.request(`/jokair/${contestId}/submit`, {
+            const response = await apiService.requestV2(`/jokair/${contestId}/submit`, {
                 method: 'POST',
                 body: JSON.stringify({ video_id: videoId }),
             });
@@ -73,7 +73,7 @@ class JokairService {
         try {
             if (!entryId) throw new Error('Entry ID requis');
 
-            const response = await apiService.request(`/jokair/entries/${entryId}/vote`, {
+            const response = await apiService.requestV2(`/jokair/entries/${entryId}/vote`, {
                 method: 'POST',
             });
 
@@ -89,7 +89,7 @@ class JokairService {
         try {
             if (!entryId) throw new Error('Entry ID requis');
 
-            await apiService.request(`/jokair/entries/${entryId}/watch`, {
+            await apiService.requestV2(`/jokair/entries/${entryId}/watch`, {
                 method: 'POST',
                 body: JSON.stringify({
                     seconds_watched: secondsWatched,
