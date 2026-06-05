@@ -252,18 +252,23 @@ const FILTERS = [
     { id: 'trending', label: 'Tendances', icon: TrendingUp },
     { id: 'popular', label: 'Populaires', icon: Flame },
     { id: 'recent', label: 'Récents', icon: Clock },
+    { id: 'jokair', label: 'Jok-Air', icon: Radio, special: true },
 ];
 
 const FilterBar = ({ filter, onChange }) => (
     <div className="flex gap-2 mb-8 overflow-x-auto pb-1 scrollbar-hide">
-        {FILTERS.map(({ id, label, icon: Icon }) => (
+        {FILTERS.map(({ id, label, icon: Icon, special }) => (
             <button
                 key={id}
                 onClick={() => onChange(id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                    filter === id
-                        ? 'bg-gray-900 text-white shadow-lg scale-105'
-                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    special
+                        ? filter === id
+                            ? 'bg-red-600 text-white shadow-lg scale-105'
+                            : 'bg-white text-red-600 border border-red-300 hover:bg-red-50'
+                        : filter === id
+                            ? 'bg-gray-900 text-white shadow-lg scale-105'
+                            : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                 }`}
             >
                 <Icon size={14} />
@@ -320,6 +325,12 @@ const Home = () => {
     const handleFilterChange = async (newFilter) => {
         setFilter(newFilter);
         setSearchTerm("");
+
+        if (newFilter === "jokair") {
+            window.location.hash = "#/jokair";
+            return;
+        }
+
         if (newFilter === "all") return;
 
         const reqId = ++reqIdRef.current;

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\BlockController;
 use App\Http\Controllers\Api\ClassementController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CommentInteractionController;
+use App\Http\Controllers\Api\JokairController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\LiveController;
 use App\Http\Controllers\Api\NotificationController;
@@ -193,6 +194,26 @@ Route::prefix('v2')->group(function () {
         Route::post('/ads', [AdController::class, 'store']);
         Route::patch('/ads/{id}/toggle', [AdController::class, 'toggle']);
         Route::delete('/ads/{id}', [AdController::class, 'destroy']);
+    });
+
+    Route::prefix('jokair')->group(function () {
+
+        Route::get('/active', [JokairController::class, 'activeContest']);
+        Route::get('/{contest}/leaderboard', [JokairController::class, 'leaderboard']);
+        Route::get('/hall-of-fame', [JokairController::class, 'hallOfFame']);
+
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/{contest}/submit', [JokairController::class, 'submitEntry']);
+            Route::post('/entries/{entry}/vote', [JokairController::class, 'vote']);
+            Route::post('/entries/{entry}/watch', [JokairController::class, 'recordWatch']);
+            Route::get('/entries/{entry}/my-status', [JokairController::class, 'myStatus']);
+        });
+
+        Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
+            Route::post('/', [JokairController::class, 'createContest']);
+            Route::put('/{contest}/status', [JokairController::class, 'updateStatus']);
+            Route::post('/{contest}/compute-ranks', [JokairController::class, 'computeRanks']);
+        });
     });
 
 });
