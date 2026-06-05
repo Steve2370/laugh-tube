@@ -446,14 +446,11 @@ const JokairPage = () => {
                         )}
                     </div>
 
-                    <h1 style={{
-                        fontFamily: "'Poppins', sans-serif",
-                        fontSize: 'clamp(56px, 12vw, 88px)',
-                        lineHeight: 0.9, letterSpacing: '0.02em',
-                        color: '#fff', margin: '0 0 6px',
-                    }}>
-                        JOK<span style={{ color: '#CC0000' }}>-AIR</span>
-                    </h1>
+                    <img
+                        src="/Jok-Air.png"
+                        alt="Jok-Air"
+                        style={{ height: 90, width: 'auto', margin: '0 0 6px', display: 'block' }}
+                    />
 
                     <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', margin: '0 0 24px', maxWidth: 480 }}>
                         {contest?.titre || "Le championnat annuel d'humour de LaughTube"} · <strong style={{ color: 'rgba(255,255,255,0.7)' }}>300$ à gagner</strong>
