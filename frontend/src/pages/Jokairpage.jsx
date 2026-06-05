@@ -5,9 +5,9 @@ import {
     Clock, Users, Play, Flame, Check, X, AlertCircle,
     Crown, Mic, Calendar, Zap, TrendingUp, Eye
 } from "lucide-react";
-import apiService from "../services/apiService";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
+import { useJokair } from '../hooks/useJokair';
 
 const useCountdown = (targetDate) => {
     const calc = () => {
@@ -175,21 +175,12 @@ const SubmitModal = ({ contest, onClose, onSuccess }) => {
             .finally(() => setLoading(false));
     }, []);
 
-    const handleSubmit = async () => {
-        if (!selected) return;
-        setSubmitting(true);
+    const handleSubmit = async (videoId) => {
         try {
-            await apiService.request(`/jokair/${contest.id}/submit`, {
-                method: 'POST',
-                body: JSON.stringify({ video_id: selected }),
-            });
+            await submitEntry(videoId);
             toast.success("Vidéo soumise avec succès !");
-            onSuccess();
-            onClose();
         } catch (e) {
             toast.error(e.message || "Erreur lors de la soumission");
-        } finally {
-            setSubmitting(false);
         }
     };
 
@@ -331,14 +322,25 @@ const HallOfFame = ({ editions }) => (
 const JokairPage = () => {
     const { isAuthenticated } = useAuth();
     const toast = useToast();
-
-    const [contest, setContest] = useState(null);
-    const [leaderboard, setLeaderboard] = useState([]);
-    const [myEntry, setMyEntry] = useState(null);
-    const [myVotes, setMyVotes] = useState({});
-    const [loadingContest, setLoadingContest] = useState(true);
     const [showSubmitModal, setShowSubmitModal] = useState(false);
-    const [votingId, setVotingId] = useState(null);
+
+    const {
+        contest,
+        leaderboard,
+        hallOfFame,
+        myEntry,
+        myVotes,
+        votingId,
+        loadingContest,
+        loadingLeaderboard,
+        submitting,
+        canSubmit,
+        canVote,
+        isEnded,
+        submitEntry,
+        vote,
+        refreshLeaderboard,
+    } = useJokair();
 
     const voteEnd = contest?.vote_end || null;
     const countdown = useCountdown(voteEnd || Date.now() + 86400000 * 30);
@@ -373,24 +375,11 @@ const JokairPage = () => {
 
     const handleVote = async (entry) => {
         if (!isAuthenticated) { window.location.hash = '#/login'; return; }
-        if (contest?.status !== 'voting') return;
-        if (myVotes[entry.video?.id]) return;
-
-        setVotingId(entry.video?.id);
         try {
-            const entryId = leaderboard.find(e => e.video?.id === entry.video?.id);
-            await apiService.request(`/jokair/entries/${entryId?.id || entry.id}/vote`, { method: 'POST' });
-            setMyVotes(prev => ({ ...prev, [entry.video?.id]: true }));
-            setLeaderboard(prev => prev.map(e =>
-                e.video?.id === entry.video?.id
-                    ? { ...e, vote_count: (e.vote_count || 0) + 1 }
-                    : e
-            ));
+            await vote(entry);
             toast.success("Vote enregistré !");
         } catch (e) {
             toast.error(e.message || "Erreur lors du vote");
-        } finally {
-            setVotingId(null);
         }
     };
 
@@ -401,10 +390,6 @@ const JokairPage = () => {
     };
 
     const navigateTo = (page) => { window.location.hash = `#/${page}`; };
-
-    const canSubmit = contest?.status === 'submissions' && isAuthenticated && !myEntry;
-    const canVote = contest?.status === 'voting' && isAuthenticated;
-    const isEnded = contest?.status === 'ended';
 
     const phases = contest ? [
         { label: 'Soumissions', start: contest.submission_start, end: contest.submission_end, active: contest.status === 'submissions' },
@@ -676,7 +661,11 @@ const JokairPage = () => {
                     </div>
                 </motion.div>
 
-                <HallOfFame editions={HALL} />
+                <HallOfFame editions={hallOfFame.length > 0 ? hallOfFame : [
+                    { year: new Date().getFullYear(), winner: null },
+                    { year: new Date().getFullYear() + 1, winner: null },
+                    { year: new Date().getFullYear() + 2, winner: null },
+                ]} />
 
             </div>
 
