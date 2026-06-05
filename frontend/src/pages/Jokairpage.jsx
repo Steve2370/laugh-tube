@@ -447,7 +447,7 @@ const JokairPage = () => {
                     </div>
 
                     <img
-                        src="/Jok-Air.png"
+                        src="/uploads/Jok-Air.png"
                         alt="Jok-Air"
                         style={{ height: 90, width: 'auto', margin: '0 0 6px', display: 'block' }}
                     />
