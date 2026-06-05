@@ -22,7 +22,7 @@ const Notifications  = lazy(() => import('../../pages/Notification.jsx'));
 const Classement = lazy(() => import('../../pages/Classement'));
 const StandUp = lazy(() => import('../../pages/StandUp'));
 const BattleRoom = lazy(() => import('../../pages/BattleRoom'));
-
+const Jokair = lazy(() => import('../../pages/JokairPage'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -53,6 +53,8 @@ const PageRouter = () => {
                 return <Search/>;
             case 'contact':
                 return <Contact />;
+            case 'jokair':
+                return <Jokair />;
             case 'forgot-password':
                 return <ForgotPassword />;
             case 'reset-password':
