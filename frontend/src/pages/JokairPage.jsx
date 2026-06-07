@@ -138,8 +138,16 @@ const LeaderboardRow = ({ entry, rank, onVideoClick }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 13, fontWeight: 600, color: colors.accent,
             }}>
-                {entry.user?.avatar
-                    ? <img src={entry.user.avatar} alt={initials} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                {entry.user?.avatar_url
+                    ? <img
+                        src={entry.user.avatar_url.startsWith('http')
+                            ? entry.user.avatar_url
+                            : `https://laughtube.ca/uploads/profiles/${entry.user.avatar_url}`
+                        }
+                        alt={initials}
+                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                        onError={e => { e.currentTarget.style.display = 'none'; }}
+                    />
                     : initials
                 }
             </div>
@@ -149,7 +157,7 @@ const LeaderboardRow = ({ entry, rank, onVideoClick }) => {
                     @{entry.user?.username}
                 </div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {entry.video?.titre || entry.video?.title}
+                    {entry.video?.titre}
                 </div>
             </div>
 
