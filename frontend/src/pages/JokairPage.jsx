@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import apiService from '../services/apiService.js';
 import {
     Radio, Trophy, Medal, Star, Upload, ChevronRight,
     Clock, Users, Play, Flame, Check, X, AlertCircle,
@@ -186,9 +187,7 @@ const SubmitModal = ({ contest, onClose, onSuccess }) => {
     const toast = useToast();
 
     useEffect(() => {
-        const user = apiService.getCurrentUser();
-        if (!user) return;
-        apiService.getUserVideos(user.id)
+        apiService.requestV2('/videos/my')
             .then(r => setVideos(r.videos || []))
             .catch(() => setVideos([]))
             .finally(() => setLoading(false));
@@ -374,7 +373,7 @@ const JokairPage = () => {
     useEffect(() => {
         if (!contest || !isAuthenticated) return;
         leaderboard.forEach(entry => {
-            const me = apiService.getCurrentUser();
+            const me = JSON.parse(localStorage.getItem('user') || 'null');
             if (me && entry.user?.id === me.id) setMyEntry(entry);
         });
     }, [leaderboard, isAuthenticated]);
@@ -688,7 +687,7 @@ const JokairPage = () => {
                         contest={contest}
                         onClose={() => setShowSubmitModal(false)}
                         onSuccess={() => {
-                            apiService.requestV2(`/jokair/${contest.id}/leaderboard`)
+                            jokairService.getLeaderboard(contest.id)
                                 .then(data => setLeaderboard(Array.isArray(data) ? data : []));
                         }}
                     />
