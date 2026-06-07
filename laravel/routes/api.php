@@ -206,13 +206,16 @@ Route::prefix('v2')->group(function () {
             Route::post('/{contest}/submit', [JokairController::class, 'submitEntry']);
             Route::post('/entries/{entry}/vote', [JokairController::class, 'vote']);
             Route::post('/entries/{entry}/watch', [JokairController::class, 'recordWatch']);
-            Route::get('/entries/{entry}/my-status', [JokairController::class, 'myStatus']);
+            Route::get('/{contest}/my-status', [JokairController::class, 'myStatus']);
         });
 
         Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
             Route::post('/', [JokairController::class, 'createContest']);
             Route::put('/{contest}/status', [JokairController::class, 'updateStatus']);
             Route::post('/{contest}/compute-ranks', [JokairController::class, 'computeRanks']);
+            Route::get('/{contest}/entries', [JokairController::class, 'adminEntries']);
+            Route::patch('/entries/{entry}/validate', [JokairController::class, 'validateEntry']);
+            Route::delete('/entries/{entry}', [JokairController::class, 'deleteEntry']);
         });
     });
 
