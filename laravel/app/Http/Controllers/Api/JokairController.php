@@ -26,7 +26,7 @@ class JokairController extends Controller
     {
         $entries = $contest->entries()
             ->where('validated', true)
-            ->with(['user:id,username,avatar', 'video:id,titre,thumbnail'])
+            ->with(['user:id,username,avatar_url', 'video:id,titre,thumbnail'])
             ->orderByDesc('score')
             ->take(10)
             ->get()
@@ -49,7 +49,7 @@ class JokairController extends Controller
     {
         $editions = JokairContest::where('status', 'ended')
             ->with(['entries' => function ($q) {
-                $q->where('rank', 1)->with('user:id,username,avatar');
+                $q->where('rank', 1)->with('user:id,username,avatar_url');
             }])
             ->orderByDesc('edition')
             ->get()
@@ -210,7 +210,7 @@ class JokairController extends Controller
     public function adminEntries(JokairContest $contest)
     {
         $entries = $contest->entries()
-            ->with(['user:id,username,avatar', 'video:id,titre,thumbnail,filename'])
+            ->with(['user:id,username,avatar_url', 'video:id,titre,thumbnail'])
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($entry) {
