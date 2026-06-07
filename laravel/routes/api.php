@@ -209,7 +209,7 @@ Route::prefix('v2')->group(function () {
             Route::get('/{contest}/my-status', [JokairController::class, 'myStatus']);
         });
 
-        Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
+        Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
             Route::post('/', [JokairController::class, 'createContest']);
             Route::put('/{contest}/status', [JokairController::class, 'updateStatus']);
             Route::post('/{contest}/compute-ranks', [JokairController::class, 'computeRanks']);
