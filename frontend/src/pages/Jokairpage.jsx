@@ -9,6 +9,25 @@ import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
 import { useJokair } from '../hooks/useJokair';
 
+
+const useJokairSound = () => {
+    const audioRef = useRef(null);
+
+    useEffect(() => {
+        const audio = new Audio('/MrClaps.wav');
+        audio.loop = true;
+        audio.volume = 0.35;
+        audioRef.current = audio;
+        audio.play().catch(() => {});
+
+        return () => {
+            audio.pause();
+            audio.src = '';
+        };
+    }, []);
+
+    return audioRef;
+};
 const useCountdown = (targetDate) => {
     const calc = () => {
         const diff = Math.max(0, new Date(targetDate) - Date.now());
@@ -320,6 +339,7 @@ const HallOfFame = ({ editions }) => (
 );
 
 const JokairPage = () => {
+    useJokairSound();
     const { isAuthenticated } = useAuth();
     const toast = useToast();
     const [showSubmitModal, setShowSubmitModal] = useState(false);
