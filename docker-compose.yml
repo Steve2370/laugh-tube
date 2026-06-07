@@ -81,7 +81,7 @@ services:
       - frontend_dist:/app/dist
       - frontend_dist:/dist
       - /app/node_modules
-    command: sh -c "npm install && npm run build"
+    command: sh -c "npm install && npm run build && cp -r /app/dist/. /dist/"
     restart: "no"
 
   encoder:
