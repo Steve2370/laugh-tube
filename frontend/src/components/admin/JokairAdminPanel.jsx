@@ -327,12 +327,27 @@ export default function JokairAdminPanel() {
                         {contest ? (mode === 'edit' ? 'Modifier le concours' : 'Concours actif') : 'Créer un nouveau concours'}
                     </h3>
                     {contest && mode === 'view' && (
-                        <button
-                            onClick={() => setMode('edit')}
-                            className="text-xs text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors"
-                        >
-                            Modifier
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setMode('edit')}
+                                className="text-xs text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors"
+                            >
+                                Modifier
+                            </button>
+
+                            {contest.status !== 'ended' && (
+                                <button
+                                    onClick={async () => {
+                                        if (!window.confirm('Terminer le championnat et proclamer les résultats ?')) return;
+                                        await handleComputeRanks();
+                                    }}
+                                    disabled={computing}
+                                    className="text-xs text-white bg-red-600 hover:bg-red-700 border border-red-600 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                                >
+                                    <Square size={11} /> Terminer le championnat
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
 

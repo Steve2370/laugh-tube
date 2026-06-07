@@ -8,7 +8,8 @@ class JokairContest extends Model
 {
     protected $fillable = [
         'edition', 'titre', 'submission_start', 'submission_end',
-        'vote_start', 'vote_end', 'status', 'prize_1', 'prize_2', 'prize_3',
+        'vote_start', 'vote_end', 'results_date', 'status',
+        'prize_1', 'prize_2', 'prize_3',
     ];
 
     protected $casts = [
@@ -16,6 +17,7 @@ class JokairContest extends Model
         'submission_end' => 'datetime',
         'vote_start' => 'datetime',
         'vote_end' => 'datetime',
+        'results_date' => 'date',
     ];
 
     public function entries() {

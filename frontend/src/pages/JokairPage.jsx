@@ -443,9 +443,16 @@ const JokairPage = () => {
                         style={{ height: 90, width: 'auto', margin: '0 0 6px', display: 'block' }}
                     />
 
-                    <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', margin: '0 0 24px', maxWidth: 480 }}>
-                        {contest?.titre || "Le championnat annuel d'humour de LaughTube"} · <strong style={{ color: 'rgba(255,255,255,0.7)' }}>300$ à gagner</strong>
-                    </p>
+                    <div style={{ marginBottom: 24 }}>
+                        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', margin: '0 0 4px' }}>
+                            Le championnat annuel d'humour de LaughTube
+                        </p>
+                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0, lineHeight: 1.6 }}>
+                            Humoristes, amateurs ou simple fan — uploade ta vidéo la plus drôle,
+                            récolte des votes et grimpe au sommet du classement.
+                            Le champion repart avec <strong style={{ color: '#CC0000' }}>200$</strong> et un trophée gravé à son nom.
+                        </p>
+                    </div>
 
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 28 }}>
                         {[
@@ -525,7 +532,7 @@ const JokairPage = () => {
                             </div>
                         ) : canSubmit ? (
                             <button
-                                onClick={() => setShowSubmitModal(true)}
+                                onClick={() => { window.location.hash = '#/upload'; }}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: 10,
                                     background: '#CC0000', color: '#fff', border: 'none',
