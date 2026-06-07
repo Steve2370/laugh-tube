@@ -248,6 +248,17 @@ class JokairController extends Controller
         ]);
     }
 
+    public function adminContest()
+    {
+        $contest = JokairContest::latest()->first();
+
+        if (!$contest) {
+            return response()->json(null, 404);
+        }
+
+        return response()->json($contest);
+    }
+
     public function deleteEntry(JokairEntry $entry)
     {
         $entry->votes()->delete();
