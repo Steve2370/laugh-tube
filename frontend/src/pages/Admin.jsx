@@ -93,7 +93,7 @@ export default function Admin() {
     const handleDeleteVideo = async (videoId, reportId = null) => {
         try {
             await apiService.requestV2(`/admin/videos/${videoId}`, { method: 'DELETE' });
-            setVideos(prev => prev.filter(v => v.id !== videoId));
+            setVideos(prev => prev.filter(v => v.id !== Number(videoId)));
             if (reportId) {
                 setReports(prev => prev.map(r =>
                     r.video_id === videoId ? { ...r, statut: 'reviewed' } : r
