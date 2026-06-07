@@ -14,7 +14,7 @@ const useJokairSound = () => {
     const audioRef = useRef(null);
 
     useEffect(() => {
-        const audio = new Audio('/MrClaps.wav');
+        const audio = new Audio('/uploads/MrClaps.wav');
         audio.loop = true;
         audio.volume = 0.35;
         audioRef.current = audio;
