@@ -22,7 +22,7 @@ const Notifications  = lazy(() => import('../../pages/Notification.jsx'));
 const Classement = lazy(() => import('../../pages/Classement'));
 const StandUp = lazy(() => import('../../pages/StandUp'));
 const BattleRoom = lazy(() => import('../../pages/BattleRoom'));
-const Jokair = lazy(() => import('../../pages/JokairPage'));
+const Jokair = lazy(() => import('../../pages/JokairPage.jsx'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
