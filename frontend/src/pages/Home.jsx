@@ -5,6 +5,7 @@ import { useToast } from "../contexts/ToastContext";
 import { motion } from 'framer-motion';
 import VideoCard from "../components/VideoCard";
 import apiService from "../services/apiService";
+import AppStoreBanner from "../components/AppStoreBanner";
 import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap, CheckCircle2, Mic, Radio, Users, Swords } from "lucide-react";
 const ParticleNetwork = () => {
     const canvasRef = useRef(null);
@@ -398,7 +399,7 @@ const Home = () => {
 
     return (
         <div className="min-h-screen pt-20 relative" style={{ backgroundColor: 'transparent' }}>
-
+            <AppStoreBanner appStoreUrl="https://apps.apple.com/app/laughtube/id6771074500" />
             <video
                 className="bg-video"
                 autoPlay

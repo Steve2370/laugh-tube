@@ -94,9 +94,9 @@ export default function Navbar() {
         >
             <style>{`
                 @keyframes navEmojiFloat {
-                    0%   { opacity: 0; transform: translateY(0) scale(0.6); }
-                    15%  { opacity: 1; transform: translateY(-4px) scale(1); }
-                    85%  { opacity: 1; transform: translateY(-18px) scale(1); }
+                    0% { opacity: 0; transform: translateY(0) scale(0.6); }
+                    15% { opacity: 1; transform: translateY(-4px) scale(1); }
+                    85% { opacity: 1; transform: translateY(-18px) scale(1); }
                     100% { opacity: 0; transform: translateY(-26px) scale(0.8); }
                 }
                 .nav-emoji {
