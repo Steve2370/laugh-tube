@@ -214,7 +214,12 @@ export default function JokairAdminPanel() {
     const loadContest = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await apiService.requestV2('/jokair/admin/contest');
+            let data;
+            try {
+                data = await apiService.requestV2('/jokair/active');
+            } catch {
+                data = await apiService.requestV2('/jokair/admin/latest');
+            }
             setContest(data);
             setMode('view');
         } catch {
