@@ -370,14 +370,6 @@ const JokairPage = () => {
         { year: new Date().getFullYear() + 2, winner: null },
     ];
 
-    useEffect(() => {
-        if (!contest || !isAuthenticated) return;
-        leaderboard.forEach(entry => {
-            const me = JSON.parse(localStorage.getItem('user') || 'null');
-            if (me && entry.user?.id === me.id) setMyEntry(entry);
-        });
-    }, [leaderboard, isAuthenticated]);
-
     const handleVote = async (entry) => {
         if (!isAuthenticated) { window.location.hash = '#/login'; return; }
         try {
