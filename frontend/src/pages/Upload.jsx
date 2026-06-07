@@ -118,7 +118,7 @@ const Upload = () => {
                 formData.append('thumbnail', thumbnailFile);
             }
 
-            await apiService.uploadVideo(formData, (percent) => {
+            const response = await apiService.uploadVideo(formData, (percent) => {
                 setUploadProgress(percent);
             });
 
