@@ -97,7 +97,7 @@ const AppStoreBanner: React.FC<AppStoreBannerProps> = ({
     appStoreUrl,
     appName = "LaughTube",
     appTagline = "La plateforme québécoise de l'humour",
-    logoSrc = "/Laugh Tale Version2.png"
+    logoSrc = "/Tube.png"
 }) => {
     const { visible, hide } = useVisibility(true);
 
