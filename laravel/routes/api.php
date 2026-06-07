@@ -210,12 +210,12 @@ Route::prefix('v2')->group(function () {
         });
 
         Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+            Route::get('/contest', [JokairController::class, 'adminContest']);
             Route::post('/', [JokairController::class, 'createContest']);
             Route::put('/{contest}/status', [JokairController::class, 'updateStatus']);
             Route::post('/{contest}/compute-ranks', [JokairController::class, 'computeRanks']);
             Route::get('/{contest}/entries', [JokairController::class, 'adminEntries']);
             Route::patch('/entries/{entry}/validate', [JokairController::class, 'validateEntry']);
-            Route::get('/contest', [JokairController::class, 'adminContest']);
             Route::delete('/entries/{entry}', [JokairController::class, 'deleteEntry']);
         });
     });
