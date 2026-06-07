@@ -369,7 +369,7 @@ class ApiService {
      * @returns {Promise<Array>}
      */
     async getVideos() {
-        const response = await this.request('/videos');
+        const response = await this.requestV2('/videos');
         return response.data || response.videos || response;
     }
 
