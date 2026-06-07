@@ -283,4 +283,11 @@ class JokairController extends Controller
 
         return response()->json(['computed' => true, 'total' => $entries->count()]);
     }
+
+    public function latestContest()
+    {
+        $contest = JokairContest::latest()->first();
+        if (!$contest) return response()->json(null, 404);
+        return response()->json($contest);
+    }
 }

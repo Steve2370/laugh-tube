@@ -211,6 +211,7 @@ Route::prefix('v2')->group(function () {
 
         Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
             Route::get('/contest', [JokairController::class, 'adminContest']);
+            Route::get('/latest', [JokairController::class, 'latestContest']);
             Route::post('/', [JokairController::class, 'createContest']);
             Route::put('/{contest}/status', [JokairController::class, 'updateStatus']);
             Route::post('/{contest}/compute-ranks', [JokairController::class, 'computeRanks']);
