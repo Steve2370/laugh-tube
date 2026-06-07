@@ -372,20 +372,6 @@ const JokairPage = () => {
     ];
 
     useEffect(() => {
-        apiService.request('/jokair/active')
-            .then(data => setContest(data))
-            .catch(() => setContest(null))
-            .finally(() => setLoadingContest(false));
-    }, []);
-
-    useEffect(() => {
-        if (!contest) return;
-        apiService.request(`/jokair/${contest.id}/leaderboard`)
-            .then(data => setLeaderboard(Array.isArray(data) ? data : []))
-            .catch(() => setLeaderboard([]));
-    }, [contest]);
-
-    useEffect(() => {
         if (!contest || !isAuthenticated) return;
         leaderboard.forEach(entry => {
             const me = apiService.getCurrentUser();
@@ -695,7 +681,7 @@ const JokairPage = () => {
                         contest={contest}
                         onClose={() => setShowSubmitModal(false)}
                         onSuccess={() => {
-                            apiService.request(`/jokair/${contest.id}/leaderboard`)
+                            apiService.requestV2(`/jokair/${contest.id}/leaderboard`)
                                 .then(data => setLeaderboard(Array.isArray(data) ? data : []));
                         }}
                     />
