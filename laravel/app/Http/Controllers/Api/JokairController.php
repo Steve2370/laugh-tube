@@ -59,7 +59,7 @@ class JokairController extends Controller
                     'year' => $contest->edition,
                     'titre' => $contest->titre,
                     'winner' => $winner?->username,
-                    'avatar' => $winner?->avatar,
+                    'avatar' => $winner?->avatar_url,
                 ];
             });
 
