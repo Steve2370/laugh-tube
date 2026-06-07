@@ -68,4 +68,9 @@ class Video extends Model
         return $query->withCount(['views', 'likes'])
             ->orderByRaw('(views_count + likes_count * 3) DESC');
     }
+
+    public function jokairEntry()
+    {
+        return $this->hasOne(JokairEntry::class, 'video_id');
+    }
 }

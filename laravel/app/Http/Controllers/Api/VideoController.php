@@ -150,11 +150,11 @@ class VideoController extends Controller
             'recent_views' => $video->recent_views ?? null,
             'recent_likes' => $video->recent_likes ?? null,
             'views_count' => $video->views_count  ?? null,
-            'likes_count' => $video->likes_count ?? 0,
+            'likes_count' => $video->likes_count  ?? 0,
             'comments_count' => $video->commentaires_count ?? 0,
+            'is_jokair' => $video->jokairEntry()->where('validated', true)->exists(),
         ];
     }
-
     public function upload(Request $request): JsonResponse
     {
         $request->validate([

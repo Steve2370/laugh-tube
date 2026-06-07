@@ -215,6 +215,28 @@ const VideoCard = ({ video, onClick }) => {
                 `}
                 style={{ willChange: 'transform' }}
             >
+
+                {video.is_jokair && (
+                    <div style={{
+                        position: 'absolute', top: 8, left: 8, zIndex: 10,
+                        display: 'flex', alignItems: 'center', gap: 5,
+                        background: 'rgba(204,0,0,0.92)',
+                        backdropFilter: 'blur(4px)',
+                        borderRadius: 20, padding: '4px 10px',
+                        fontSize: 11, fontWeight: 700, color: '#fff',
+                        letterSpacing: '0.04em',
+                        boxShadow: '0 2px 8px rgba(204,0,0,0.4)',
+                    }}>
+                        <svg width="11" height="14" viewBox="0 0 11 14" fill="none">
+                            <rect x="3" y="0" width="5" height="8" rx="2.5" fill="white"/>
+                            <path d="M1 6.5C1 9.261 3.015 11.5 5.5 11.5S10 9.261 10 6.5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                            <line x1="5.5" y1="11.5" x2="5.5" y2="13.5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                            <line x1="3" y1="13.5" x2="8" y2="13.5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                        JOK-AIR
+                    </div>
+                )}
+
                 <div className="relative overflow-hidden aspect-video bg-gray-200">
                     <img
                         src={getThumbnailUrl(video.id)}

@@ -4,6 +4,8 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
 import { Upload as UploadIcon, X, FileVideo, Check, Lock, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import LoadingPage from "../components/LoadingPage.jsx";
+import jokairService from '../services/jokairService.js';
+import { Radio } from 'lucide-react';
 
 const Upload = () => {
     const [title, setTitle] = useState('');
@@ -14,6 +16,8 @@ const Upload = () => {
     const [uploading, setUploading] = useState(false);
     const [thumbnailFile, setThumbnailFile] = useState(null);
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
+    const [submitToJokair, setSubmitToJokair] = useState(false);
+    const [jokairContest, setJokairContest] = useState(null);
 
     const { isAuthenticated, user, loading } = useAuth();
     const toast = useToast();
@@ -24,6 +28,10 @@ const Upload = () => {
             window.location.hash = '#/login';
         }
     }, [isAuthenticated, loading, toast]);
+
+    useEffect(() => {
+        jokairService.getActiveContest().then(c => setJokairContest(c));
+    }, []);
 
     const validateFile = (file) => {
         const maxSize = 500 * 1024 * 1024;
@@ -102,6 +110,9 @@ const Upload = () => {
             formData.append('video', selectedFile);
             formData.append('title', title.trim());
             formData.append('description', description.trim());
+            if (submitToJokair && jokairContest) {
+                formData.append('jokair_contest_id', jokairContest.id);
+            }
 
             if (thumbnailFile) {
                 formData.append('thumbnail', thumbnailFile);
@@ -112,6 +123,11 @@ const Upload = () => {
             });
 
             toast.success("Vidéo uploadée avec succès !");
+
+            if (submitToJokair && jokairContest && response?.video?.id) {
+                await jokairService.submitEntry(jokairContest.id, response.video.id);
+                toast.success("Vidéo soumise au Jok-Air !");
+            }
             setTitle('');
             setDescription('');
             setSelectedFile(null);
@@ -238,6 +254,44 @@ const Upload = () => {
                                 <span className={description.length > 4500 ? 'text-orange-500 font-medium' : ''}>
                                     {description.length}/5000
                                 </span>
+                            </div>
+                        </div>
+
+                        <div
+                            onClick={() => jokairContest?.status === 'submissions' && setSubmitToJokair(v => !v)}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 14,
+                                padding: '14px 18px',
+                                border: `2px solid ${submitToJokair ? '#CC0000' : jokairContest?.status === 'submissions' ? '#e5e7eb' : '#f3f4f6'}`,
+                                borderRadius: 14,
+                                background: submitToJokair ? 'rgba(204,0,0,0.04)' : jokairContest?.status === 'submissions' ? '#fff' : '#f9fafb',
+                                cursor: jokairContest?.status === 'submissions' ? 'pointer' : 'not-allowed',
+                                opacity: jokairContest?.status === 'submissions' ? 1 : 0.5,
+                                transition: 'all 0.15s',
+                                userSelect: 'none',
+                            }}
+                        >
+                            <div style={{
+                                width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                                border: `2px solid ${submitToJokair ? '#CC0000' : '#d1d5db'}`,
+                                background: submitToJokair ? '#CC0000' : '#fff',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                {submitToJokair && <Check size={12} color="#fff" />}
+                            </div>
+                            <Radio size={18} color={jokairContest?.status === 'submissions' ? '#CC0000' : '#9ca3af'} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 14, fontWeight: 600, color: jokairContest?.status === 'submissions' ? '#111' : '#9ca3af' }}>
+                                    Soumettre au Jok-Air {jokairContest?.edition || ''}
+                                </div>
+                                <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
+                                    {jokairContest?.status === 'submissions'
+                                        ? `Participe au championnat — ${jokairContest.prize_1}$ à gagner`
+                                        : jokairContest
+                                            ? 'Les soumissions sont fermées pour cette édition'
+                                            : 'Aucun concours actif en ce moment'
+                                    }
+                                </div>
                             </div>
                         </div>
 
