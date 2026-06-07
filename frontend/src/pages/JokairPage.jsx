@@ -603,7 +603,7 @@ const JokairPage = () => {
                                                 onClick={() => handleVote(entry)}
                                                 disabled={!!myVotes[entry.video?.id] || votingId === entry.video?.id}
                                                 style={{
-                                                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                                                    position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)',
                                                     background: myVotes[entry.video?.id] ? 'rgba(34,197,94,0.15)' : 'rgba(204,0,0,0.15)',
                                                     border: `0.5px solid ${myVotes[entry.video?.id] ? 'rgba(34,197,94,0.3)' : 'rgba(204,0,0,0.3)'}`,
                                                     color: myVotes[entry.video?.id] ? '#4ADE80' : '#FF6666',
