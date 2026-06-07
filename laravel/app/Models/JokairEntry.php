@@ -9,6 +9,7 @@ class JokairEntry extends Model
     protected $fillable = [
         'contest_id', 'user_id', 'video_id',
         'vote_count', 'watch_seconds_total', 'watch_count', 'score', 'rank',
+        'validated', 'rejected_reason',
     ];
 
     public function contest() {

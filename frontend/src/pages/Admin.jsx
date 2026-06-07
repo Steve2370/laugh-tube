@@ -6,13 +6,15 @@ import ReportsTable from '../components/admin/ReportsTable.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import MessagesTable from '../components/admin/MessagesTable.jsx';
 import AdminInboxTable from '../components/admin/AdminInboxTable.jsx';
-import {Flag, MessageCircle, Users, Video} from "lucide-react";
+import JokairAdminPanel from '../components/admin/JokairAdminPanel.jsx';
+import { Flag, MessageCircle, Users, Video, Radio } from "lucide-react";
 
 const TABS = [
     { key: 'reports', label: 'Signalements', icon: Flag },
     { key: 'users', label: 'Utilisateurs', icon: Users },
     { key: 'videos', label: 'Vidéos', icon: Video },
     { key: 'messages', label: 'Messagerie', icon: MessageCircle },
+    { key: 'jokair', label: 'Jok-Air', icon: Radio },
 ];
 
 function StatCard({ label, value, sub, color = 'blue' }) {
@@ -224,6 +226,7 @@ export default function Admin() {
                                         <MessagesTable users={users} messages={messages} onMessageSent={loadAll} />
                                     </div>
                                 )}
+                                {activeTab === 'jokair' && <JokairAdminPanel />}
                             </>
                         )}
                     </div>
