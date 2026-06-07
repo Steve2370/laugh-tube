@@ -108,16 +108,17 @@ const AppStoreBanner: React.FC<AppStoreBannerProps> = ({
             role="banner"
     style={{
         position: 'fixed',
-            top: 0, left: 0, right: 0,
-            zIndex: 9999,
-            background: 'rgba(0,0,0,0.92)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '10px 16px',
-            borderBottom: '0.5px solid rgba(255,255,255,0.1)',
+        top: 64,
+        left: 0, right: 0,
+        zIndex: 49,
+        background: 'rgba(0,0,0,0.92)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '10px 16px',
+        borderBottom: '0.5px solid rgba(255,255,255,0.1)',
     }}
 >
     <AppLogo src={logoSrc} alt={appName} />
