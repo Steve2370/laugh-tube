@@ -77,17 +77,18 @@ interface CloseButtonProps {
 const CloseButton: React.FC<CloseButtonProps> = ({ onClose }) => (
     <button
         onClick={onClose}
-aria-label="Fermer"
-style={{
-    background: 'none',
-        border: 'none',
-        color: 'rgba(255,255,255,0.4)',
-        cursor: 'pointer',
-        padding: 4,
-        flexShrink: 0,
-        fontSize: 16,
-        lineHeight: 1,
-}}
+        aria-label="Fermer"
+        style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255,255,255,0.4)',
+            cursor: 'pointer',
+            padding: 4,
+            flexShrink: 0,
+            fontSize: 16,
+            lineHeight: 1,
+        }
+    }
 >
 ✕
     </button>
