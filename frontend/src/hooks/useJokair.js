@@ -18,6 +18,7 @@ export const useJokair = () => {
     useEffect(() => {
         const init = async () => {
             setLoadingContest(true);
+            jokairService.invalidateAll();
             const [activeContest, fame] = await Promise.all([
                 jokairService.getActiveContest(),
                 jokairService.getHallOfFame(),
@@ -37,9 +38,22 @@ export const useJokair = () => {
             const data = await jokairService.getLeaderboard(contest.id);
             setLeaderboard(data);
             setLoadingLeaderboard(false);
+
+            if (user) {
+                const storageKey = `jokair_votes_${contest.id}_${user.id}_${contest.updated_at}`;
+                const stored = localStorage.getItem(storageKey);
+                if (stored) {
+                    setMyVotes(JSON.parse(stored));
+                } else {
+                    Object.keys(localStorage)
+                        .filter(k => k.startsWith(`jokair_votes_${contest.id}_${user.id}`))
+                        .forEach(k => localStorage.removeItem(k));
+                    setMyVotes({});
+                }
+            }
         };
         fetchLeaderboard();
-    }, [contest?.id]);
+    }, [contest?.id, isAuthenticated]);
 
     useEffect(() => {
         if (!user || !leaderboard.length) return;
@@ -70,7 +84,14 @@ export const useJokair = () => {
         try {
             await jokairService.vote(entry.id, contest.id);
 
-            setMyVotes(prev => ({ ...prev, [entry.id]: true }));
+            setMyVotes(prev => {
+                const updated = { ...prev, [entry.id]: true };
+                if (user) {
+                    const storageKey = `jokair_votes_${contest.id}_${user.id}_${contest.updated_at}`;
+                    localStorage.setItem(storageKey, JSON.stringify(updated));
+                }
+                return updated;
+            });
             setLeaderboard(prev => prev.map(e =>
                 e.id === entry.id
                     ? { ...e, vote_count: (e.vote_count || 0) + 1 }
@@ -82,7 +103,7 @@ export const useJokair = () => {
         } finally {
             setVotingId(null);
         }
-    }, [isAuthenticated, contest?.id, myVotes, votingId]);
+    }, [isAuthenticated, contest?.id, myVotes, votingId, contest?.updated_at]);
 
     const recordWatch = useCallback(async (entryId, secondsWatched, videoDuration) => {
         await jokairService.recordWatch(entryId, secondsWatched, videoDuration);

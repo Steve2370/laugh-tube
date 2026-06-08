@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Radio, Trophy, Calendar, DollarSign, Play, Square, Award, RefreshCw } from 'lucide-react';
 import apiService from '../../services/apiService.js';
 import { useToast } from '../../contexts/ToastContext.jsx';
@@ -42,49 +42,161 @@ const StatCard = ({ label, value, icon: Icon, color = 'blue' }) => {
     );
 };
 
+const Field = ({ label, children }) => (
+    <div>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            {label}
+        </label>
+        {children}
+    </div>
+);
 
-const ContestForm = ({ initial, onSave, saving }) => {
-    const [form, setForm] = useState({
-        edition: initial?.edition ?? new Date().getFullYear().toString(),
-        titre: initial?.titre ?? '',
-        submission_start: toInputDate(initial?.submission_start) ?? '',
-        submission_end: toInputDate(initial?.submission_end) ?? '',
-        vote_start: toInputDate(initial?.vote_start) ?? '',
-        vote_end: toInputDate(initial?.vote_end) ?? '',
-        results_date: toInputDate(initial?.results_date) ?? '',
-        prize_1: initial?.prize_1 ?? 200,
-        prize_2: initial?.prize_2 ?? 75,
-        prize_3: initial?.prize_3 ?? 25,
-        status: initial?.status ?? 'upcoming',
-    });
+const SubmissionsPanel = ({ contestId }) => {
+    const toast = useToast();
+    const [entries, setEntries] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const set = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+    const load = useCallback(async () => {
+        if (!contestId) return;
+        setLoading(true);
+        try {
+            const data = await apiService.requestV2(`/jokair/admin/${contestId}/entries`);
+            setEntries(Array.isArray(data) ? data : []);
+        } catch { setEntries([]); }
+        finally { setLoading(false); }
+    }, [contestId]);
 
-    const Field = ({ label, children }) => (
-        <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                {label}
-            </label>
-            {children}
-        </div>
+    useEffect(() => { load(); }, [load]);
+
+    const handleValidate = async (entryId, validated) => {
+        try {
+            await apiService.requestV2(`/jokair/admin/entries/${entryId}/validate`, {
+                method: 'PATCH',
+                body: JSON.stringify({ validated }),
+            });
+            toast.success(validated ? 'Vidéo approuvée ✓' : 'Vidéo rejetée');
+            load();
+        } catch (e) {
+            toast.error(e.message || 'Erreur');
+        }
+    };
+
+    const handleDelete = async (entryId) => {
+        if (!window.confirm('Supprimer cette soumission ?')) return;
+        try {
+            await apiService.requestV2(`/jokair/admin/entries/${entryId}`, { method: 'DELETE' });
+            toast.success('Soumission supprimée');
+            load();
+        } catch (e) {
+            toast.error(e.message || 'Erreur');
+        }
+    };
+
+    if (loading) return <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-800 rounded-full animate-spin" /></div>;
+
+    if (entries.length === 0) return (
+        <div className="text-center py-8 text-sm text-gray-400">Aucune soumission pour le moment</div>
     );
 
-    const inputClass = "w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent";
+    return (
+        <div className="space-y-3">
+            {entries.map(entry => (
+                <div key={entry.id} className={`flex items-center gap-3 p-3 rounded-xl border ${entry.validated ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                    {/* Thumbnail */}
+                    <div className="w-16 h-10 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                        {entry.video?.thumbnail && (
+                            <img src={`/uploads/thumbnails/${entry.video.thumbnail}`} alt="" className="w-full h-full object-cover" />
+                        )}
+                    </div>
+
+                    <a
+                        href={`/uploads/videos/${entry.video?.filename}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                    >
+                        Voir
+                    </a>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">{entry.video?.title}</div>
+                        <div className="text-xs text-gray-500">@{entry.user?.username}</div>
+                    </div>
+                    {/* Status */}
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${entry.validated ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {entry.validated ? 'Approuvée' : 'En attente'}
+                    </span>
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                        {!entry.validated ? (
+                            <button onClick={() => handleValidate(entry.id, true)}
+                                    className="px-3 py-1 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                Approuver
+                            </button>
+                        ) : (
+                            <button onClick={() => handleValidate(entry.id, false)}
+                                    className="px-3 py-1 text-xs font-semibold bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
+                                Rejeter
+                            </button>
+                        )}
+                        <button onClick={() => handleDelete(entry.id)}
+                                className="px-3 py-1 text-xs font-semibold bg-red-100 text-red-600 rounded-lg hover:bg-red-200">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const inputClass = "w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent";
+
+
+const ContestForm = React.memo(({ initial, onSave, saving }) => {
+    const editionRef = useRef(null);
+    const titreRef = useRef(null);
+    const statusRef = useRef(null);
+    const subStartRef = useRef(null);
+    const subEndRef = useRef(null);
+    const voteStartRef = useRef(null);
+    const voteEndRef = useRef(null);
+    const resultsRef = useRef(null);
+    const prize1Ref = useRef(null);
+    const prize2Ref = useRef(null);
+    const prize3Ref = useRef(null);
+
+    const handleSubmit = () => {
+        onSave({
+            edition: editionRef.current?.value ?? '',
+            titre: titreRef.current?.value ?? '',
+            status: statusRef.current?.value ?? 'upcoming',
+            submission_start: subStartRef.current?.value ?? '',
+            submission_end: subEndRef.current?.value ?? '',
+            vote_start: voteStartRef.current?.value ?? '',
+            vote_end: voteEndRef.current?.value ?? '',
+            results_date: resultsRef.current?.value ?? '',
+            prize_1: parseInt(prize1Ref.current?.value) || 0,
+            prize_2: parseInt(prize2Ref.current?.value) || 0,
+            prize_3: parseInt(prize3Ref.current?.value) || 0,
+        });
+    };
 
     return (
         <div className="space-y-6">
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Édition">
-                    <input type="text" className={inputClass} value={form.edition} onChange={e => set('edition', e.target.value)} placeholder="2025" />
+                    <input ref={editionRef} type="text" className={inputClass} defaultValue={initial?.edition ?? new Date().getFullYear().toString()} placeholder="2025" />
                 </Field>
                 <Field label="Titre">
-                    <input type="text" className={inputClass} value={form.titre} onChange={e => set('titre', e.target.value)} placeholder="Jok-Air — 1ère Édition" />
+                    <input ref={titreRef} type="text" className={inputClass} defaultValue={initial?.titre ?? ''} placeholder="Jok-Air 1ère Édition" />
                 </Field>
             </div>
 
             <Field label="Statut">
-                <select className={inputClass} value={form.status} onChange={e => set('status', e.target.value)}>
+                <select ref={statusRef} className={inputClass} defaultValue={initial?.status ?? 'upcoming'}>
                     <option value="upcoming">À venir</option>
                     <option value="submissions">Soumissions ouvertes</option>
                     <option value="voting">Votes ouverts</option>
@@ -98,19 +210,19 @@ const ContestForm = ({ initial, onSave, saving }) => {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Field label="Début des soumissions">
-                        <input type="date" className={inputClass} value={form.submission_start} onChange={e => set('submission_start', e.target.value)} />
+                        <input ref={subStartRef} type="date" className={inputClass} defaultValue={toInputDate(initial?.submission_start)} />
                     </Field>
                     <Field label="Fin des soumissions">
-                        <input type="date" className={inputClass} value={form.submission_end} onChange={e => set('submission_end', e.target.value)} />
+                        <input ref={subEndRef} type="date" className={inputClass} defaultValue={toInputDate(initial?.submission_end)} />
                     </Field>
                     <Field label="Début des votes">
-                        <input type="date" className={inputClass} value={form.vote_start} onChange={e => set('vote_start', e.target.value)} />
+                        <input ref={voteStartRef} type="date" className={inputClass} defaultValue={toInputDate(initial?.vote_start)} />
                     </Field>
                     <Field label="Fin des votes">
-                        <input type="date" className={inputClass} value={form.vote_end} onChange={e => set('vote_end', e.target.value)} />
+                        <input ref={voteEndRef} type="date" className={inputClass} defaultValue={toInputDate(initial?.vote_end)} />
                     </Field>
                     <Field label="Proclamation des résultats">
-                        <input type="date" className={inputClass} value={form.results_date} onChange={e => set('results_date', e.target.value)} />
+                        <input ref={resultsRef} type="date" className={inputClass} defaultValue={toInputDate(initial?.results_date)} />
                     </Field>
                 </div>
             </div>
@@ -122,24 +234,21 @@ const ContestForm = ({ initial, onSave, saving }) => {
                 <div className="grid grid-cols-3 gap-4">
                     <div>
                         <label className="block text-xs font-medium text-yellow-600 mb-1">1er place</label>
-                        <input type="number" className={inputClass} value={form.prize_1} onChange={e => set('prize_1', parseInt(e.target.value))} min={0} />
+                        <input ref={prize1Ref} type="number" className={inputClass} defaultValue={initial?.prize_1 ?? 200} min={0} />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-gray-500 mb-1">2e place</label>
-                        <input type="number" className={inputClass} value={form.prize_2} onChange={e => set('prize_2', parseInt(e.target.value))} min={0} />
+                        <input ref={prize2Ref} type="number" className={inputClass} defaultValue={initial?.prize_2 ?? 75} min={0} />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-orange-600 mb-1">3e place</label>
-                        <input type="number" className={inputClass} value={form.prize_3} onChange={e => set('prize_3', parseInt(e.target.value))} min={0} />
+                        <input ref={prize3Ref} type="number" className={inputClass} defaultValue={initial?.prize_3 ?? 25} min={0} />
                     </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">
-                    Total : <strong>{(form.prize_1 || 0) + (form.prize_2 || 0) + (form.prize_3 || 0)}$</strong>
-                </p>
             </div>
 
             <button
-                onClick={() => onSave(form)}
+                onClick={handleSubmit}
                 disabled={saving}
                 className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
@@ -150,58 +259,7 @@ const ContestForm = ({ initial, onSave, saving }) => {
             </button>
         </div>
     );
-};
-
-const LeaderboardPreview = ({ contestId, onComputeRanks, computing }) => {
-    const [entries, setEntries] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (!contestId) return;
-        apiService.requestV2(`/jokair/${contestId}/leaderboard`)
-            .then(data => setEntries(Array.isArray(data) ? data : []))
-            .catch(() => setEntries([]))
-            .finally(() => setLoading(false));
-    }, [contestId]);
-
-    if (loading) return <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-800 rounded-full animate-spin" /></div>;
-
-    if (entries.length === 0) return (
-        <div className="text-center py-8 text-sm text-gray-400">Aucune soumission pour le moment</div>
-    );
-
-    return (
-        <div className="space-y-2">
-            {entries.map((entry, i) => (
-                <div key={entry.id || i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                    <span className={`w-7 text-center font-bold text-sm ${i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-400'}`}>
-                        {i + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">@{entry.user?.username}</div>
-                        <div className="text-xs text-gray-400 truncate">{entry.video?.titre || entry.video?.title}</div>
-                    </div>
-                    <div className="text-right">
-                        <div className="text-sm font-bold text-gray-900">{parseFloat(entry.score || 0).toFixed(1)}</div>
-                        <div className="text-xs text-gray-400">{entry.vote_count} votes</div>
-                    </div>
-                </div>
-            ))}
-
-            <button
-                onClick={onComputeRanks}
-                disabled={computing}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 w-full justify-center"
-            >
-                {computing
-                    ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Calcul...</>
-                    : <><Award size={14} /> Proclamer les résultats</>
-                }
-            </button>
-        </div>
-    );
-};
-
+});
 
 export default function JokairAdminPanel() {
     const toast = useToast();
@@ -232,7 +290,7 @@ export default function JokairAdminPanel() {
 
     useEffect(() => { loadContest(); }, [loadContest]);
 
-    const handleSave = async (form) => {
+    const handleSave = useCallback(async (form) => {
         setSaving(true);
         try {
             if (contest) {
@@ -254,7 +312,7 @@ export default function JokairAdminPanel() {
         } finally {
             setSaving(false);
         }
-    };
+    }, [contest?.id, loadContest]);
 
     const handleComputeRanks = async () => {
         if (!contest) return;
@@ -311,8 +369,8 @@ export default function JokairAdminPanel() {
                     <div className="flex gap-0 overflow-hidden rounded-xl border border-gray-200">
                         {[
                             { label: 'Soumissions', start: contest.submission_start, end: contest.submission_end, active: contest.status === 'submissions' },
-                            { label: 'Votes',       start: contest.vote_start,       end: contest.vote_end,       active: contest.status === 'voting' },
-                            { label: 'Résultats',   start: contest.results_date,     end: null,                   active: contest.status === 'ended' },
+                            { label: 'Votes', start: contest.vote_start, end: contest.vote_end, active: contest.status === 'voting' },
+                            { label: 'Résultats', start: contest.results_date, end: null, active: contest.status === 'ended' },
                         ].map((p, i, arr) => (
                             <div key={i} style={{ flex: 1, borderRight: i < arr.length - 1 ? '1px solid #e5e7eb' : 'none' }}
                                  className={`p-3 text-center ${p.active ? 'bg-gray-900 text-white' : 'bg-white'}`}>
@@ -365,7 +423,7 @@ export default function JokairAdminPanel() {
                         <div><strong className="text-gray-900">Prix :</strong> {contest.prize_1}$ / {contest.prize_2}$ / {contest.prize_3}$</div>
                     </div>
                 ) : (
-                    <ContestForm initial={contest} onSave={handleSave} saving={saving} />
+                    <ContestForm key={contest?.id ?? 'new'} initial={contest} onSave={handleSave} saving={saving} />
                 )}
             </div>
 
@@ -381,6 +439,65 @@ export default function JokairAdminPanel() {
                     />
                 </div>
             )}
+
+            {contest && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                    <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <Radio size={15} className="text-red-600" /> Soumissions à valider
+                    </h3>
+                    <SubmissionsPanel contestId={contest.id} />
+                </div>
+            )}
         </div>
     );
 }
+
+const LeaderboardPreview = ({ contestId, onComputeRanks, computing }) => {
+    const [entries, setEntries] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!contestId) return;
+        apiService.requestV2(`/jokair/${contestId}/leaderboard`)
+            .then(data => setEntries(Array.isArray(data) ? data : []))
+            .catch(() => setEntries([]))
+            .finally(() => setLoading(false));
+    }, [contestId]);
+
+    if (loading) return <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-800 rounded-full animate-spin" /></div>;
+
+    if (entries.length === 0) return (
+        <div className="text-center py-8 text-sm text-gray-400">Aucune soumission pour le moment</div>
+    );
+
+    return (
+        <div className="space-y-2">
+            {entries.map((entry, i) => (
+                <div key={entry.id || i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className={`w-7 text-center font-bold text-sm ${i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-400'}`}>
+                        {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">@{entry.user?.username}</div>
+                        <div className="text-xs text-gray-400 truncate">{entry.video?.titre || entry.video?.title}</div>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-sm font-bold text-gray-900">{parseFloat(entry.score || 0).toFixed(1)}</div>
+                        <div className="text-xs text-gray-400">{entry.vote_count} votes</div>
+                    </div>
+                </div>
+            ))}
+
+            <button
+                onClick={onComputeRanks}
+                disabled={computing}
+                className="mt-4 flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 w-full justify-center"
+            >
+                {computing
+                    ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Calcul...</>
+                    : <><Award size={14} /> Proclamer les résultats</>
+                }
+            </button>
+        </div>
+    );
+};

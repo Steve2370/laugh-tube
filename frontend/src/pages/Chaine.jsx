@@ -13,10 +13,11 @@ import {
     Calendar,
     Users,
     Video,
-    Swords
+    Swords,
+    Trophy
 } from 'lucide-react';
 
-const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, challenged, setChallenged, toast }) => {
+const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, challenged, setChallenged, toast, jokairWin }) => {
     const getAvatarUrl = () => {
         if (!channelUser?.avatar_url || channelUser.avatar_url.includes('default')) return null;
         if (channelUser.avatar_url.startsWith('http')) return channelUser.avatar_url;
@@ -113,6 +114,21 @@ const ChaineHeader = ({ channelUser, stats, subscribersCount, currentUser, chall
 
                 <div className="mb-5">
                     <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">{channelUser.username}</h1>
+
+                    {jokairWin && (
+                        <div style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            background: '#1a1a1a',
+                            border: '1px solid rgba(245,200,66,0.5)',
+                            borderRadius: 20, padding: '4px 12px',
+                            fontSize: 12, fontWeight: 600,
+                            color: '#F5C842', marginBottom: 8,
+                        }}>
+                            <Trophy size={13} style={{ color: '#F5C842' }} />
+                            Vainqueur Jok-Air {jokairWin}
+                        </div>
+                    )}
+
                     {channelUser.bio && (
                         <p className="text-gray-700 mb-3 text-base sm:text-lg">{channelUser.bio}</p>
                     )}
@@ -186,6 +202,7 @@ const Chaine = () => {
     const [loading, setLoading] = useState(true);
     const [challenged, setChallenged] = useState(false);
     const [battleCheckTime, setBattleCheckTime] = useState(Date.now());
+    const [jokairWin, setJokairWin] = useState(null);
     const [stats, setStats] = useState({
         totalVideos: 0,
         totalViews: 0,
@@ -200,6 +217,19 @@ const Chaine = () => {
             refreshAbonnement();
         }
     }, [channelUser?.id]);
+
+    useEffect(() => {
+        const fetchJokairWin = async () => {
+            try {
+                const fameRes = await apiService.requestV2('/jokair/hall-of-fame');
+                if (Array.isArray(fameRes)) {
+                    const win = fameRes.find(e => e.winner === channelUser?.username);
+                    if (win) setJokairWin(win.year || win.edition);
+                }
+            } catch {}
+        };
+        if (channelUser?.username) fetchJokairWin();
+    }, [channelUser?.username]);
 
     useEffect(() => {
         loadChannelData();
@@ -282,8 +312,8 @@ const Chaine = () => {
     };
 
     const calculateStats = () => {
-        const totalViews = videos.reduce((sum, v) => sum + (v.views    || v.views_count    || 0), 0);
-        const totalLikes = videos.reduce((sum, v) => sum + (v.likes    || v.likes_count    || 0), 0);
+        const totalViews = videos.reduce((sum, v) => sum + (v.views || v.views_count || 0), 0);
+        const totalLikes = videos.reduce((sum, v) => sum + (v.likes || v.likes_count || 0), 0);
         const totalComments = videos.reduce((sum, v) => sum + (v.comments || v.comments_count || 0), 0);
 
         setStats({
@@ -354,6 +384,7 @@ const Chaine = () => {
                             challenged={challenged}
                             setChallenged={setChallenged}
                             toast={toast}
+                            jokairWin={jokairWin}
                         />
 
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">

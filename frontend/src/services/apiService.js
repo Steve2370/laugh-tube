@@ -574,6 +574,7 @@ class ApiService {
             likes: v.likes ?? v.nb_likes ?? v.likes_count ?? 0,
             comments: v.comments ?? v.nb_commentaires ?? v.comments_count ?? 0,
             user_id: v.user_id ?? v.userId ?? null,
+            is_jokair: v.is_jokair ?? false,
         }));
     }
 

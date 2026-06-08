@@ -155,6 +155,20 @@ class VideoController extends Controller
             'is_jokair' => $video->jokairEntry()->where('validated', true)->exists(),
         ];
     }
+
+    public function userVideos(int $userId): JsonResponse
+    {
+        $videos = Video::with('user:id,username,avatar_url')
+            ->withCount(['commentaires', 'likes'])
+            ->whereNull('deleted_at')
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($v) => $this->formatVideo($v));
+
+        return response()->json(['videos' => $videos]);
+    }
+
     public function upload(Request $request): JsonResponse
     {
         $request->validate([
@@ -191,7 +205,7 @@ class VideoController extends Controller
             'video_id' => $video,
             'status' => 'pending',
             'priority' => 0,
-            'custom_thumbnail' => $thumbnailName ? true : false, // ← indique à l'encodeur de ne pas générer de miniature
+            'custom_thumbnail' => $thumbnailName ? true : false,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

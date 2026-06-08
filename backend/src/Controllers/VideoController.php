@@ -227,6 +227,7 @@ readonly class VideoController
                 $v['recent_views'] = (int)($v['recent_views'] ?? 0);
                 $v['likes_count'] = (int)($v['likes_count'] ?? 0);
                 $v['trend_score'] = (int)($v['trend_score'] ?? 0);
+                $v['is_jokair'] = (bool)($v['is_jokair'] ?? false);
                 return $v;
             }, $videos);
 
@@ -304,20 +305,21 @@ readonly class VideoController
                         COUNT(DISTINCT vv.id) as view_count,
                         (SELECT COUNT(*) FROM likes l WHERE l.video_id = v.id) AS likes,
                         (SELECT COUNT(*) FROM dislikes d WHERE d.video_id = v.id) AS dislikes,
-                        (SELECT COUNT(*) FROM commentaires c WHERE c.video_id = v.id) AS comments
-                 FROM videos v
-                 LEFT JOIN video_views vv ON v.id = vv.video_id
-                 WHERE v.user_id = $1 AND v.deleted_at IS NULL
-                 GROUP BY v.id
-                 ORDER BY v.created_at DESC",
+                        (SELECT COUNT(*) FROM commentaires c WHERE c.video_id = v.id) AS comments,
+                        EXISTS(SELECT 1 FROM jokair_entries je WHERE je.video_id = v.id AND je.validated IS TRUE) AS is_jokair
+                     FROM videos v
+                     LEFT JOIN video_views vv ON v.id = vv.video_id
+                     WHERE v.user_id = $1 AND v.deleted_at IS NULL
+                     GROUP BY v.id
+                     ORDER BY v.created_at DESC",
                 [$userId]
             );
 
             $videos = array_map(function($v) {
-                $v['views']    = (int)($v['views']      ?? $v['view_count'] ?? 0);
-                $v['likes']    = (int)($v['likes']      ?? 0);
-                $v['dislikes'] = (int)($v['dislikes']   ?? 0);
-                $v['comments'] = (int)($v['comments']   ?? 0);
+                $v['views'] = (int)($v['views'] ?? $v['view_count'] ?? 0);
+                $v['likes'] = (int)($v['likes'] ?? 0);
+                $v['dislikes'] = (int)($v['dislikes'] ?? 0);
+                $v['comments'] = (int)($v['comments'] ?? 0);
                 return $v;
             }, $videos);
 

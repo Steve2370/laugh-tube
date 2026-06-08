@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import apiService from '../services/apiService.js';
+import jokairService from '../services/jokairService.js';
 
 export const useVideoPlayer = (videoId) => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -23,6 +24,14 @@ export const useVideoPlayer = (videoId) => {
                 watch_percentage: percentage * 100,
                 completed: percentage >= 0.95
             });
+
+            if (video?.is_jokair && video?.jokair_entry_id) {
+                await jokairService.recordWatch(
+                    video.jokair_entry_id,
+                    Math.floor(watchTime / 1000),
+                    Math.floor(duration)
+                );
+            }
 
             if (percentage >= 0.1) {
                 viewRecordedRef.current = true;

@@ -3,7 +3,7 @@ import apiService from './apiService.js';
 class VideoService {
     constructor() {
         this.cache = new Map();
-        this.cacheDuration = 5 * 60 * 1000;
+        this.cacheDuration = 0;
         this.uploadQueue = [];
     }
 
