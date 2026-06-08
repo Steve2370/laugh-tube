@@ -32,10 +32,12 @@ class JokairEntry extends Model
     {
         $maxVotes = JokairEntry::where('contest_id', $this->contest_id)->max('vote_count') ?: 1;
         $maxWatch = JokairEntry::where('contest_id', $this->contest_id)->max('watch_count') ?: 1;
-        $voteRatio = $this->vote_count / $maxVotes;
-        $watchRatio = $this->watch_count / $maxWatch;
 
-        $this->score = round(($voteRatio * 0.70) + ($watchRatio * 0.30), 4);
-        $this->save();
+        JokairEntry::where('contest_id', $this->contest_id)->get()->each(function($entry) use ($maxVotes, $maxWatch) {
+            $voteRatio  = $entry->vote_count / $maxVotes;
+            $watchRatio = $entry->watch_count / $maxWatch;
+            $entry->score = round(($voteRatio * 0.70) + ($watchRatio * 0.30), 4);
+            $entry->save();
+        });
     }
 }

@@ -69,8 +69,8 @@ const CountdownBlock = ({ value, label }) => (
 const PhaseBadge = ({ status }) => {
     const map = {
         upcoming: { label: 'À venir', bg: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', dot: false },
-        submissions: { label: 'Soumissions', bg: 'rgba(59,130,246,0.15)', color: '#60A5FA', dot: true  },
-        voting: { label: 'Votes ouverts', bg: 'rgba(204,0,0,0.15)', color: '#FF4444', dot: true  },
+        submissions: { label: 'Soumissions', bg: 'rgba(59,130,246,0.15)', color: '#60A5FA', dot: false },
+        voting: { label: 'Votes ouverts', bg: 'rgba(204,0,0,0.15)', color: '#FF4444', dot: false  },
         ended: { label: 'Terminé', bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)', dot: false },
     };
     const { label, bg, color, dot } = map[status] || map.upcoming;
@@ -99,7 +99,7 @@ const RankColors = {
     3: { accent: '#C97B3A', bg: 'rgba(201,123,58,0.07)', border: 'rgba(201,123,58,0.25)' },
 };
 
-const LeaderboardRow = ({ entry, rank, onVideoClick }) => {
+const LeaderboardRow = ({ entry, rank, onVideoClick, canVote, hasVoted, isVoting, onVote }) => {
     const colors = RankColors[rank] || { accent: 'rgba(255,255,255,0.35)', bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.07)' };
     const initials = (entry.user?.username || '?').slice(0, 2).toUpperCase();
 
@@ -182,7 +182,24 @@ const LeaderboardRow = ({ entry, rank, onVideoClick }) => {
                 <div style={{ height: '100%', width: `${Math.min(100, parseFloat(entry.score || 0))}%`, background: colors.accent, borderRadius: 2 }} />
             </div>
 
-            <Play size={14} style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+            {canVote ? (
+                <button
+                    onClick={(e) => { e.stopPropagation(); onVote(); }}
+                    disabled={hasVoted || isVoting}
+                    style={{
+                        background: hasVoted ? 'rgba(34,197,94,0.15)' : 'rgba(204,0,0,0.15)',
+                        border: `0.5px solid ${hasVoted ? 'rgba(34,197,94,0.3)' : 'rgba(204,0,0,0.3)'}`,
+                        color: hasVoted ? '#4ADE80' : '#FF6666',
+                        borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 600,
+                        cursor: hasVoted ? 'default' : 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
+                    }}
+                >
+                    {hasVoted ? <>Voté</> : isVoting ? '...' : <><Flame size={11} /> Voter</>}
+                </button>
+            ) : (
+                <Play size={14} style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+            )}
         </motion.div>
     );
 };
@@ -444,20 +461,20 @@ const JokairPage = () => {
 
                     <div style={{ marginBottom: 24 }}>
                         <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', margin: '0 0 4px' }}>
-                            Le championnat annuel d'humour de LaughTube
+                            {contest?.titre ? `${contest.titre} · Le championnat annuel d'humour de LaughTube` : "Le championnat annuel d'humour de LaughTube"}
                         </p>
                         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0, lineHeight: 1.6 }}>
-                            Humoristes, amateurs ou simple fan — uploade ta vidéo la plus drôle,
+                            Humoristes, amateurs ou simple fan. uploade ta vidéo la plus drôle,
                             récolte des votes et grimpe au sommet du classement.
-                            Le champion repart avec <strong style={{ color: '#CC0000' }}>200$</strong> et un trophée gravé à son nom.
+                            Le champion repart avec <strong style={{ color: '#CC0000' }}>{contest?.prize_1 || 200}$</strong> et un trophée gravé à son nom.
                         </p>
                     </div>
 
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 28 }}>
                         {[
-                            { place: '1er', amount: '200$', color: '#F5C842', icon: <Crown size={18} /> },
-                            { place: '2e', amount: '75$',  color: '#B0B8C8', icon: <Medal size={18} /> },
-                            { place: '3e', amount: '25$',  color: '#C97B3A', icon: <Star size={18}  /> },
+                            { place: '1er', amount: `${contest?.prize_1 || 200}$`, color: '#F5C842', icon: <Crown size={18} /> },
+                            { place: '2e',  amount: `${contest?.prize_2 || 75}$`,  color: '#B0B8C8', icon: <Medal size={18} /> },
+                            { place: '3e',  amount: `${contest?.prize_3 || 25}$`,  color: '#C97B3A', icon: <Star size={18}  /> },
                         ].map(({ place, amount, color, icon }) => (
                             <div key={place} style={{
                                 display: 'flex', alignItems: 'center', gap: 10,
@@ -523,7 +540,6 @@ const JokairPage = () => {
                                 background: 'rgba(34,197,94,0.08)', border: '0.5px solid rgba(34,197,94,0.25)',
                                 borderRadius: 12, padding: '14px 18px',
                             }}>
-                                <Check size={18} style={{ color: '#4ADE80', flexShrink: 0 }} />
                                 <div>
                                     <div style={{ fontSize: 14, fontWeight: 600, color: '#4ADE80' }}>Vidéo soumise</div>
                                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{myEntry.video?.titre || myEntry.video?.title}</div>
@@ -591,37 +607,16 @@ const JokairPage = () => {
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                 {leaderboard.map((entry, i) => (
-                                    <div key={entry.id || i} style={{ position: 'relative' }}>
-                                        <LeaderboardRow
-                                            entry={entry}
-                                            rank={i + 1}
-                                            onVideoClick={handleVideoClick}
-                                        />
-
-                                        {canVote && (
-                                            <button
-                                                onClick={() => handleVote(entry)}
-                                                disabled={!!myVotes[entry.video?.id] || votingId === entry.video?.id}
-                                                style={{
-                                                    position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)',
-                                                    background: myVotes[entry.video?.id] ? 'rgba(34,197,94,0.15)' : 'rgba(204,0,0,0.15)',
-                                                    border: `0.5px solid ${myVotes[entry.video?.id] ? 'rgba(34,197,94,0.3)' : 'rgba(204,0,0,0.3)'}`,
-                                                    color: myVotes[entry.video?.id] ? '#4ADE80' : '#FF6666',
-                                                    borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 600,
-                                                    cursor: myVotes[entry.video?.id] ? 'default' : 'pointer',
-                                                    transition: 'all 0.15s',
-                                                    display: 'flex', alignItems: 'center', gap: 4,
-                                                }}
-                                            >
-                                                {myVotes[entry.video?.id]
-                                                    ? <><Check size={11} /> Voté</>
-                                                    : votingId === entry.video?.id
-                                                        ? '...'
-                                                        : <><Flame size={11} /> Voter</>
-                                                }
-                                            </button>
-                                        )}
-                                    </div>
+                                    <LeaderboardRow
+                                        key={entry.id || i}
+                                        entry={entry}
+                                        rank={i + 1}
+                                        onVideoClick={handleVideoClick}
+                                        canVote={canVote}
+                                        hasVoted={!!myVotes[entry.id]}
+                                        isVoting={votingId === entry.id}
+                                        onVote={() => handleVote(entry)}
+                                    />
                                 ))}
                             </div>
                         )}

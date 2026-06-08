@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
 import apiService from '../services/apiService.js';
+import videoService from '../services/videoService.js';
 import { Upload as UploadIcon, X, FileVideo, Check, Lock, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import LoadingPage from "../components/LoadingPage.jsx";
 import jokairService from '../services/jokairService.js';
@@ -18,7 +19,7 @@ const Upload = () => {
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
     const [submitToJokair, setSubmitToJokair] = useState(false);
     const [jokairContest, setJokairContest] = useState(null);
-
+    const [myJokairEntry, setMyJokairEntry] = useState(null);
     const { isAuthenticated, user, loading } = useAuth();
     const toast = useToast();
 
@@ -32,6 +33,13 @@ const Upload = () => {
     useEffect(() => {
         jokairService.getActiveContest().then(c => setJokairContest(c));
     }, []);
+
+    useEffect(() => {
+        if (!jokairContest) return;
+        apiService.requestV2(`/jokair/${jokairContest.id}/my-status`)
+            .then(s => setMyJokairEntry(s.has_entry ? s.entry : null))
+            .catch(() => {});
+    }, [jokairContest]);
 
     const validateFile = (file) => {
         const maxSize = 500 * 1024 * 1024;
@@ -79,6 +87,16 @@ const Upload = () => {
     };
 
     const handleSubmit = async (e) => {
+        if (submitToJokair && jokairContest) {
+            try {
+                const status = await apiService.requestV2(`/jokair/${jokairContest.id}/my-status`);
+                if (status.has_entry) {
+                    toast.error("Tu as déjà soumis une vidéo au Jok-Air. Supprime-la d'abord pour en soumettre une nouvelle.");
+                    return;
+                }
+            } catch (e) { }
+        }
+
         e.preventDefault();
 
         if (!selectedFile) {
@@ -123,11 +141,15 @@ const Upload = () => {
             });
 
             toast.success("Vidéo uploadée avec succès !");
+            videoService._invalidateCache('videos_');
 
-            if (submitToJokair && jokairContest && response?.video?.id) {
-                await jokairService.submitEntry(jokairContest.id, response.video.id);
+            const videoId = response?.video?.id || response?.video_id;
+
+            if (submitToJokair && jokairContest && videoId) {
+                await jokairService.submitEntry(jokairContest.id, videoId);
                 toast.success("Vidéo soumise au Jok-Air !");
             }
+
             setTitle('');
             setDescription('');
             setSelectedFile(null);
@@ -293,6 +315,18 @@ const Upload = () => {
                                     }
                                 </div>
                             </div>
+
+                            {submitToJokair && jokairContest && myJokairEntry && (
+                                <div style={{
+                                    fontSize: 12, color: '#CC0000', marginTop: 6,
+                                    padding: '6px 10px',
+                                    background: 'rgba(204,0,0,0.06)',
+                                    borderRadius: 8,
+                                    border: '0.5px solid rgba(204,0,0,0.2)',
+                                }}>
+                                    Tu as déjà soumis une vidéo. Supprime-la d'abord pour en soumettre une nouvelle.
+                                </div>
+                            )}
                         </div>
 
                         <div>

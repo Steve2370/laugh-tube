@@ -37,7 +37,7 @@ Route::prefix('v2')->group(function () {
 
     Route::get('/users/{id}/profile', [ProfileController::class, 'show']);
     Route::get('/users/{id}/stats', [ProfileController::class, 'stats']);
-    Route::get('/users/{id}/videos', [ProfileController::class, 'videos']);
+    Route::get('/users/{id}/videos', [VideoController::class, 'userVideos']);
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -110,6 +110,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/videos/{id}/signaler', [VideoController::class, 'signaler']);
         Route::post('/users/{id}/signaler', [VideoController::class, 'signalerUser']);
+        Route::get('/users/{userId}/videos', [VideoController::class, 'userVideos']);
 
         Route::get('/auth/2fa/status', [TwoFactorController::class, 'status']);
         Route::post('/auth/2fa/enable', [TwoFactorController::class, 'enable']);

@@ -3,7 +3,7 @@ import apiService from './apiService.js';
 class JokairService {
     constructor() {
         this.cache = new Map();
-        this.cacheDuration = 2 * 60 * 1000;
+        this.cacheDuration = 0;
     }
 
     async getActiveContest() {
