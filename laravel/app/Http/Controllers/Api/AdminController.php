@@ -137,7 +137,7 @@ class AdminController extends Controller
     public function deleteVideo(int $id): JsonResponse
     {
         $video = Video::withTrashed()->findOrFail($id);
-        $video->update(['deleted_at' => now()]);
+        DB::table('videos')->where('id', $id)->update(['deleted_at' => now()]);
         return response()->json(['message' => 'Vidéo supprimée']);
     }
 
