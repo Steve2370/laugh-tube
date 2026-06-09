@@ -1,0 +1,47 @@
+services:
+  backend:
+    volumes:
+      - ./uploads:/var/www/html/public/uploads
+
+  laravel:
+    volumes:
+      - ./uploads:/var/www/html/public/uploads
+    environment:
+      - APP_ENV=local
+      - APP_URL=http://localhost
+      - FRONTEND_URL=http://localhost
+      - APP_KEY=base64:dJW7cf4LmYFnpBKKPZp2M57fJANjCI4XJCcgrlH8EeQ=
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=laughtube
+      - DB_USERNAME=laughtube_user
+      - DB_PASSWORD=changeme
+      - SESSION_DRIVER=array
+      - LIVEKIT_HOST=livekit:7880
+      - LIVEKIT_API_KEY=87d3037fcbeb6c500595d75572e380e1
+      - LIVEKIT_API_SECRET=3d2428926499fa6023d904a93b3d854dbfa7f9bc70e4bbe919ee1c5682915c54
+      - RESEND_API_KEY=re_FDz94o7i_4fiLzhQLp8VTGgt841ouVW4Z
+      - MAIL_FROM_EMAIL=noreply@laughtube.ca
+      - MAIL_FROM_NAME=LaughTube
+
+  encoder:
+    volumes:
+      - ./encoder:/app
+      - ./uploads:/app/uploads
+      - /app/node_modules
+
+  frontend:
+    command: sh -c "npm install && npm run build"
+    ports: []
+
+  nginx:
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/public:/var/www/html/public:ro
+      - ./uploads:/var/www/html/public/uploads:ro
+      - ./frontend/dist:/var/www/frontend:ro
+
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: changeme
