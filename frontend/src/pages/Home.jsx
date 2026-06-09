@@ -253,7 +253,7 @@ const FILTERS = [
     { id: 'trending', label: 'Tendances', icon: TrendingUp },
     { id: 'popular', label: 'Populaires', icon: Flame },
     { id: 'recent', label: 'Récents', icon: Clock },
-    { id: 'jokair', label: 'Jok-Air', icon: Radio, special: true },
+    { id: 'jokair', label: 'Jok-Air', icon: Trophy, special: true },
 ];
 
 const FilterBar = ({ filter, onChange }) => (
