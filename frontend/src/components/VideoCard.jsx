@@ -227,11 +227,13 @@ const VideoCard = ({ video, onClick }) => {
                             letterSpacing: '0.04em',
                             boxShadow: '0 2px 8px rgba(204,0,0,0.4)',
                         }}>
-                            <svg width="11" height="14" viewBox="0 0 11 14" fill="none">
-                                <rect x="3" y="0" width="5" height="8" rx="2.5" fill="white"/>
-                                <path d="M1 6.5C1 9.261 3.015 11.5 5.5 11.5S10 9.261 10 6.5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
-                                <line x1="5.5" y1="11.5" x2="5.5" y2="13.5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
-                                <line x1="3" y1="13.5" x2="8" y2="13.5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                                <path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"/>
+                                <path d="M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/>
+                                <path d="M4 22h16"/>
+                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
                             </svg>
                             JOK-AIR
                         </div>

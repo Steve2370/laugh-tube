@@ -7,14 +7,14 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import MessagesTable from '../components/admin/MessagesTable.jsx';
 import AdminInboxTable from '../components/admin/AdminInboxTable.jsx';
 import JokairAdminPanel from '../components/admin/JokairAdminPanel.jsx';
-import { Flag, MessageCircle, Users, Video, Radio } from "lucide-react";
+import {Flag, MessageCircle, Users, Video, Radio, Trophy} from "lucide-react";
 
 const TABS = [
     { key: 'reports', label: 'Signalements', icon: Flag },
     { key: 'users', label: 'Utilisateurs', icon: Users },
     { key: 'videos', label: 'Vidéos', icon: Video },
     { key: 'messages', label: 'Messagerie', icon: MessageCircle },
-    { key: 'jokair', label: 'Jok-Air', icon: Radio },
+    { key: 'jokair', label: 'Jok-Air', icon: Trophy },
 ];
 
 function StatCard({ label, value, sub, color = 'blue' }) {
