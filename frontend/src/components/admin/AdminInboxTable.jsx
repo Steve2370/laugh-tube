@@ -38,7 +38,7 @@ const AdminInboxTable = ({ inbox, onRefresh }) => {
                 method: 'PATCH',
                 body: JSON.stringify({ statut: 'replied' }),
             });
-            onUpdateStatut?.(msgId, 'replied'); // mise à jour immédiate
+            onUpdateStatut?.(msgId, 'replied');
             toast.success('Marqué comme répondu');
         } catch (err) {
             toast.error('Erreur mise à jour statut');
