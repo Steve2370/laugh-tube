@@ -116,7 +116,7 @@ class AdminController extends Controller
     public function getVideos(): JsonResponse
     {
         $videos = Video::with('user:id,username')
-            ->withTrashed()
+            ->whereNull('deleted_at')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($v) => [
@@ -124,6 +124,7 @@ class AdminController extends Controller
                 'title' => $v->title,
                 'filename' => $v->filename,
                 'thumbnail' => $v->thumbnail,
+                'thumbnail_url' => $v->thumbnail ? "/uploads/thumbnails/{$v->thumbnail}" : null,
                 'views' => $v->views,
                 'created_at' => $v->created_at,
                 'deleted_at' => $v->deleted_at,
