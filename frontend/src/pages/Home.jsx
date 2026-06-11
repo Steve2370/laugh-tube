@@ -357,8 +357,7 @@ const Home = () => {
     };
 
     const handleVideoClick = (video) => {
-        localStorage.setItem("currentVideo", JSON.stringify(video));
-        window.location.hash = "#/video";
+        window.location.hash = `#/video/${video.id}`;
     };
 
     const navigateTo = (page) => { window.location.hash = `#/${page}`; };

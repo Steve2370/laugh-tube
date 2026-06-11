@@ -680,8 +680,7 @@ const Video = () => {
                     <button
                         key={v.id}
                         onClick={() => {
-                            localStorage.setItem('currentVideo', JSON.stringify(v));
-                            window.location.hash = '#/video';
+                            window.location.hash = `#/video/${v.id}`;
                             window.location.reload();
                         }}
                         className="flex gap-3 text-left hover:bg-gray-50 rounded-xl p-2 transition-all group"
@@ -768,7 +767,7 @@ const Video = () => {
             </div>
         );
     }
-    const shareUrl = `https://laughtube.ca/api/v2/og/video/${video.id}`;
+    const shareUrl = `https://laughtube.ca/#/video/${video.id}`;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20">
@@ -1003,8 +1002,7 @@ const Video = () => {
                                 Vidéos populaires
                             </h3>
                             <SuggestedVideos currentVideoId={video?.id} onVideoClick={(v) => {
-                                localStorage.setItem('currentVideo', JSON.stringify(v));
-                                reload();
+                                window.location.hash = `#/video/${v.id}`;
                                 window.scrollTo(0, 0);
                             }} />
                         </div>
@@ -1201,7 +1199,7 @@ const Video = () => {
                                 </p>
                                 <button
                                     onClick={async () => {
-                                        await navigator.clipboard.writeText(`https://laughtube.ca/api/v2/og/video/${video.id}`);
+                                        await navigator.clipboard.writeText(`https://laughtube.ca/#/video/${video.id}`);
                                         toast.success('Lien copié !');
                                     }}
                                     className="bg-white text-gray-900 font-bold text-sm px-4 py-1.5 rounded-lg hover:bg-gray-100 transition-all flex-shrink-0"

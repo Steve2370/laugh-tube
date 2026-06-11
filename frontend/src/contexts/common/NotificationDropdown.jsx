@@ -51,8 +51,7 @@ const NotificationDropdown = () => {
         if (notification.video_id) {
             try {
                 const video = await apiService.getVideoById(notification.video_id);
-                localStorage.setItem('currentVideo', JSON.stringify(video));
-                window.location.hash = `#/video/${notification.video_id}`;
+                window.location.hash = `#/video/${video.id}`;
             } catch {
                 toast.error('Erreur lors du chargement de la vidéo');
             }
