@@ -430,8 +430,7 @@ const ProfileHeader = ({ stats, isOwnProfile, targetUserId }) => {
 
 const VideosTab = ({ videos, onVideoClick, onDelete, isOwnProfile }) => {
     const handleVideoClick = (video) => {
-        localStorage.setItem("currentVideo", JSON.stringify(video));
-        window.location.hash = "#/video";
+        window.location.hash = `#/video/${video.id}`;
     };
 
     if (videos.length === 0) {
