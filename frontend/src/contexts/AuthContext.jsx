@@ -13,17 +13,22 @@ export const AuthProvider = ({ children }) => {
         try {
             const authenticated = apiService.isAuthenticated();
             if (authenticated) {
-                const currentUser = await apiService.getMe();
-                setUser(currentUser);
-                setIsAuthenticated(true);
+                try {
+                    const currentUser = await apiService.getMe();
+                    setUser(currentUser);
+                    setIsAuthenticated(true);
+                } catch (err) {
+                    if (err.message === 'Non autorisé' || err.message?.includes('401')) {
+                        setUser(null);
+                        setIsAuthenticated(false);
+                    } else {
+                        setIsAuthenticated(true);
+                    }
+                }
             } else {
                 setUser(null);
                 setIsAuthenticated(false);
             }
-        } catch (err) {
-            setUser(null);
-            setIsAuthenticated(false);
-            setError(err.message);
         } finally {
             setLoading(false);
         }

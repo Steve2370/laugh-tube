@@ -52,7 +52,7 @@ class AuthController extends Controller
             Log::error('Email failed on register: ' . $e->getMessage());
         }
 
-        $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
         return response()->json([
             'message' => 'Compte créé avec succès',
@@ -86,7 +86,7 @@ class AuthController extends Controller
         }
 
         $user->tokens()->delete();
-        $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
         return response()->json([
             'message' => 'Connexion réussie',
@@ -174,7 +174,7 @@ class AuthController extends Controller
             }
 
             $user->tokens()->delete();
-            $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+            $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
             if ($isMobile) {
                 return redirect('laughtube://auth/callback?token=' . $token . '&user_id=' . $user->id);
@@ -256,7 +256,7 @@ class AuthController extends Controller
             }
 
             $user->tokens()->delete();
-            $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+            $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
             return response()->json([
                 'token' => $token,
@@ -326,7 +326,7 @@ class AuthController extends Controller
             }
 
             $user->tokens()->delete();
-            $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+            $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
             return response()->json([
                 'token' => $token,

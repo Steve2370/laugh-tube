@@ -90,43 +90,7 @@ class ApiService {
     }
 
     async handleTokenExpired(endpoint, options) {
-        const token = localStorage.getItem('access_token');
-
-        if (token && token.includes('|')) {
-            throw new Error('Non autorisé');
-        }
-
-        if (this.isRefreshing) {
-            return new Promise((resolve, reject) => {
-                this.failedQueue.push({ resolve, reject, endpoint, options });
-            });
-        }
-        this.isRefreshing = true;
-        try {
-            const refreshed = await this.refreshToken();
-            if (refreshed) {
-                this.failedQueue.forEach(({ resolve, endpoint, options }) => {
-                    resolve(this.request(endpoint, options));
-                });
-                this.failedQueue = [];
-                return this.request(endpoint, options);
-            } else {
-                this.failedQueue.forEach(({ reject }) => {
-                    reject(new Error('Session expirée'));
-                });
-                this.failedQueue = [];
-                localStorage.removeItem('token');
-                localStorage.removeItem('refreshToken');
-                window.location.hash = '#/login';
-                throw new Error('Session expirée - veuillez vous reconnecter');
-            }
-        } catch (err) {
-            this.failedQueue.forEach(({ reject }) => reject(err));
-            this.failedQueue = [];
-            throw err;
-        } finally {
-            this.isRefreshing = false;
-        }
+        throw new Error('Non autorisé');
     }
 
     async handleResponse(response) {
