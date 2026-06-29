@@ -370,7 +370,7 @@ L'application iOS "Tube à rire" est développée en SwiftUI et disponible sur l
 
 ---
 
-## 📄 Licence
+## Licence
 
 © 2026 LaughTube / Tube à rire. Tous droits réservés.
 
