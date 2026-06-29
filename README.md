@@ -12,7 +12,7 @@
 
 ---
 
-## 📋 Table des matières
+## Table des matières
 
 - [Aperçu](#aperçu)
 - [Fonctionnalités](#fonctionnalités)
