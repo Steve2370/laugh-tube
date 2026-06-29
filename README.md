@@ -38,7 +38,7 @@ LaughTube (Tube à rire) est une plateforme UGC (User Generated Content) québé
 
 ---
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
 ### Utilisateurs
 - Upload et lecture de vidéos humoristiques
@@ -120,7 +120,7 @@ LaughTube (Tube à rire) est une plateforme UGC (User Generated Content) québé
 
 ---
 
-## 📁 Structure du projet
+## Structure du projet
 
 ```
 laugh-tube/
