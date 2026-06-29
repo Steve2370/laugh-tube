@@ -1,4 +1,4 @@
-# 🎤 LaughTube — Tube à rire
+# LaughTube: Tube à rire
 
 > La plateforme québécoise 100% dédiée à l'humour.  
 > Vidéos humoristiques, lives, battles et créateurs de talent réunis dans une seule application.
@@ -28,30 +28,30 @@
 
 ---
 
-## 🎯 Aperçu
+## Aperçu
 
 LaughTube (Tube à rire) est une plateforme UGC (User Generated Content) québécoise dédiée exclusivement à l'humour. Les créateurs uploadent leurs propres vidéos humoristiques, organisent des battles en direct et font des lives pour leur audience.
 
 **Disponible sur :**
-- 🌐 Web : [laughtube.ca](https://www.laughtube.ca)
-- 📱 iOS : App Store — "Tube à rire"
+-  Web : [laughtube.ca](https://www.laughtube.ca)
+-  iOS : App Store — "Tube à rire"
 
 ---
 
 ## ✨ Fonctionnalités
 
 ### Utilisateurs
-- 📹 Upload et lecture de vidéos humoristiques
-- 🔴 Lives en temps réel (LiveKit)
-- ⚔️ Battle Rooms entre créateurs
-- 🏆 Classement mensuel des meilleurs créateurs
-- 🔔 Notifications en temps réel (push + in-app)
-- 👤 Profil créateur avec statistiques
-- ❤️ Likes, commentaires, réponses et mentions
-- 🚫 Blocage d'utilisateurs
-- 🚩 Signalement de contenu
-- 🔐 Authentification 2FA (TOTP)
-- 🌙 Thème Sombre / Clair / Système (iOS)
+- Upload et lecture de vidéos humoristiques
+- Lives en temps réel (LiveKit)
+- Battle Rooms entre créateurs
+- Classement mensuel des meilleurs créateurs
+- Notifications en temps réel (push + in-app)
+- Profil créateur avec statistiques
+- Likes, commentaires, réponses et mentions
+- Blocage d'utilisateurs
+- Signalement de contenu
+- Authentification 2FA (TOTP)
+- Thème Sombre / Clair / Système (iOS)
 
 ### Sécurité
 - Authentification OAuth (Google, Apple)
@@ -62,7 +62,7 @@ LaughTube (Tube à rire) est une plateforme UGC (User Generated Content) québé
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -98,7 +98,7 @@ LaughTube (Tube à rire) est une plateforme UGC (User Generated Content) québé
 
 ---
 
-## 🛠 Stack technique
+## Stack technique
 
 | Composant | Technologie |
 |-----------|-------------|
@@ -168,7 +168,7 @@ laugh-tube/
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prérequis
 
@@ -204,7 +204,7 @@ cp .env.example .env
 
 ---
 
-## 🔧 Variables d'environnement
+## Variables d'environnement
 
 ```env
 # Base de données
@@ -234,7 +234,7 @@ MAX_WORKERS=4
 
 ---
 
-## 🌐 Déploiement
+## Déploiement
 
 ### Production (DigitalOcean)
 
@@ -276,7 +276,7 @@ ls /opt/Laugh_Tube/backup_*.sql
 
 ---
 
-## 📡 API
+## API
 
 ### Base URL
 
@@ -335,7 +335,7 @@ Authorization: Bearer {token}
 
 ---
 
-## 📱 Application iOS
+## Application iOS
 
 L'application iOS "Tube à rire" est développée en SwiftUI et disponible sur l'App Store.
 
@@ -360,13 +360,13 @@ L'application iOS "Tube à rire" est développée en SwiftUI et disponible sur l
 
 ---
 
-## 👨‍💻 Auteur
+## Auteur
 
-**Brice Steve Tchagam Youatchui** (Leon Beltran)
+**Brice Steve Tchagam** 
 
 - GitHub: [@Steve2370](https://github.com/Steve2370)
 - Site: [laughtube.ca](https://www.laughtube.ca)
-- Projet solo — Design, développement, déploiement et soumission App Store
+- Projet solo: Design, développement, déploiement et soumission App Store
 
 ---
 
