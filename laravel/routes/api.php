@@ -104,6 +104,15 @@ Route::prefix('v2')->group(function () {
     Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin']);
 
+    Route::get('/debug-ip', function(Request $request) {
+        return response()->json([
+            'ip' => $request->ip(),
+            'cf_ip' => $request->header('CF-Connecting-IP'),
+            'x_forwarded' => $request->header('X-Forwarded-For'),
+            'remote_addr' => $_SERVER['REMOTE_ADDR'] ?? null,
+        ]);
+    });
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/device-token', [DeviceTokenController::class, 'store']);
