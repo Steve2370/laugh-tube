@@ -23,6 +23,11 @@ class User extends Authenticatable
         'cover_url',
         'email_verified',
         'two_fa_enabled',
+        'ip_registration',
+        'user_agent_registration',
+        'verification_token',
+        'verification_token_expires',
+        'google_id',
     ];
 
     protected $hidden = [
