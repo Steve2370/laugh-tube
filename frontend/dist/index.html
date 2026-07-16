@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/assets/Animation1-BnYRxAgR.png">
+    <title>LaughTube - Partagez vos punchlines</title>
+    <meta name="description" content="LaughTube - Partagez et découvrez les meilleures vidéos humoristiques. La plateforme québécoise de partage de vidéos.">
+    <meta name="keywords" content="vidéos, humour, partage, québec, laughtube, comédie, laugh, drôle, rire, punchline, humouriste">
+    <meta name="author" content="LaughTube">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.laughtube.ca">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.laughtube.ca">
+    <meta property="og:title" content="LaughTube - Partagez vos punchlines">
+    <meta property="og:description" content="La plateforme québécoise de partage de vidéos humoristiques.">
+    <meta property="og:image" content="https://www.laughtube.ca/images/default-cover.svg">
+    <meta property="og:locale" content="fr_CA">
+    <meta property="og:site_name" content="LaughTube">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LaughTube - Partagez vos punchlines">
+    <meta name="twitter:description" content="La plateforme de partage de vidéos humoristiques.">
+    <meta name="twitter:image" content="https://www.laughtube.ca/images/default-cover.svg">
+    <!-- Privacy-friendly analytics by Plausible -->
+    <script async src="https://plausible.io/js/pa-Gq7zxL9Os7roo2NtAAF9c.js"></script>
+    <script>
+        window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+        plausible.init()
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17977411247"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'AW-17977411247');
+    </script>
+
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            300: '#d8b4fe',
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                            800: '#6b21a8',
+                            900: '#581c87',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        #root {
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+        }
+
+        video {
+            background: #000;
+            max-width: 100%;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+  <script type="module" crossorigin src="/assets/index-DUxZflnP.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-LLUgqbWr.css">
+</head>
+<body>
+<div id="root"></div>
+<!--<script>-->
+<!--    console.log('%cSTOP! INTERDIT', 'color: red; font-size: 48px; font-weight: bold;');-->
+<!--    console.log('%cCette console est réservée aux développeurs.\nSi quelqu\'un vous a demandé de coller quelque chose ici, c\'est une tentative de piratage de votre compte.', 'color: #fff; font-size: 14px; line-height: 1.6;');-->
+<!--    (function() {-->
+<!--        const threshold = 160;-->
+<!--        setInterval(function() {-->
+<!--            if (window.outerWidth - window.innerWidth > threshold ||-->
+<!--                window.outerHeight - window.innerHeight > threshold) {-->
+<!--                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:16px"><h1 style="color:red">Accès refusé</h1><p>Fermez les outils développeurs pour continuer.</p></div>';-->
+<!--            }-->
+<!--        }, 1000);-->
+<!--    })();-->
+<!--</script>-->
+</body>
+</html>
