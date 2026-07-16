@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use App\Helpers\GeoIPHelper;
 
 class AdminController extends Controller
 {
@@ -26,8 +27,15 @@ class AdminController extends Controller
                 'avatar_url' => $u->avatar_url,
                 'email_verified' => $u->email_verified,
                 'created_at' => $u->created_at,
+                'last_login' => $u->last_login,
+                'ip_registration' => $u->ip_registration,
+                'country' => GeoIPHelper::getCountry($u->ip_registration),
+                'country_code' => GeoIPHelper::getCountryCode($u->ip_registration),
+                'user_agent' => $u->user_agent_registration,
+                'login_count' => DB::table('personal_access_tokens')
+                    ->where('tokenable_id', $u->id)
+                    ->count(),
             ]);
-
         return response()->json(['users' => $users]);
     }
 
