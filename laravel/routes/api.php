@@ -104,7 +104,8 @@ Route::prefix('v2')->group(function () {
     Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin']);
 
-    Route::get('/debug-ip', function(Request $request) {
+    Route::get('/debug-ip', function() {
+        $request = request();
         return response()->json([
             'ip' => $request->ip(),
             'cf_ip' => $request->header('CF-Connecting-IP'),
