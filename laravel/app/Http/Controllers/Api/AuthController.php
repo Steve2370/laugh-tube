@@ -34,6 +34,8 @@ class AuthController extends Controller
             'verification_token' => $verificationToken,
             'verification_token_expires'  => now()->addDays(7),
             'role' => 'membre',
+            'ip_registration' => $request->ip(),
+            'user_agent_registration' => $request->userAgent(),
         ]);
 
         try {
@@ -152,6 +154,8 @@ class AuthController extends Controller
                     'avatar_url' => $googleUser->getAvatar(),
                     'email_verified' => true,
                     'role' => 'membre',
+                    'ip_registration' => $request->ip(),
+                    'user_agent_registration' => $request->userAgent(),
                 ]);
                 try {
                     $this->emailService->sendWelcomeEmail($user->id, $user->email, $user->username);
@@ -242,6 +246,8 @@ class AuthController extends Controller
                     'password_hash' => Hash::make(Str::random(32)),
                     'email_verified' => true,
                     'role' => 'membre',
+                    'ip_registration' => $request->ip(),
+                    'user_agent_registration' => $request->userAgent(),
                 ]);
 
                 try {
@@ -306,6 +312,8 @@ class AuthController extends Controller
                     'password_hash' => Hash::make(Str::random(32)),
                     'email_verified' => true,
                     'role' => 'membre',
+                    'ip_registration' => $request->ip(),
+                    'user_agent_registration' => $request->userAgent(),
                 ]);
                 try {
                     $this->emailService->sendWelcomeEmail($user->id, $user->email, $user->username);
