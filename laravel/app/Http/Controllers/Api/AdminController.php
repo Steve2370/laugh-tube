@@ -124,6 +124,7 @@ class AdminController extends Controller
     public function getVideos(): JsonResponse
     {
         $videos = Video::with('user:id,username')
+            ->withCount(['likes', 'dislikes', 'commentaires'])
             ->whereNull('deleted_at')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -134,12 +135,14 @@ class AdminController extends Controller
                 'thumbnail' => $v->thumbnail,
                 'thumbnail_url' => $v->thumbnail ? "/uploads/thumbnails/{$v->thumbnail}" : null,
                 'views' => $v->views,
+                'likes' => $v->likes_count ?? 0,
+                'dislikes' => $v->dislikes_count ?? 0,
+                'comments' => $v->commentaires_count ?? 0,
                 'created_at' => $v->created_at,
                 'deleted_at' => $v->deleted_at,
                 'username' => $v->user?->username,
                 'user_id' => $v->user_id,
             ]);
-
         return response()->json(['videos' => $videos]);
     }
 
