@@ -140,7 +140,11 @@ function UserRow({ user, onRefresh }) {
                         <div><span className="font-semibold block">Inscrit le</span>{formatDate(user.created_at)}</div>
                         <div><span className="font-semibold block">Dernière connexion</span>{formatDate(user.last_login)}</div>
                         <div><span className="font-semibold block">Tentatives échouées</span>{user.failed_login_attempts ?? 0}</div>
-                        <div><span className="font-semibold block">Email vérifié</span>{user.email_verified ? '✅' : '❌'}</div>
+                        <div><span className="font-semibold block">Email vérifié</span>{user.email_verified ? 'Oui' : 'Non'}</div>
+                        <div><span className="font-semibold block">IP inscription</span>{user.ip_registration ?? '—'}</div>
+                        <div><span className="font-semibold block">Pays</span>{user.country_code !== 'LOCAL' ? `${user.country} (${user.country_code})` : '—'}</div>
+                        <div><span className="font-semibold block">Navigateur</span>{user.user_agent ? user.user_agent.substring(0, 50) + '...' : '—'}</div>
+                        <div><span className="font-semibold block">Connexions</span>{user.login_count ?? 0}</div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
