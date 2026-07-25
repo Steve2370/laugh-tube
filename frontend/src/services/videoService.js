@@ -150,8 +150,7 @@ class VideoService {
                 reject(new Error('Timeout lors de l\'upload'));
             });
 
-            const baseUrl = window.location.origin;
-            const fullUrl = `${baseUrl}/api${endpoint}`;
+            const fullUrl = `https://upload.laughtube.ca/api/v2/videos/upload`;
 
             console.log('Upload URL:', fullUrl);
 
