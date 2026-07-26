@@ -154,4 +154,4 @@ volumes:
 
 networks:
   laughtube_network:
-    driver: bridgeroot@ubuntu-s-1vcpu-2gb-nyc3-01:/opt/Laugh_Tube#
+    driver: bridge
