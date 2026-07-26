@@ -135,6 +135,7 @@ services:
       - ./backend/public:/var/www/html/public:ro
       - /opt/Laugh_Tube/uploads:/var/www/html/public/uploads:ro
       - ./frontend/dist:/var/www/frontend:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
       - frontend
