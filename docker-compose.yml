@@ -134,7 +134,7 @@ services:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend/public:/var/www/html/public:ro
       - /opt/Laugh_Tube/uploads:/var/www/html/public/uploads:ro
-      - ./frontend/dist:/var/www/frontend:ro
+      - frontend_dist:/var/www/frontend:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
