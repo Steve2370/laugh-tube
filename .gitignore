@@ -25,3 +25,4 @@ laravel/storage/framework/sessions/
 laravel/storage/framework/views/frontend/public/*.mp4
 frontend/public/*.mp4
 frontend/dist/*.mp4
+.env
