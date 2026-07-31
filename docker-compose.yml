@@ -65,11 +65,8 @@ services:
       - DB_USERNAME=laughtube_user
       - "DB_PASSWORD=LaughTube206@#$"
       - GOOGLE_CLIENT_ID=198207836705-nqt2kh6mv1nqgm05rg1osc76ff9cebv6.apps.googleusercontent.com
-<<<<<<< HEAD
-      - GOOGLE_CLIENT_SECRET=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
-=======
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_CLIENT_SECRET=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
->>>>>>> 9ff7629 (Feat: fix google oauth)
       - GOOGLE_REDIRECT_URI=https://www.laughtube.ca/api/v2/auth/google/callback
       - SESSION_DRIVER=array
       - LIVEKIT_HOST=livekit:7880
