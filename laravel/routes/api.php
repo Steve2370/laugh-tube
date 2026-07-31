@@ -199,7 +199,7 @@ Route::prefix('v2')->group(function () {
 
         Route::get('/messages', [AdminController::class, 'getMessages']);
         Route::post('/messages', [AdminController::class, 'sendMessage']);
-        Route::post('/admin/messages/all', [AdminController::class, 'sendMessageAll']);
+        Route::post('/messages/all', [AdminController::class, 'sendMessageAll']);
 
         Route::get('/ads', [AdController::class, 'index']);
         Route::post('/ads', [AdController::class, 'store']);
