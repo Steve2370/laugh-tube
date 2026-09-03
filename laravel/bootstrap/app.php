@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\OptionalSanctumAuth;
 use App\Http\Middleware\VerifyCsrfToken;
+use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'auth.sanctum' => CheckAbilities::class,
+            'admin' => EnsureIsAdmin::class,
         ]);
         $middleware->redirectGuestsTo(fn() => null);
     })

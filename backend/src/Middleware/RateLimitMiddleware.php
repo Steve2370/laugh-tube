@@ -58,34 +58,23 @@ class RateLimitMiddleware
         $window = $limit['window'];
         $max    = $limit['max'];
 
-        if (function_exists('apcu_fetch')) {
-            $data = apcu_fetch($key) ?: ['count' => 0, 'start' => $now];
+        if (!function_exists('apcu_fetch')) {
+            error_log('RateLimitMiddleware: APCu indisponible, rate limiting desactive pour ' . $type);
+            return;
+        }
 
-            if ($now - $data['start'] > $window) {
-                $data = ['count' => 1, 'start' => $now];
-            } else {
-                $data['count']++;
-            }
+        $data = apcu_fetch($key) ?: ['count' => 0, 'start' => $now];
 
-            apcu_store($key, $data, $window);
-
-            if ($data['count'] > $max) {
-                self::tooManyRequests($type, $window);
-            }
+        if ($now - $data['start'] > $window) {
+            $data = ['count' => 1, 'start' => $now];
         } else {
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
+            $data['count']++;
+        }
 
-            if (!isset($_SESSION[$key]) || ($now - $_SESSION[$key]['start']) > $window) {
-                $_SESSION[$key] = ['count' => 1, 'start' => $now];
-            } else {
-                $_SESSION[$key]['count']++;
-            }
+        apcu_store($key, $data, $window);
 
-            if ($_SESSION[$key]['count'] > $max) {
-                self::tooManyRequests($type, $window);
-            }
+        if ($data['count'] > $max) {
+            self::tooManyRequests($type, $window);
         }
     }
 
@@ -129,8 +118,8 @@ class RateLimitMiddleware
         header('Content-Type: application/json');
         echo json_encode([
             'success' => false,
-            'error'   => 'Trop de requêtes. Veuillez ralentir.',
-            'type'    => $type,
+            'error' => 'Trop de requêtes. Veuillez ralentir.',
+            'type' => $type,
             'retry_after_seconds' => $retryAfter,
         ]);
         exit;

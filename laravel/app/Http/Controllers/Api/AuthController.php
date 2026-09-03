@@ -19,9 +19,14 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'username' => 'required|string|min:3|max:50|unique:users,username',
+            'username' => [
+                'required', 'string', 'min:3', 'max:50', 'unique:users,username',
+                'regex:/^[a-zA-Z0-9_-]+$/',
+            ],
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
+        ], [
+            'username.regex' => "Le nom d'utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores",
         ]);
 
         $verificationToken = Str::random(64);
@@ -349,5 +354,80 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
+    }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::whereNull('deleted_at')->where('email', $request->email)->first();
+
+        // Réponse identique que l'email existe ou non (anti-énumération)
+        if ($user) {
+            $token = Str::random(64);
+            $user->password_reset_token = $token;
+            $user->password_reset_expires_at = now()->addHour();
+            $user->save();
+
+            try {
+                $this->emailService->sendPasswordResetEmail($user->id, $user->email, $user->username, $token);
+            } catch (\Exception $e) {
+                Log::error('forgotPassword email failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Si cet email existe, un lien de réinitialisation a été envoyé',
+        ]);
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::where('password_reset_token', $validated['token'])
+            ->where('password_reset_expires_at', '>', now())
+            ->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'Lien invalide ou expiré'], 400);
+        }
+
+        $user->password_hash = Hash::make($validated['password']);
+        $user->password_reset_token = null;
+        $user->password_reset_expires_at = null;
+        $user->password_changed_at = now();
+        $user->save();
+
+        // Comme le faisait l'ancien backend (UPDATE sessions SET is_valid = FALSE) :
+        // on invalide tous les jetons Sanctum existants après un changement de mot de passe.
+        $user->tokens()->delete();
+
+        return response()->json(['success' => true, 'message' => 'Mot de passe mis à jour']);
+    }
+
+    public function resendVerification(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+        $user = User::whereNull('deleted_at')->where('email', $request->email)->first();
+
+        if ($user && !$user->email_verified) {
+            $token = Str::random(64);
+            $user->verification_token = $token;
+            $user->verification_token_expires = now()->addDays(7);
+            $user->save();
+            try {
+                $this->emailService->sendVerificationEmail($user->id, $user->email, $user->username, $token);
+            } catch (\Exception $e) {
+                Log::error('resendVerification email failed: ' . $e->getMessage());
+            }
+        }
+
+        // Même réponse dans tous les cas (anti-énumération)
+        return response()->json(['success' => true, 'message' => "Si ce compte existe et n'est pas vérifié, un email a été renvoyé"]);
     }
 }

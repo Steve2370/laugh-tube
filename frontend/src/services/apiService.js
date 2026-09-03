@@ -129,8 +129,6 @@ class ApiService {
 
         if (accessToken) {
             localStorage.setItem('access_token', accessToken);
-            localStorage.setItem('authToken', accessToken);
-            localStorage.setItem('token', accessToken);
         }
 
         if (user) {
@@ -162,8 +160,6 @@ class ApiService {
         const accessToken = response.token || response.data?.token;
         if (accessToken) {
             localStorage.setItem('access_token', accessToken);
-            localStorage.setItem('authToken', accessToken);
-            localStorage.setItem('token', accessToken);
         }
 
         return response;
@@ -241,6 +237,12 @@ class ApiService {
     clearAuth() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        // Nettoyage des anciennes cles dupliquees (authToken / token) -- voir rapport
+        // de migration : elles n'etaient plus jamais relues nulle part sauf un point
+        // isole (PageVideo.jsx, corrige) et n'etaient jamais effacees a la deconnexion,
+        // ce qui pouvait laisser un jeton valide trainer apres logout.
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
     }
 
     /**
@@ -301,7 +303,7 @@ class ApiService {
     }
 
     async requestPasswordReset(email) {
-        return this.request('/auth/reset-password', {
+        return this.requestV2('/auth/forgot-password', {
             method: 'POST',
             body: JSON.stringify({ email }),
             skipAuth: true,
@@ -309,19 +311,19 @@ class ApiService {
     }
 
     async resetPassword(token, new_password, confirmPassword) {
-        return this.request('/auth/reset-password', {
+        return this.requestV2('/auth/reset-password', {
             method: 'POST',
             body: JSON.stringify({
                 token,
-                new_password,
-                confirm_password: confirmPassword
+                password: new_password,
+                password_confirmation: confirmPassword
             }),
             skipAuth: true,
         });
     }
 
     async resendVerification(email) {
-        return this.request('/resendVerification.php', {
+        return this.requestV2('/resend-verification', {
             method: 'POST',
             body: JSON.stringify({ email }),
             skipAuth: true,
@@ -627,7 +629,7 @@ class ApiService {
      */
     async search(query, filters = {}) {
         const params = new URLSearchParams({ q: query, ...filters });
-        const response = await this.request(`/search?${params}`);
+        const response = await this.requestV2(`/search?${params}`);
         return response.data || response.results || response;
     }
 

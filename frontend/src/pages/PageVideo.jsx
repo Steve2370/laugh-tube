@@ -49,8 +49,11 @@ function PageVideo() {
 
         if (user) {
             try {
-                const response = await fetch(`${apiService.baseUrl}/videos/${selectedVideo.id}/viewed?userId=${user.id}`);
-                const data = await response.json();
+                // Avant : fetch() vers `${apiService.baseUrl}/...` (propriete inexistante,
+                // voir recordView plus bas) — URL "undefined/videos/..." qui echouait
+                // toujours. apiService.request() ajoute en plus le prefixe /api requis
+                // par le routeur du backend (voir normalizeUri() cote PHP).
+                const data = await apiService.request(`/videos/${selectedVideo.id}/viewed?userId=${user.id}`);
                 setHasViewed(data.hasViewed);
             } catch (error) {
                 console.error('Erreur vérification vue:', error);
@@ -67,8 +70,7 @@ function PageVideo() {
             const response = await apiService.getVideoById(selectedVideo.id);
             setVideoData(response.video || response);
 
-            const viewsResponse = await fetch(`${apiService.baseUrl}/videos/${selectedVideo.id}/views`);
-            const viewsData = await viewsResponse.json();
+            const viewsData = await apiService.request(`/videos/${selectedVideo.id}/views`);
             setVideoData(prev => ({
                 ...prev,
                 views: viewsData.views,
@@ -167,23 +169,22 @@ function PageVideo() {
         const completed = watchPercentage >= 0.95;
 
         try {
-            const response = await fetch(`${apiService.baseUrl}/videos/${selectedVideo.id}/record-view`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(user && { 'Authorization': `Bearer ${localStorage.getItem('token')}` })
-                },
-                body: JSON.stringify({
-                    userId: user?.id || null,
-                    sessionId: sessionId,
-                    watchTime: Math.round(watchTime),
-                    watchPercentage: Math.round(watchPercentage * 100) / 100,
-                    completed
-                })
+            // Avant : fetch() manuel vers `${apiService.baseUrl}/...` — cette propriété
+            // n'existe pas sur apiService (c'est `baseURL`), donc cet appel visait en
+            // réalité l'URL "undefined/videos/.../record-view" et échouait silencieusement
+            // (la vue n'était jamais enregistrée pour cette page). Il relisait aussi la clé
+            // localStorage 'token', qui n'est plus mise à jour (voir rapport de migration).
+            // apiService.recordView() existe déjà, cible la bonne URL et gère l'auth
+            // correctement — on le réutilise au lieu de dupliquer cette logique.
+            const result = await apiService.recordView(selectedVideo.id, {
+                user_id: user?.id || null,
+                session_id: sessionId,
+                watch_time: Math.round(watchTime),
+                watch_percentage: Math.round(watchPercentage * 100) / 100,
+                completed,
             });
 
-            if (response.ok) {
-                const result = await response.json();
+            if (result) {
                 setHasViewed(true);
 
                 if (!result.alreadyViewed) {
@@ -200,6 +201,8 @@ function PageVideo() {
                 localStorage.setItem(viewedKey, 'true');
 
                 console.log('Vue enregistrée avec succès');
+            } else {
+                setViewCounted(false);
             }
         } catch (error) {
             console.error('Erreur enregistrement vue:', error);

@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { exec } = require("child_process");
+const { execFile } = require("child_process");
 const { Pool } = require("pg");
 const fs = require("fs").promises;
 const path = require("path");
@@ -36,6 +36,16 @@ const CONFIG = {
     }
 };
 
+function execFileAsync(cmd, args, timeout) {
+    return new Promise((resolve, reject) => {
+        execFile(cmd, args, { timeout, maxBuffer: 1024 * 1024 * 50 }, (err, stdout, stderr) => {
+            if (err) reject(new Error(stderr || err.message));
+            else resolve(stdout);
+        });
+    });
+}
+
+
 const pool = new Pool(CONFIG.db);
 
 pool.on('error', (err) => {
@@ -52,20 +62,6 @@ pool.connect()
         console.error('Impossible de se connecter à PostgreSQL:', err.message);
         process.exit(1);
     });
-
-function execCommand(cmd, timeout = CONFIG.encoder.encodingTimeout) {
-    return new Promise((resolve, reject) => {
-        const process = exec(cmd, { timeout }, (err, stdout, stderr) => {
-            if (err) {
-                reject(new Error(stderr || err.message));
-            } else {
-                resolve(stdout);
-            }
-        });
-
-        process.on('error', reject);
-    });
-}
 
 async function ensureDirectories() {
     try {
@@ -212,37 +208,34 @@ class VideoEncoder {
             const username = job.username || 'LaughTube';
             const watermarkPath = path.join(__dirname, 'watermark.png');
 
-            const encodeCmd = `ffmpeg -y -ignore_unknown -i "${inputPath}" -i "${watermarkPath}" \
-                -filter_complex "\
-                [1:v]scale=200:-1[logo];\
-                [0:v][logo]overlay=\
-                x='if(lt(mod(t\\,16)\\,8)\\,10\\,W-w-10)':\
-                y='if(lt(mod(t\\,16)\\,8)\\,10\\,H-h-30)'[v_logo];\
-                [v_logo]drawtext=\
-                text='@${username}':\
-                fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf:\
-                fontsize=18:\
-                fontcolor=white:\
-                x='if(lt(mod(t\\,16)\\,8)\\,10\\,W-200-10)':\
-                y='if(lt(mod(t\\,16)\\,8)\\,58\\,H-30)':\
-                shadowcolor=black:\
-                shadowx=1:shadowy=1[out]" \
-                    -map "[out]" -map 0:a:0? \
-                    -c:v libx264 \
-                    -preset ${CONFIG.encoder.videoPreset} \
-                    -crf ${CONFIG.encoder.videoCRF} \
-                    -profile:v high \
-                    -level 4.0 \
-                    -pix_fmt yuv420p \
-                    -movflags +faststart \
-                    -c:a aac \
-                    -b:a ${CONFIG.encoder.audioBitrate} \
-                    -ar 44100 \
-                    -ac 2 \
-                    -max_muxing_queue_size 1024 \
-                    "${outputPath}" 2>&1`;
+            // Nom d'utilisateur nettoyé en défense en profondeur : même si la validation
+            // d'inscription/profil venait à changer un jour, aucun caractère spécial ne peut
+            // atteindre ffmpeg. Et surtout : execFile() ne passe plus par un shell, donc il
+            // n'y a de toute façon plus d'interprétation shell possible ici (voir 2.1 du rapport).
+            const safeUsername = username.replace(/[^a-zA-Z0-9_-]/g, '') || 'LaughTube';
 
-            await execCommand(encodeCmd);
+            const filterComplex =
+                "[1:v]scale=200:-1[logo];" +
+                "[0:v][logo]overlay=x='if(lt(mod(t\\,16)\\,8)\\,10\\,W-w-10)':" +
+                "y='if(lt(mod(t\\,16)\\,8)\\,10\\,H-h-30)'[v_logo];" +
+                `[v_logo]drawtext=text='@${safeUsername}':` +
+                "fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf:fontsize=18:fontcolor=white:" +
+                "x='if(lt(mod(t\\,16)\\,8)\\,10\\,W-200-10)':y='if(lt(mod(t\\,16)\\,8)\\,58\\,H-30)':" +
+                "shadowcolor=black:shadowx=1:shadowy=1[out]";
+
+            const encodeArgs = [
+                '-y', '-ignore_unknown',
+                '-i', inputPath, '-i', watermarkPath,
+                '-filter_complex', filterComplex,
+                '-map', '[out]', '-map', '0:a:0?',
+                '-c:v', 'libx264', '-preset', CONFIG.encoder.videoPreset, '-crf', String(CONFIG.encoder.videoCRF),
+                '-profile:v', 'high', '-level', '4.0', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+                '-c:a', 'aac', '-b:a', CONFIG.encoder.audioBitrate, '-ar', '44100', '-ac', '2',
+                '-max_muxing_queue_size', '1024',
+                outputPath,
+            ];
+
+            await execFileAsync('ffmpeg', encodeArgs, CONFIG.encoder.encodingTimeout);
 
             const outputSize = await getFileSize(outputPath);
             const encodingTime = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -252,13 +245,15 @@ class VideoEncoder {
                 logInfo(`Worker ${this.workerId} - Miniature personnalisée détectée, skip génération`);
             } else {
                 logInfo(`Worker ${this.workerId} - Génération thumbnail...`);
-                const thumbCmd = `ffmpeg -y -i "${outputPath}" \
-                    -ss 00:00:03 \
-                    -vframes 1 \
-                    -vf "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" \
-                    -q:v 2 \
-                    -f image2 "${thumbPath}" 2>&1`;
-                await execCommand(thumbCmd);
+                const thumbArgs = [
+                    '-y', '-i', outputPath,
+                    '-ss', '00:00:03',
+                    '-vframes', '1',
+                    '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
+                    '-q:v', '2',
+                    '-f', 'image2', thumbPath,
+                ];
+                await execFileAsync('ffmpeg', thumbArgs, CONFIG.encoder.encodingTimeout);
 
                 const thumbPathJpeg = thumbPath.replace('_thumb.jpg', '_thumb.jpeg');
                 if (!await fileExists(thumbPath) && await fileExists(thumbPathJpeg)) {

@@ -12,18 +12,9 @@ class AdminMiddleware
         $this->authMiddleware = $authMiddleware;
     }
 
-    public function handle(): array
-    {
-        $user = AuthMiddleware::optionalAuth();
-
-        if (empty($user)) {
-            $this->abort(401, 'Non authentifié');
-        }
-
-        if (($user['role'] ?? '') !== 'admin') {
-            $this->abort(403, 'Accès réservé aux administrateurs');
-        }
-
+    public function handle(): array {
+        $user = $this->authMiddleware->handleRequired();
+        if (($user['role'] ?? '') !== 'admin') { $this->abort(403, 'Accès réservé aux administrateurs'); }
         return $user;
     }
 

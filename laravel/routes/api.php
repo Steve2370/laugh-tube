@@ -16,6 +16,9 @@ use App\Http\Controllers\Api\LiveController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProfileUploadController;
+use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\ResendInboundController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\VideoController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +47,9 @@ Route::prefix('v2')->group(function () {
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
     Route::post('/auth/apple', [AuthController::class, 'handleAppleToken']);
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,15');
+    Route::post('/resend-verification', [AuthController::class, 'resendVerification'])->middleware('throttle:3,15');
 
     Route::get('/users/{id}/subscribers-count', [AbonnementController::class, 'count']);
 
@@ -51,6 +57,9 @@ Route::prefix('v2')->group(function () {
     Route::get('/comments/{commentId}/like-status', [CommentInteractionController::class, 'getCommentLikeStatus']);
     Route::get('/replies/{replyId}/like-status', [CommentInteractionController::class, 'getReplyLikeStatus']);
     Route::get('/ads/random', [AdController::class, 'random']);
+    Route::get('/search', [SearchController::class, 'search']);
+    Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,15');
+    Route::post('/webhooks/resend-inbound', [ResendInboundController::class, 'handle']);
     Route::post('/ads/{id}/click', [AdController::class, 'click']);
 
     Route::get('/og/video/{id}', function($id) {
@@ -70,7 +79,7 @@ Route::prefix('v2')->group(function () {
         $thumb = $video->thumbnail
             ? "https://laughtube.ca/uploads/thumbnails/{$video->thumbnail}"
             : "https://laughtube.ca/images/default-cover.svg";
-        $url = "https://www.laughtube.ca/#/video?id={$id}";
+        $url = "https://www.laughtube.ca/#/video/{$id}";
         $username = htmlspecialchars($video->username);
 
         $html = "<!DOCTYPE html><html lang='fr'><head>
@@ -102,7 +111,8 @@ Route::prefix('v2')->group(function () {
     });
 
     Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
-    Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin']);
+    Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin'])
+        ->middleware('throttle:5,15');
 
     Route::get('/debug-ip', function() {
         $request = request();
@@ -151,6 +161,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/users/{id}/block-status', [BlockController::class, 'status']);
         Route::get('/users/me/blocked', [BlockController::class, 'myBlocked']);
         Route::delete('/users/me', [ProfileController::class, 'deleteAccount']);
+        Route::post('/profile/cancel-deletion', [ProfileController::class, 'cancelDeletion']);
 
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
@@ -179,7 +190,7 @@ Route::prefix('v2')->group(function () {
 
     Route::post('/lives/{id}/join-public', [LiveController::class, 'joinPublic']);
 
-    Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
         Route::get('/stats', [AdminController::class, 'getStats']);
 
         Route::get('/users', [AdminController::class, 'getUsers']);
@@ -220,7 +231,7 @@ Route::prefix('v2')->group(function () {
             Route::get('/{contest}/my-status', [JokairController::class, 'myStatus']);
         });
 
-        Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+        Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
             Route::get('/contest', [JokairController::class, 'adminContest']);
             Route::get('/latest', [JokairController::class, 'latestContest']);
             Route::post('/', [JokairController::class, 'createContest']);

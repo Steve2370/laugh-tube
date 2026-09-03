@@ -767,7 +767,7 @@ const Video = () => {
             </div>
         );
     }
-    const shareUrl = `https://laughtube.ca/#/video/${video.id}`;
+    const shareUrl = `https://www.laughtube.ca/api/v2/og/video/${video.id}`;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20">

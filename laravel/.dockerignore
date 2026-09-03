@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+storage/logs/*
+vendor/
+.git

@@ -127,7 +127,7 @@ const Settings = () => {
     const handleEnable2FA = async () => {
         setTwoFALoading(true);
         try {
-            const res = await apiService.request('/auth/2fa/enable', { method: 'POST' });
+            const res = await apiService.requestV2('/auth/2fa/enable', { method: 'POST' });
             setTwoFASetupData(res);
             setTwoFAStep('setup');
         } catch (err) { toast.error(err.message || 'Erreur'); }
@@ -138,7 +138,7 @@ const Settings = () => {
         if (!twoFACode.trim()) { toast.error('Entrez le code'); return; }
         setTwoFALoading(true);
         try {
-            await apiService.request('/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ code: twoFACode }) });
+            await apiService.requestV2('/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ code: twoFACode }) });
             setTwoFAEnabled(true); setTwoFAStep('idle'); setTwoFASetupData(null); setTwoFACode('');
             updateUser({ two_fa_enabled: true });
             toast.success('2FA activée !');
@@ -150,7 +150,7 @@ const Settings = () => {
         if (!twoFAPassword.trim()) { toast.error('Entrez votre mot de passe'); return; }
         setTwoFALoading(true);
         try {
-            await apiService.request('/auth/2fa/disable', { method: 'POST', body: JSON.stringify({ password: twoFAPassword }) });
+            await apiService.requestV2('/auth/2fa/disable', { method: 'POST', body: JSON.stringify({ password: twoFAPassword }) });
             setTwoFAEnabled(false); setTwoFAStep('idle'); setTwoFAPassword('');
             updateUser({ two_fa_enabled: false });
             toast.success('2FA désactivée');

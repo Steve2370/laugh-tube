@@ -90,8 +90,6 @@ export const AuthProvider = ({ children }) => {
             const accessToken = response.token || response.data?.token;
             if (accessToken) {
                 localStorage.setItem('access_token', accessToken);
-                localStorage.setItem('authToken', accessToken);
-                localStorage.setItem('token', accessToken);
             }
 
             try {
@@ -120,8 +118,6 @@ export const AuthProvider = ({ children }) => {
 
     const loginWithToken = useCallback(async (token) => {
         localStorage.setItem('access_token', token);
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('token', token);
         await checkAuth();
     }, [checkAuth]);
 

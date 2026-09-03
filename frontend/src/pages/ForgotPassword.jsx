@@ -14,7 +14,7 @@ const ForgotPassword = () => {
         if (!email.trim()) { toast.error('Entrez votre email'); return; }
         setLoading(true);
         try {
-            await apiService.request('/auth/forgot-password', {
+            await apiService.requestV2('/auth/forgot-password', {
                 method: 'POST',
                 body: JSON.stringify({ email }),
                 skipAuth: true,

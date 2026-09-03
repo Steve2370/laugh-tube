@@ -38,9 +38,15 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $validated = $request->validate([
-            'username' => 'sometimes|string|min:3|max:50|unique:users,username,' . $user->id,
+            'username' => [
+                'sometimes', 'string', 'min:3', 'max:50',
+                'unique:users,username,' . $user->id,
+                'regex:/^[a-zA-Z0-9_-]+$/',
+            ],
             'bio' => 'sometimes|nullable|string|max:500',
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
+        ], [
+            'username.regex' => "Le nom d'utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores",
         ]);
         $user->update($validated);
         return response()->json([
@@ -95,6 +101,24 @@ class ProfileController extends Controller
             ]);
 
         return response()->json(['videos' => $videos]);
+    }
+
+    public function cancelDeletion(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (empty($user->deletion_scheduled_at)) {
+            return response()->json(['error' => 'Aucune suppression en attente'], 400);
+        }
+
+        $user->deletion_scheduled_at = null;
+        if (method_exists($user, 'trashed') && $user->trashed()) {
+            $user->restore();
+        } else {
+            $user->save();
+        }
+
+        return response()->json(['success' => true, 'message' => 'Suppression du compte annulée']);
     }
 
     public function deleteAccount(Request $request): JsonResponse

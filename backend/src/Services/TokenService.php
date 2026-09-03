@@ -23,7 +23,11 @@ class TokenService
         int $refreshExpirationTime = 604800,
         string $algorithm = 'HS256',
         ?User $userModel = null) {
-        $this->secret = $secret ?? ($_ENV['JWT_SECRET'] ?? 'secret123');
+        $secretFromEnv = $secret ?? $_ENV['JWT_SECRET'] ?? null;
+        if (empty($secretFromEnv)) {
+            throw new \RuntimeException('JWT_SECRET doit être défini.');
+        }
+        $this->secret = $secretFromEnv;
         $this->expirationTime = $expirationTime;
         $this->refreshExpirationTime = $refreshExpirationTime;
         $this->algorithm = $algorithm;

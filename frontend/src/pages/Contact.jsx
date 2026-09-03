@@ -32,7 +32,7 @@ const Contact = () => {
         }
         setLoading(true);
         try {
-            await apiService.request('/contact', {
+            await apiService.requestV2('/contact', {
                 method: 'POST',
                 body: JSON.stringify({ name, email, subject, message }),
             });

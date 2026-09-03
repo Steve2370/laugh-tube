@@ -13,18 +13,9 @@ class AuthAide
 
     public static function getAuthenticatedUser(): ?array
     {
-        $token = self::getTokenFromRequest();
+        $payload = AuthMiddleware::optionalAuth();
 
-        if (!$token) {
-            return null;
-        }
-
-        $payload = self::$tokenService->validateToken($token);
-
-        if (!$payload) {
-            return null;
-        }
-        return $payload;
+        return !empty($payload) ? $payload : null;
     }
 
     public static function optionalAuth(): ?array

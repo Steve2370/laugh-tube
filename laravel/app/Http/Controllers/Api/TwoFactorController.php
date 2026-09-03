@@ -111,18 +111,19 @@ class TwoFactorController extends Controller
             return response()->json(['error' => 'Utilisateur introuvable'], 404);
         }
 
-        $tokenValid = $user->tokens()
+        $pendingToken = $user->tokens()
             ->where('name', '2fa_pending')
             ->where('expires_at', '>', now())
-            ->exists();
+            ->first();
 
-        if (!$tokenValid) {
-            return response()->json(['error' => 'Token expiré'], 401);
+        if (!$pendingToken || !hash_equals($pendingToken->token, hash('sha256', $request->temp_token))) {
+            return response()->json(['error' => 'Session de connexion invalide ou expirée'], 401);
         }
 
         if (!$this->google2fa->verifyKey($user->two_fa_secret, $request->code)) {
             return response()->json(['error' => 'Code invalide'], 400);
         }
+
 
         $user->tokens()->where('name', '2fa_pending')->delete();
         $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;

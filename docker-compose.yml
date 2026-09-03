@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-laughtube}
       POSTGRES_USER: ${DB_USER:-laughtube_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-LaughTube206@#$}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD manquant dans .env}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -30,8 +30,16 @@ services:
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-laughtube}
       DB_USER: ${DB_USER:-laughtube_user}
-      DB_PASSWORD: ${DB_PASSWORD:-LaughTube206@#$}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD manquant dans .env}
       APP_ENV: ${APP_ENV:-production}
+      # Ajoutes le 2026-09-03 (voir audit securite) : ces secrets etaient auparavant
+      # lus UNIQUEMENT depuis backend/.env, copie en dur dans l'image Docker (COPY . .)
+      # sans .dockerignore. Maintenant que backend/.dockerignore exclut .env du build,
+      # ils doivent etre fournis ici pour que le conteneur les recoive au demarrage.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET manquant dans .env}
+      RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY manquant dans .env}
+      APP_URL: ${APP_URL:-https://www.laughtube.ca}
+      FRONTEND_URL: ${FRONTEND_URL:-https://www.laughtube.ca}
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,21 +65,23 @@ services:
       - laughtube_network
     environment:
       - APP_ENV=production
-      - APP_KEY=base64:dJW7cf4LmYFnpBKKPZp2M57fJANjCI4XJCcgrlH8EeQ=
+      - APP_KEY=${APP_KEY:?APP_KEY manquant dans .env (voir audit securite - cle regeneree)}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_DATABASE=laughtube
-      - DB_USERNAME=laughtube_user
-      - "DB_PASSWORD=LaughTube206@#$"
-      - GOOGLE_CLIENT_ID=198207836705-nqt2kh6mv1nqgm05rg1osc76ff9cebv6.apps.googleusercontent.com
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_CLIENT_SECRET=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
-      - GOOGLE_REDIRECT_URI=https://www.laughtube.ca/api/v2/auth/google/callback
+      - DB_DATABASE=${DB_NAME:-laughtube}
+      - DB_USERNAME=${DB_USER:-laughtube_user}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD manquant dans .env}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET manquant dans .env}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-https://www.laughtube.ca/api/v2/auth/google/callback}
       - SESSION_DRIVER=array
       - LIVEKIT_HOST=livekit:7880
-      - LIVEKIT_API_KEY=87d3037fcbeb6c500595d75572e380e1
-      - LIVEKIT_API_SECRET=3d2428926499fa6023d904a93b3d854dbfa7f9bc70e4bbe919ee1c5682915c54
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:?LIVEKIT_API_KEY manquant dans .env}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET manquant dans .env}
+      # Ajoute le 2026-09-03 : necessaire pour le nouveau ResendInboundController
+      # (webhook mail entrant legal@laughtube.ca, voir rapport de migration 3.2.6)
+      - RESEND_API_KEY=${RESEND_API_KEY:?RESEND_API_KEY manquant dans .env}
 
   frontend:
     image: node:20-alpine
@@ -95,7 +105,7 @@ services:
       - DB_PORT=5432
       - DB_NAME=${DB_NAME:-laughtube}
       - DB_USER=${DB_USER:-laughtube_user}
-      - DB_PASSWORD=${DB_PASSWORD:-LaughTube206@#$}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD manquant dans .env}
       - UPLOADS_DIR=/app/uploads/videos
       - OUTPUT_DIR=/app/uploads/encoded
       - THUMBS_DIR=/app/uploads/thumbnails
