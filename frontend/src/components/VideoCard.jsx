@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Eye, ThumbsUp, MessageCircle, Clock, Users } from "lucide-react";
 import apiService from "../services/apiService.js";
+import { formatDuration } from "../utils/formatDuration.js";
 
 const useScrollReveal = (threshold = 0.15) => {
     const ref = useRef(null);
@@ -259,9 +260,9 @@ const VideoCard = ({ video, onClick }) => {
 
                     <div className={`absolute inset-0 rounded-t-2xl pointer-events-none transition-all duration-300 ${hovered ? 'ring-2 ring-blue-400 ring-opacity-60' : ''}`} />
 
-                    {video.duration && (
+                    {formatDuration(video.duration) && (
                         <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded font-medium">
-                            {video.duration}
+                            {formatDuration(video.duration)}
                         </div>
                     )}
                 </div>

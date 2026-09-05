@@ -263,6 +263,20 @@ class VideoEncoder {
                 logSuccess(`Worker ${this.workerId} - Thumbnail créé`);
             }
 
+            let durationSeconds = null;
+            try {
+                const probeOut = await execFileAsync('ffprobe', [
+                    '-v', 'error',
+                    '-show_entries', 'format=duration',
+                    '-of', 'default=noprint_wrappers=1:nokey=1',
+                    outputPath,
+                ], CONFIG.encoder.encodingTimeout);
+                const parsed = Math.round(parseFloat(probeOut.trim()));
+                durationSeconds = Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+            } catch (probeErr) {
+                logError(`Worker ${this.workerId} - ffprobe a échoué (durée non enregistrée): ${probeErr.message}`);
+            }
+
             const client = await pool.connect();
             try {
                 await client.query('BEGIN');
@@ -272,9 +286,10 @@ class VideoEncoder {
                     SET encoded = TRUE,
                         encoded_filename = $1,
                         thumbnail = $2,
-                        status = 'published'
+                        status = 'published',
+                        duration = $4
                     WHERE id = $3
-                `, [outputFilename, thumbFilename, video_id]);
+                `, [outputFilename, thumbFilename, video_id, durationSeconds]);
 
                 await client.query(`
                     UPDATE encoding_queue
