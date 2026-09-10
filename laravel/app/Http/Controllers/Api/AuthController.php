@@ -92,7 +92,6 @@ class AuthController extends Controller
             return response()->json(['error' => 'Compte désactivé.'], 403);
         }
 
-        $user->tokens()->delete();
         $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
         return response()->json([
@@ -182,7 +181,6 @@ class AuthController extends Controller
                 return redirect('https://www.laughtube.ca/#/auth/google/callback?requires_2fa=true&temp_token=' . $tempToken . '&user_id=' . $user->id);
             }
 
-            $user->tokens()->delete();
             $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
             if ($isMobile) {
@@ -266,7 +264,6 @@ class AuthController extends Controller
                 }
             }
 
-            $user->tokens()->delete();
             $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
             return response()->json([
@@ -338,7 +335,6 @@ class AuthController extends Controller
                 ]);
             }
 
-            $user->tokens()->delete();
             $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
             return response()->json([

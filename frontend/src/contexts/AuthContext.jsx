@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
                     setUser(currentUser);
                     setIsAuthenticated(true);
                 } catch (err) {
-                    if (err.message === 'Non autorisé' || err.message?.includes('401')) {
+                    if (err.status === 401 || err.message === 'Non autorisé' || err.message?.includes('401')) {
                         setUser(null);
                         setIsAuthenticated(false);
                     } else {

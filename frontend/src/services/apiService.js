@@ -103,7 +103,9 @@ class ApiService {
 
         if (!response.ok) {
             const msg = data?.message || data?.error || `Erreur ${response.status}`;
-            throw new Error(msg);
+            const error = new Error(msg);
+            error.status = response.status;
+            throw error;
         }
 
         return data ?? { success: true };

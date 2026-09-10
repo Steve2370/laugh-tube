@@ -126,7 +126,7 @@ class TwoFactorController extends Controller
 
 
         $user->tokens()->where('name', '2fa_pending')->delete();
-        $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
         return response()->json([
             'token' => $token,
