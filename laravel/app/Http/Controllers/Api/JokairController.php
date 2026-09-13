@@ -24,10 +24,19 @@ class JokairController extends Controller
 
     public function leaderboard(JokairContest $contest)
     {
+        // Tri principal par score (votes 70% + visionnage Jokair 30%), et tri secondaire
+        // par le nombre de vues réel de la vidéo (colonne videos.views). Ce tri secondaire
+        // est ce qui garde le classement pertinent en temps réel avant l'ouverture des votes
+        // (quand vote_count = watch_count = score = 0 pour tout le monde) : sans lui, l'ordre
+        // retombait sur l'ordre d'insertion en base (donc l'ordre de soumission), pas sur la
+        // popularité réelle de la vidéo.
         $entries = $contest->entries()
             ->where('validated', true)
+            ->join('videos', 'videos.id', '=', 'jokair_entries.video_id')
+            ->select('jokair_entries.*')
+            ->orderByDesc('jokair_entries.score')
+            ->orderByDesc('videos.views')
             ->with(['user:id,username,avatar_url', 'video:id,title,thumbnail,filename,views'])
-            ->orderByDesc('score')
             ->take(10)
             ->get()
             ->map(function ($entry, $index) {
@@ -270,9 +279,14 @@ class JokairController extends Controller
 
     public function computeRanks(JokairContest $contest)
     {
+        // Même tiebreak que leaderboard() : score d'abord, puis vues réelles de la vidéo,
+        // pour un classement final déterministe (pas d'égalité résolue par l'ordre d'insertion).
         $entries = $contest->entries()
             ->where('validated', true)
-            ->orderByDesc('score')
+            ->join('videos', 'videos.id', '=', 'jokair_entries.video_id')
+            ->select('jokair_entries.*')
+            ->orderByDesc('jokair_entries.score')
+            ->orderByDesc('videos.views')
             ->get();
 
         foreach ($entries as $i => $entry) {

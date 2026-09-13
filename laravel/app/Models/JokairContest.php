@@ -25,12 +25,17 @@ class JokairContest extends Model
     }
 
     public function isVotingOpen(): bool {
-        $now = now();
-        return $now->between($this->vote_start, $this->vote_end);
+        // Le statut ('submissions' / 'voting' / 'ended') est le seul bouton que l'admin
+        // actionne réellement (aucune tâche planifiée ne bascule automatiquement selon les
+        // dates), et c'est aussi ce que l'app iOS utilise pour afficher le bouton de vote.
+        // On se base donc uniquement sur le statut ici : sinon, si l'admin passe le statut
+        // à "voting" un peu avant/après la fenêtre vote_start/vote_end exacte, l'app affiche
+        // le bouton de vote mais le serveur rejette silencieusement chaque vote (403 "Vote
+        // fermé") — les dates restent affichées dans la timeline à titre indicatif seulement.
+        return $this->status === 'voting';
     }
 
     public function isSubmissionOpen(): bool {
-        $now = now();
-        return $now->between($this->submission_start, $this->submission_end);
+        return $this->status === 'submissions';
     }
 }
