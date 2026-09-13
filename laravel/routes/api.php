@@ -42,8 +42,8 @@ Route::prefix('v2')->group(function () {
     Route::get('/users/{id}/stats', [ProfileController::class, 'stats']);
     Route::get('/users/{id}/videos', [VideoController::class, 'userVideos']);
 
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,15');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,15');
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
     Route::post('/auth/apple', [AuthController::class, 'handleAppleToken']);
@@ -114,15 +114,6 @@ Route::prefix('v2')->group(function () {
     Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin'])
         ->middleware('throttle:5,15');
 
-    Route::get('/debug-ip', function() {
-        $request = request();
-        return response()->json([
-            'ip' => $request->ip(),
-            'cf_ip' => $request->header('CF-Connecting-IP'),
-            'x_forwarded' => $request->header('X-Forwarded-For'),
-            'remote_addr' => $_SERVER['REMOTE_ADDR'] ?? null,
-        ]);
-    });
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);

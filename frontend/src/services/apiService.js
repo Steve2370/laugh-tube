@@ -283,22 +283,22 @@ class ApiService {
         });
     }
 
-    async verify2FA(userId, code) {
-        const response = await this.request('/auth/2fa/login', {
+    async verify2FA(userId, code, tempToken) {
+        // Corrige la faille 1.1 de l'audit du 12/09 : ce flux appelait l'ancien
+        // endpoint PHP (/auth/2fa/login), disjoint du temp_token désormais émis par
+        // AuthController::login() (Laravel/Sanctum). On utilise le même endpoint v2
+        // que le callback Google (TwoFactorController::verifyLogin).
+        const response = await this.requestV2('/auth/2fa/verify-login', {
             method: 'POST',
-            body: JSON.stringify({ user_id: userId, code }),
+            body: JSON.stringify({ user_id: userId, code, temp_token: tempToken }),
             skipAuth: true,
         });
 
         const accessToken = response.token || response.data?.token ||
             response.access_token || response.data?.access_token;
-        const refreshToken = response.refresh_token || response.data?.refresh_token;
 
         if (accessToken) {
             localStorage.setItem('access_token', accessToken);
-            if (refreshToken) {
-                localStorage.setItem('refresh_token', refreshToken);
-            }
         }
 
         return response;

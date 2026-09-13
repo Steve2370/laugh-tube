@@ -82,6 +82,12 @@ services:
       # Ajoute le 2026-09-03 : necessaire pour le nouveau ResendInboundController
       # (webhook mail entrant legal@laughtube.ca, voir rapport de migration 3.2.6)
       - RESEND_API_KEY=${RESEND_API_KEY:?RESEND_API_KEY manquant dans .env}
+      # Ajoute le 13/09 (audit securite 1.3) : sans cette variable, la verification
+      # de signature Svix du webhook Resend echoue TOUJOURS en fermeture (401 sur
+      # tout), car docker compose ne transmet au conteneur que les variables
+      # explicitement listees ici, meme si RESEND_WEBHOOK_SECRET est dans .env.
+      # Recupere le secret de signature dans le dashboard Resend > Webhooks.
+      - RESEND_WEBHOOK_SECRET=${RESEND_WEBHOOK_SECRET:-}
 
   frontend:
     image: node:20-alpine

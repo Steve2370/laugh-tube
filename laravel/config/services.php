@@ -20,6 +20,10 @@ return [
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),
+        // Secret de signature Svix du webhook entrant Resend (dashboard Resend ->
+        // Webhooks -> Signing Secret). Obligatoire : sans lui, le webhook refuse
+        // toute requête (voir ResendInboundController::hasValidSignature).
+        'webhook_secret' => env('RESEND_WEBHOOK_SECRET'),
     ],
 
     'ses' => [

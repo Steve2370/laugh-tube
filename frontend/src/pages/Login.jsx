@@ -64,6 +64,7 @@ const Login = () => {
     const [show2FA, setShow2FA] = useState(false);
     const [twoFactorCode, setTwoFactorCode] = useState('');
     const [userId2FA, setUserId2FA] = useState(null);
+    const [tempToken2FA, setTempToken2FA] = useState(null);
     const [loginDelay, setLoginDelay] = useState(0);
     const [failedAttempts, setFailedAttempts] = useState(0);
     const [countdown, setCountdown] = useState(0);
@@ -81,6 +82,7 @@ const Login = () => {
             if (result.success) {
                 if (result.requires_2fa) {
                     setUserId2FA(result.user_id);
+                    setTempToken2FA(result.temp_token);
                     setShow2FA(true);
                     toast.info('Veuillez entrer votre code 2FA');
                 } else {
@@ -105,7 +107,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const result = await verify2FA(userId2FA, twoFactorCode);
+            const result = await verify2FA(userId2FA, twoFactorCode, tempToken2FA);
 
             if (result.success) {
                 toast.success('Authentification réussie !');

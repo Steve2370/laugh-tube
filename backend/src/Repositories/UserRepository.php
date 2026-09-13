@@ -139,6 +139,27 @@ class UserRepository {
         return $this->db->execute($sql, [$minutes, $userId]);
     }
 
+    /**
+     * Faille 2.2 de l'audit du 12/09 (constat étendu au backend legacy réellement
+     * utilisé) : AuthService::deleteAccount() n'avait aucun moyen de récupérer le
+     * hash du mot de passe pour vérifier la réauthentification avant suppression.
+     */
+    public function findByIdWithPassword(int $id): ?array
+    {
+        $sql = "SELECT id, password_hash FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1";
+
+        try {
+            $pdo = $this->db->getConnection();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $row ?: null;
+        } catch (\Throwable $e) {
+            error_log("findByIdWithPassword error: " . $e->getMessage());
+            return null;
+        }
+    }
+
     public function softDelete(int $userId, ?string $reason = null): bool {
         $sql = "UPDATE users 
                 SET deleted_at = NOW() + '30 days'::INTERVAL,

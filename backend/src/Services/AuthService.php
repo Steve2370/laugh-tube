@@ -353,7 +353,18 @@ class AuthService
         }
     }
 
-    public function deleteAccount(int $userId, ?string $reason = null): array
+    /**
+     * Faille 2.2 de l'audit du 12/09, sur le chemin réellement utilisé (le
+     * frontend appelle cet endpoint legacy, pas ProfileController::deleteAccount
+     * en Laravel) : la signature ne déclarait que 2 paramètres alors que le
+     * contrôleur en passait 3 par position. Résultat concret : $password se
+     * retrouvait affecté au paramètre $reason, et cette valeur — le mot de passe
+     * en clair — était stockée dans la colonne deletion_reason en base, tandis
+     * que la vraie raison saisie par l'utilisateur était silencieusement perdue.
+     * Aucune vérification du mot de passe n'était jamais effectuée : un jeton
+     * volé suffisait à programmer la suppression du compte.
+     */
+    public function deleteAccount(int $userId, string $password, ?string $reason = null): array
     {
         $user = $this->userModel->findById($userId);
         if (!$user) {
@@ -361,6 +372,16 @@ class AuthService
                 'success' => false,
                 'code' => 404,
                 'message' => 'Utilisateur introuvable'
+            ];
+        }
+
+        $withPassword = $this->userModel->findByIdWithPassword($userId);
+        if (!$withPassword || !password_verify($password, $withPassword['password_hash'])) {
+            $this->auditService->logSecurityEvent($userId, 'account_deletion_wrong_password', []);
+            return [
+                'success' => false,
+                'code' => 400,
+                'message' => 'Mot de passe incorrect'
             ];
         }
 

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 use PragmaRX\Google2FA\Google2FA;
 
 class TwoFactorController extends Controller
@@ -84,10 +85,16 @@ class TwoFactorController extends Controller
     {
         $user = $request->user();
 
-        if ($request->has('password') && !empty($request->password)) {
-            if (!Hash::check($request->password, $user->password_hash)) {
-                return response()->json(['error' => 'Mot de passe incorrect'], 400);
-            }
+        // Faille 1.5 de l'audit du 12/09 : le mot de passe n'était vérifié que
+        // s'il était fourni, donc une requête sans champ "password" désactivait
+        // la 2FA sans aucune vérification. Il est désormais obligatoire et
+        // systématiquement vérifié.
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!Hash::check($request->password, $user->password_hash)) {
+            return response()->json(['error' => 'Mot de passe incorrect'], 400);
         }
 
         $user->update([
@@ -111,12 +118,23 @@ class TwoFactorController extends Controller
             return response()->json(['error' => 'Utilisateur introuvable'], 404);
         }
 
-        $pendingToken = $user->tokens()
-            ->where('name', '2fa_pending')
-            ->where('expires_at', '>', now())
-            ->first();
+        // Un jeton Sanctum tel que rendu au client ("plainTextToken") est de la
+        // forme "{id}|{partie_aleatoire}" : l'id sert à retrouver la ligne, seule
+        // la partie aléatoire est hashée en base (colonne "token"). Hasher tout
+        // temp_token tel quel (avec le "{id}|") ne correspondra donc JAMAIS au
+        // hash stocké - la vérification échouait systématiquement (401) même
+        // avec un temp_token parfaitement valide. PersonalAccessToken::findToken()
+        // est la méthode Sanctum officielle qui fait cette extraction + le
+        // hash_equals correctement.
+        $pendingToken = PersonalAccessToken::findToken($request->temp_token);
 
-        if (!$pendingToken || !hash_equals($pendingToken->token, hash('sha256', $request->temp_token))) {
+        if (
+            !$pendingToken
+            || $pendingToken->name !== '2fa_pending'
+            || (int) $pendingToken->tokenable_id !== (int) $user->id
+            || $pendingToken->tokenable_type !== $user->getMorphClass()
+            || ($pendingToken->expires_at !== null && $pendingToken->expires_at->isPast())
+        ) {
             return response()->json(['error' => 'Session de connexion invalide ou expirée'], 401);
         }
 
@@ -124,8 +142,7 @@ class TwoFactorController extends Controller
             return response()->json(['error' => 'Code invalide'], 400);
         }
 
-
-        $user->tokens()->where('name', '2fa_pending')->delete();
+        $pendingToken->delete();
         $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
         return response()->json([

@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
             setError(null);
             const response = await apiService.login(email, password);
             if (response.requires_2fa) {
-                return { success: true, requires_2fa: true, user_id: response.user_id };
+                return { success: true, requires_2fa: true, user_id: response.user_id, temp_token: response.temp_token };
             }
             await checkAuth();
             return { success: true, requires_2fa: false };
@@ -60,11 +60,11 @@ export const AuthProvider = ({ children }) => {
         }
     }, [checkAuth]);
 
-    const verify2FA = useCallback(async (userId, code) => {
+    const verify2FA = useCallback(async (userId, code, tempToken) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await apiService.verify2FA(userId, code);
+            const response = await apiService.verify2FA(userId, code, tempToken);
             if (response?.user) {
                 setUser(response.user);
                 setIsAuthenticated(true);

@@ -58,12 +58,51 @@ class RateLimitMiddleware
         $window = $limit['window'];
         $max    = $limit['max'];
 
-        if (!function_exists('apcu_fetch')) {
-            error_log('RateLimitMiddleware: APCu indisponible, rate limiting desactive pour ' . $type);
+        if (function_exists('apcu_fetch')) {
+            $data = apcu_fetch($key) ?: ['count' => 0, 'start' => $now];
+
+            if ($now - $data['start'] > $window) {
+                $data = ['count' => 1, 'start' => $now];
+            } else {
+                $data['count']++;
+            }
+
+            apcu_store($key, $data, $window);
+
+            if ($data['count'] > $max) {
+                self::tooManyRequests($type, $window);
+            }
             return;
         }
 
-        $data = apcu_fetch($key) ?: ['count' => 0, 'start' => $now];
+        // Faille 2.3 de l'audit du 12/09 : en l'absence d'APCu, le rate limiting
+        // était silencieusement désactivé (une erreur de déploiement supprimait donc
+        // la protection sans que personne ne le remarque). On se replie désormais sur
+        // un compteur fichier (verrouillé par flock) : jamais de désactivation muette.
+        error_log('RateLimitMiddleware: APCu indisponible, repli sur le stockage fichier pour ' . $type);
+        self::checkFileFallback($key, $type, $window, $max, $now);
+    }
+
+    private static function checkFileFallback(string $key, string $type, int $window, int $max, int $now): void
+    {
+        $dir = sys_get_temp_dir() . '/laughtube_ratelimit';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0700, true);
+        }
+
+        $handle = @fopen($dir . '/' . $key . '.json', 'c+');
+        if (!$handle) {
+            // Si même le stockage fichier est inaccessible, on choisit la sécurité :
+            // bloquer plutôt que de laisser passer sans aucune limite.
+            self::tooManyRequests($type, $window);
+        }
+
+        flock($handle, LOCK_EX);
+        $contents = stream_get_contents($handle);
+        $data = $contents !== false ? json_decode($contents, true) : null;
+        if (!is_array($data) || !isset($data['start'])) {
+            $data = ['count' => 0, 'start' => $now];
+        }
 
         if ($now - $data['start'] > $window) {
             $data = ['count' => 1, 'start' => $now];
@@ -71,7 +110,12 @@ class RateLimitMiddleware
             $data['count']++;
         }
 
-        apcu_store($key, $data, $window);
+        ftruncate($handle, 0);
+        rewind($handle);
+        fwrite($handle, json_encode($data));
+        fflush($handle);
+        flock($handle, LOCK_UN);
+        fclose($handle);
 
         if ($data['count'] > $max) {
             self::tooManyRequests($type, $window);

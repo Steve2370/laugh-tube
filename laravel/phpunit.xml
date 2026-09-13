@@ -18,19 +18,55 @@
         </include>
     </source>
     <php>
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-        <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="BROADCAST_CONNECTION" value="null"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
-        <env name="DB_URL" value=""/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
-        <env name="PULSE_ENABLED" value="false"/>
-        <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- force="true" partout : en conteneur Docker, DB_CONNECTION=pgsql (et les
+             autres variables ci-dessous) sont deja definies comme vraies variables
+             d'environnement par docker-compose.yml. PHPUnit n'ecrase PAS une variable
+             d'environnement deja presente sauf si force="true" est explicite - sans
+             ca, ces <env> etaient silencieusement ignores et les tests tapaient sur
+             la vraie base Postgres au lieu de SQLite en memoire (decouvert en ecrivant
+             les tests de l'audit du 12/09 : aucun test n'utilisait RefreshDatabase
+             avant, donc ce trou etait invisible). -->
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_DEBUG" value="true" force="true"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file" force="true"/>
+        <env name="BCRYPT_ROUNDS" value="4" force="true"/>
+        <env name="BROADCAST_CONNECTION" value="null" force="true"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <env name="DB_DATABASE" value=":memory:" force="true"/>
+        <env name="DB_URL" value="" force="true"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <env name="PULSE_ENABLED" value="false" force="true"/>
+        <env name="TELESCOPE_ENABLED" value="false" force="true"/>
+        <env name="NIGHTWATCH_ENABLED" value="false" force="true"/>
+        <!-- Meme cause que force="true" ci-dessus, mais plus profond : Laravel/phpdotenv
+             lit d'abord $_SERVER (ServerConstAdapter) avant $_ENV/getenv() (voir
+             vendor/vlucas/phpdotenv/src/Repository/RepositoryBuilder.php - ordre
+             ServerConstAdapter puis EnvConstAdapter puis PutenvAdapter). Or le handler
+             PHPUnit qui applique les <env> ci-dessus (PhpHandler::handleEnvVariables)
+             ne touche JAMAIS $_SERVER, seulement putenv()/$_ENV - meme avec force="true".
+             $_SERVER['DB_CONNECTION'] restait donc a 'pgsql' (herite du vrai environnement
+             du conteneur Docker), et comme $_SERVER est consulte en premier, la valeur
+             sqlite forcee ci-dessus etait purement et simplement ignoree par Laravel.
+             Les <server> ci-dessous ecrivent directement dans $_SERVER (toujours, sans
+             condition - PhpHandler::handleServerVariables) : c'est ce qui corrige
+             reellement le probleme. -->
+        <server name="APP_ENV" value="testing"/>
+        <server name="APP_DEBUG" value="true"/>
+        <server name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <server name="BCRYPT_ROUNDS" value="4"/>
+        <server name="BROADCAST_CONNECTION" value="null"/>
+        <server name="CACHE_STORE" value="array"/>
+        <server name="DB_CONNECTION" value="sqlite"/>
+        <server name="DB_DATABASE" value=":memory:"/>
+        <server name="DB_URL" value=""/>
+        <server name="MAIL_MAILER" value="array"/>
+        <server name="QUEUE_CONNECTION" value="sync"/>
+        <server name="SESSION_DRIVER" value="array"/>
+        <server name="PULSE_ENABLED" value="false"/>
+        <server name="TELESCOPE_ENABLED" value="false"/>
+        <server name="NIGHTWATCH_ENABLED" value="false"/>
     </php>
 </phpunit>

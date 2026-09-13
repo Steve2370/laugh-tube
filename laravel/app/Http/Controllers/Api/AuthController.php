@@ -92,6 +92,21 @@ class AuthController extends Controller
             return response()->json(['error' => 'Compte désactivé.'], 403);
         }
 
+        // Faille 1.1 de l'audit du 12/09 : ce endpoint émettait le token complet
+        // sans jamais vérifier two_fa_enabled, contournant totalement la 2FA pour
+        // le login classique. On réutilise désormais le même flux temp_token que
+        // pour Google/Apple, vérifié par TwoFactorController::verifyLogin().
+        if ($user->two_fa_enabled && $user->two_fa_secret) {
+            $user->tokens()->where('name', '2fa_pending')->delete();
+            $tempToken = $user->createToken('2fa_pending', ['*'], now()->addMinutes(10))->plainTextToken;
+
+            return response()->json([
+                'requires_2fa' => true,
+                'temp_token' => $tempToken,
+                'user_id' => $user->id,
+            ]);
+        }
+
         $token = $user->createToken('auth_token', ['*'])->plainTextToken;
 
         return response()->json([

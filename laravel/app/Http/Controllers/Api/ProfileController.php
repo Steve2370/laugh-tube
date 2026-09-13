@@ -123,12 +123,25 @@ class ProfileController extends Controller
 
     public function deleteAccount(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $userId = $user->id;
-        $user->tokens()->delete();
-        \DB::table('users')->where('id', $userId)->delete();
+        // Faille 2.2 de l'audit du 12/09 : aucune réauthentification n'était exigée
+        // (un token volé suffisait) et la suppression était un DELETE SQL immédiat
+        // et irréversible, incohérent avec le reste de l'application qui utilise
+        // un soft delete partout ailleurs (SoftDeletes sur User) et, côté backend
+        // legacy, un délai de grâce de 30 jours avant suppression définitive.
+        $request->validate([
+            'password' => 'required|string',
+        ]);
 
-        return response()->json(['success' => true, 'message' => 'Compte supprimé définitivement']);
+        $user = $request->user();
+
+        if (!Hash::check($request->password, $user->password_hash)) {
+            return response()->json(['error' => 'Mot de passe incorrect'], 400);
+        }
+
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json(['success' => true, 'message' => 'Compte supprimé']);
     }
 
     public function stats(int $id): JsonResponse
