@@ -516,13 +516,21 @@ readonly class VideoController
 
             if (!empty($video['thumbnail'])) {
                 $thumbnailFilename = basename($video['thumbnail']);
-                $possiblePaths = [
-                    $basePath . $thumbnailFilename,
+                $possiblePaths = [$basePath . $thumbnailFilename];
+                // L'encodeur enregistrait toujours "<nom>_thumb.jpg" même quand une
+                // miniature personnalisée (.png, .jpeg...) avait été envoyée : on
+                // retrouve le vrai fichier par son nom sans extension.
+                $stem = pathinfo($thumbnailFilename, PATHINFO_FILENAME);
+                foreach (['png', 'jpeg', 'jpg', 'webp', 'PNG', 'JPG', 'JPEG'] as $ext) {
+                    $possiblePaths[] = $basePath . $stem . '.' . $ext;
+                }
+                array_push(
+                    $possiblePaths,
                     $basePath . $videoId . '.jpg',
                     $basePath . $videoId . '.jpeg',
                     $basePath . $videoId . '.png',
-                    $basePath . $videoId . '.webp',
-                ];
+                    $basePath . $videoId . '.webp'
+                );
             } else {
                 $possiblePaths = [
                     $basePath . $videoId . '.jpg',

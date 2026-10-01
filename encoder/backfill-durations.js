@@ -11,6 +11,13 @@
  *   node backfill-durations.js
  */
 require("dotenv").config();
+
+// Faille 2.5 de l'audit du 12/09 : un DB_PASSWORD manquant faisait silencieusement
+// démarrer le service avec le mot de passe par défaut 'changeme' (secret connu de
+// tous). On échoue désormais au démarrage plutôt que de se replier dessus.
+if (!process.env.DB_PASSWORD) {
+    throw new Error("DB_PASSWORD manquant dans l'environnement — arrêt volontaire (voir audit sécurité 2.5).");
+}
 const { execFile } = require("child_process");
 const { Pool } = require("pg");
 const path = require("path");
@@ -21,7 +28,7 @@ const CONFIG = {
         port: Number(process.env.DB_PORT || 5432),
         database: process.env.DB_NAME || 'laughtube',
         user: process.env.DB_USER || 'laughtube_user',
-        password: process.env.DB_PASSWORD || 'changeme',
+        password: process.env.DB_PASSWORD,
     },
     paths: {
         encoded: process.env.OUTPUT_DIR || '/app/uploads/encoded',

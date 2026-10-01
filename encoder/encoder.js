@@ -1,4 +1,11 @@
 require("dotenv").config();
+
+// Faille 2.5 de l'audit du 12/09 : un DB_PASSWORD manquant faisait silencieusement
+// démarrer le service avec le mot de passe par défaut 'changeme' (secret connu de
+// tous). On échoue désormais au démarrage plutôt que de se replier dessus.
+if (!process.env.DB_PASSWORD) {
+    throw new Error("DB_PASSWORD manquant dans l'environnement — arrêt volontaire (voir audit sécurité 2.5).");
+}
 const { execFile } = require("child_process");
 const { Pool } = require("pg");
 const fs = require("fs").promises;
@@ -11,7 +18,7 @@ const CONFIG = {
         port: Number(process.env.DB_PORT || 5432),
         database: process.env.DB_NAME || 'laughtube',
         user: process.env.DB_USER || 'laughtube_user',
-        password: process.env.DB_PASSWORD || 'changeme',
+        password: process.env.DB_PASSWORD,
         max: 10,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 5000,
@@ -285,11 +292,19 @@ class VideoEncoder {
                     UPDATE videos
                     SET encoded = TRUE,
                         encoded_filename = $1,
-                        thumbnail = $2,
+                        thumbnail = COALESCE($2, thumbnail),
                         status = 'published',
                         duration = $4
                     WHERE id = $3
-                `, [outputFilename, thumbFilename, video_id, durationSeconds]);
+                `, [
+                    outputFilename,
+                    // Miniature personnalisée : on garde le nom enregistré par Laravel
+                    // (son extension réelle, .png/.jpeg...) au lieu d'écraser par _thumb.jpg,
+                    // fichier qui n'existe pas puisque la génération a été sautée.
+                    job.custom_thumbnail ? null : thumbFilename,
+                    video_id,
+                    durationSeconds,
+                ]);
 
                 await client.query(`
                     UPDATE encoding_queue
