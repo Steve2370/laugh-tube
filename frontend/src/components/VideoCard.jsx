@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Eye, ThumbsUp, MessageCircle, Clock, Users } from "lucide-react";
 import apiService from "../services/apiService.js";
 import { formatDuration } from "../utils/formatDuration.js";
+import { trackCard } from "../utils/lusionMotion.js";
+import PixelGlyph, { glyphFor } from "./PixelGlyph.jsx";
 
 const useScrollReveal = (threshold = 0.15) => {
     const ref = useRef(null);
@@ -85,6 +87,15 @@ const VideoCard = ({ video, onClick }) => {
     const [hovered, setHovered] = useState(false);
     const [likesBurst, setLikesBurst] = useState(0);
     const [cardRef, visible] = useScrollReveal();
+    const card3dRef = useRef(null);
+    const thumbRef = useRef(null);
+    const motionRef = useRef(null);
+    const glyph = glyphFor(video?.title);
+
+    useEffect(() => {
+        motionRef.current = trackCard(cardRef.current, card3dRef.current, thumbRef.current);
+        return () => { motionRef.current?.dispose(); motionRef.current = null; };
+    }, []);
 
     const authorId = useMemo(() => video?.user_id ?? video?.userId ?? video?.author_id ?? video?.authorId ?? null, [video]);
     const views = useMemo(() => video?.views ?? video?.nb_vues ?? video?.view_count ?? 0, [video]);
@@ -182,10 +193,6 @@ const VideoCard = ({ video, onClick }) => {
                     0%   { transform: translate(-50%,-50%) translate(0,0) rotate(0deg) scale(var(--sc)); opacity:1; }
                     100% { transform: translate(-50%,-50%) translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(0); opacity:0; }
                 }
-                @keyframes cardReveal {
-                    from { opacity:0; transform:translateY(28px) scale(0.97); }
-                    to   { opacity:1; transform:translateY(0) scale(1); }
-                }
                 @keyframes shimmer {
                     0%   { background-position: -400px 0; }
                     100% { background-position: 400px 0; }
@@ -198,8 +205,12 @@ const VideoCard = ({ video, onClick }) => {
                     from { opacity:0; transform:translateY(6px); }
                     to   { opacity:1; transform:translateY(0); }
                 }
-                .card-reveal { animation: cardReveal 0.5s cubic-bezier(0.22,1,0.36,1) forwards; }
-                .card-hidden { opacity:0; transform:translateY(28px) scale(0.97); }
+                .vc-card { transform-style: preserve-3d; will-change: transform; }
+                .vc-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+                .vc-front { transform: rotateY(0deg); }
+                .vc-front img { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+                .vc-back { position: absolute; inset: 0; transform: rotateY(180deg); }
+                .vc-glare { background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgba(255,255,255,.45), transparent 45%); mix-blend-mode: overlay; opacity: var(--glare, 0); }
                 .play-pulse  { animation: playPulse 1.6s ease-in-out infinite; }
                 .count-anim  { animation: countUp 0.4s ease-out forwards; }
             `}</style>
@@ -209,13 +220,13 @@ const VideoCard = ({ video, onClick }) => {
                 onClick={onClick}
                 onMouseEnter={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
-                className={`cursor-pointer bg-white rounded-2xl shadow-md overflow-hidden relative
-                    transition-all duration-300 ease-out
-                    ${hovered ? 'shadow-2xl -translate-y-2 scale-[1.02]' : ''}
-                    ${visible ? 'card-reveal' : 'card-hidden'}
-                `}
-                style={{ willChange: 'transform' }}
+                onPointerEnter={(e) => motionRef.current?.handlers.onPointerEnter(e)}
+                onPointerMove={(e) => motionRef.current?.handlers.onPointerMove(e)}
+                onPointerLeave={(e) => motionRef.current?.handlers.onPointerLeave(e)}
+                className={`cursor-pointer relative ${hovered ? 'z-20' : 'z-0'}`}
             >
+              <div ref={card3dRef} className="vc-card relative">
+                <div className={`vc-face vc-front bg-white rounded-2xl overflow-hidden relative transition-shadow duration-300 ${hovered ? 'shadow-2xl' : 'shadow-md'}`}>
                 <div className="relative overflow-hidden aspect-video bg-gray-200">
                     {video.is_jokair && (
                         <div style={{
@@ -243,6 +254,7 @@ const VideoCard = ({ video, onClick }) => {
                     )}
 
                     <img
+                        ref={thumbRef}
                         src={getThumbnailUrl(video.id)}
                         loading="lazy"
                         alt={video.title ?? "Vidéo"}
@@ -268,9 +280,12 @@ const VideoCard = ({ video, onClick }) => {
                 </div>
 
                 <div className="p-4">
-                    <h3 className={`font-bold text-gray-900 line-clamp-2 mb-2 transition-colors duration-200 ${hovered ? 'text-blue-600' : ''}`}>
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                    <h3 className={`font-bold text-gray-900 line-clamp-2 transition-colors duration-200 ${hovered ? 'text-blue-600' : ''}`}>
                         {video.title || "Sans titre"}
                     </h3>
+                    <PixelGlyph char={glyph} className={`w-3 h-5 flex-shrink-0 mt-0.5 transition-colors duration-200 ${hovered ? 'text-blue-600' : 'text-gray-900'}`} />
+                    </div>
 
                     {video.description && (
                         <p className="text-sm text-gray-600 line-clamp-2 mb-3">{video.description}</p>
@@ -348,9 +363,29 @@ const VideoCard = ({ video, onClick }) => {
                             </div>
                         </div>
                     )}
+
+                    <div className="mt-3 pt-3 border-t-2 border-dotted border-gray-200" aria-hidden="true">
+                        <div className="flex items-center justify-between gap-3 transform rotate-180">
+                            <span className={`text-xs font-bold uppercase tracking-wide truncate transition-colors duration-200 ${hovered ? 'text-blue-600' : 'text-gray-500'}`}>
+                                {video.title || "Sans titre"}
+                            </span>
+                            <PixelGlyph char={glyph} className={`w-3 h-5 flex-shrink-0 transition-colors duration-200 ${hovered ? 'text-blue-600' : 'text-gray-900'}`} />
+                        </div>
+                    </div>
                 </div>
 
                 <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 transition-all duration-300 ${hovered ? 'opacity-100' : 'opacity-0'}`}/>
+                <div className="vc-glare absolute inset-0 pointer-events-none z-30" />
+                </div>
+
+                <div className="vc-face vc-back rounded-2xl overflow-hidden bg-blue-600 shadow-md flex items-center justify-center" aria-hidden="true">
+                    <div className="absolute inset-3 rounded-xl border-2 border-dotted border-white/30" />
+                    <div className="flex flex-col items-center gap-3 text-white">
+                        <PixelGlyph char="L" className="w-9 h-[60px]" />
+                        <span className="text-xs font-bold uppercase tracking-[0.3em] text-blue-100">LaughTube</span>
+                    </div>
+                </div>
+              </div>
             </div>
         </>
     );
