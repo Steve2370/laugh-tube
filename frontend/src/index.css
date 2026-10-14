@@ -116,3 +116,57 @@ video.bg-video {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
 }
+
+/* Fond animé de l'accueil (components/LaughBackground.jsx) */
+.lt-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    pointer-events: none;
+    background: #f4f6fb;
+}
+
+.lt-bg-grid {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -28px;
+    bottom: -28px;
+    background-image: radial-gradient(circle, rgba(100, 116, 139, .22) 1.1px, transparent 1.6px);
+    background-size: 28px 28px;
+    will-change: transform;
+}
+
+.lt-dd {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: visible;
+    will-change: transform;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.lt-dd.draw * {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: var(--d, 0);
+}
+
+.lt-dd text {
+    font-family: 'Poppins', system-ui, sans-serif;
+    font-weight: 800;
+    paint-order: stroke;
+}
+
+.lt-ha {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0;
+    will-change: transform, opacity;
+}

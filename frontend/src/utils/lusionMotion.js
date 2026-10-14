@@ -18,6 +18,7 @@ let velocity = 0;
 let observer = null;
 const cards = new Set();
 const byWrap = new Map();
+const frameListeners = new Set();
 
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 const expoOut = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
@@ -72,6 +73,7 @@ function frame(time) {
         .forEach((c, i) => { c.revealAt = time + i * STAGGER_MS; });
 
     for (const c of active) render(c, time, vw, vh);
+    for (const fn of frameListeners) fn(time);
     requestAnimationFrame(frame);
 }
 
@@ -92,6 +94,16 @@ export function initMotion() {
     started = true;
     lenis = new Lenis({ lerp: 0.085, smoothWheel: true, allowNestedScroll: true, autoRaf: false });
     requestAnimationFrame(frame);
+}
+
+// Autres animations (ex. fond de l'accueil) branchées sur la même boucle rAF.
+export function onFrame(fn) {
+    frameListeners.add(fn);
+    return () => frameListeners.delete(fn);
+}
+
+export function isMotionRunning() {
+    return started;
 }
 
 const noop = () => {};

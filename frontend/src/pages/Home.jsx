@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import VideoCard from "../components/VideoCard";
 import apiService from "../services/apiService";
 import AppStoreBanner from "../components/AppStoreBanner";
+import LaughBackground from "../components/LaughBackground";
 import { Play, Search, LogIn, TrendingUp, Flame, Clock, Star, LayoutGrid, Sparkles, Trophy, Zap, CheckCircle2, Mic, Radio, Users, Swords } from "lucide-react";
 const ParticleNetwork = () => {
     const canvasRef = useRef(null);
@@ -399,23 +400,7 @@ const Home = () => {
     return (
         <div className="min-h-screen pt-20 relative" style={{ backgroundColor: 'transparent' }}>
             <AppStoreBanner appStoreUrl="https://apps.apple.com/app/laughtube/id6771074500" />
-            <video
-                className="bg-video"
-                autoPlay
-                loop
-                muted
-                playsInline
-                style={{
-                    position: 'fixed',
-                    top: 0, left: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    zIndex: -2,
-                }}
-            >
-                <source src="/uploads/BG.mp4" type="video/mp4" />
-            </video>
+            <LaughBackground />
             <style>{`
                 @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
                 @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
