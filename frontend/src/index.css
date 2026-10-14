@@ -10,6 +10,7 @@
 }
 
 body {
+    padding-top: var(--app-banner-h, 0px);
     font-family: 'Poppins', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

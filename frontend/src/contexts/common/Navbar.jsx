@@ -89,7 +89,7 @@ export default function Navbar() {
     return (
         <header
             className="fixed top-0 left-0 right-0 z-50 text-black text-sm shadow-md backdrop-blur-md"
-            style={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.3)", top: "var(--app-banner-h, 0px)" }}
         >
             <style>{`
                 @keyframes navEmojiFloat {
