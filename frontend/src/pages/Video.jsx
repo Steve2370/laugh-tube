@@ -739,7 +739,7 @@ const Video = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 flex items-center justify-center">
+            <div className="min-h-screen pt-20 flex items-center justify-center">
                 <div className="text-center">
                     <LoadingPage size={280} />
                     <p className="text-gray-600 font-medium">Chargement de la vidéo...</p>
@@ -750,7 +750,7 @@ const Video = () => {
 
     if (videoError || !video) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 flex items-center justify-center">
+            <div className="min-h-screen pt-20 flex items-center justify-center">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
                     <div className="text-center">
                         <AlertCircle size={64} className="mx-auto text-red-500 mb-4" />
@@ -770,7 +770,7 @@ const Video = () => {
     const shareUrl = `https://www.laughtube.ca/api/v2/og/video/${video.id}`;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20">
+        <div className="min-h-screen pt-20">
             <style>{ANIM_STYLES}</style>
             <div className="max-w-screen-2xl mx-auto px-4 py-8">
                 <button

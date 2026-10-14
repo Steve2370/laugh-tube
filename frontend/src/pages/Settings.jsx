@@ -179,7 +179,7 @@ const Settings = () => {
     const currentAvatar = avatarPreview || user?.avatar_url || null;
 
     return (
-        <div className="min-h-screen pt-20 bg-gradient-to-br from-gray-50 via-white to-blue-50">
+        <div className="min-h-screen pt-20">
             <div className="container mx-auto px-4 py-8 max-w-5xl">
                 <div className="mb-8 flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl shadow-lg">

@@ -52,7 +52,7 @@ const ResetPassword = () => {
 
     if (!token) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-16 px-4">
+            <div className="min-h-screen flex items-center justify-center pt-16 px-4">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100 max-w-md w-full text-center">
                     <h2 className="text-2xl font-bold text-gray-900 mb-3">Lien invalide</h2>
                     <p className="text-gray-500 mb-6">Ce lien de réinitialisation est invalide ou a expiré.</p>
@@ -69,7 +69,7 @@ const ResetPassword = () => {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-16 px-4">
+            <div className="min-h-screen flex items-center justify-center pt-16 px-4">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100 max-w-md w-full text-center">
                     <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Check size={28} className="text-white" />
@@ -88,7 +88,7 @@ const ResetPassword = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-16 px-4">
+        <div className="min-h-screen flex items-center justify-center pt-16 px-4">
             <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100 max-w-md w-full">
                 <button
                     onClick={() => window.history.back()}

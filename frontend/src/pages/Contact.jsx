@@ -46,7 +46,7 @@ const Contact = () => {
 
     if (sent) {
         return (
-            <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center px-4">
+            <div className="min-h-screen pt-20 flex items-center justify-center px-4">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 max-w-md w-full text-center">
                     <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Send size={28} className="text-white" />
@@ -67,7 +67,7 @@ const Contact = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="min-h-screen pt-20">
             <div className="max-w-2xl mx-auto px-4 py-10">
 
                 <button

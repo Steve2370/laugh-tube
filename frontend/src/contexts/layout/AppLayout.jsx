@@ -3,12 +3,15 @@ import Navbar from '../common/Navbar';
 import PageRouter from './PageRouter';
 import NotificationContainer from '../common/NotificationContainer';
 import AppStoreBanner from '../../components/AppstoreBanner';
+import LaughBackground from '../../components/LaughBackground';
 
 const APP_STORE_URL = 'https://apps.apple.com/app/laughtube/id6771074500';
 
 const AppLayout = () => {
     return (
         <div className="min-h-screen">
+            {/* Fond « Fou rire » partagé par toutes les pages, monté une seule fois. */}
+            <LaughBackground />
             <AppStoreBanner appStoreUrl={APP_STORE_URL} />
             <Navbar />
             <main className="min-h-screen">

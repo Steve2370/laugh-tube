@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { createLaughDoodles } from '../utils/laughDoodles';
 import { isMotionRunning, onFrame } from '../utils/lusionMotion';
 
-// Fond animé de l'accueil : doodles au trait qui montent et piquent des fous rires.
+// Fond animé du site (toutes les pages, via AppLayout) : doodles au trait qui montent et piquent des fous rires.
 // Branché sur la boucle rAF de lusionMotion (une seule boucle pour tout le site) ;
 // image fixe quand l'appareil demande de réduire les animations.
 const LaughBackground = () => {

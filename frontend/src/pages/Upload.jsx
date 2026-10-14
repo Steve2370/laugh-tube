@@ -184,7 +184,7 @@ const Upload = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+            <div className="min-h-screen pt-20 flex items-center justify-center">
                 <div className="text-center">
                     <LoadingPage size={280} />
                     <p className="mt-4 text-gray-600">Chargement...</p>
@@ -195,7 +195,7 @@ const Upload = () => {
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+            <div className="min-h-screen pt-20 flex items-center justify-center">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
                     <div className="text-center">
                         <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
@@ -220,7 +220,7 @@ const Upload = () => {
     }
 
     return (
-        <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="min-h-screen pt-20">
             <div className="container mx-auto px-4 py-8 max-w-3xl">
                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-8 text-white">

@@ -19,7 +19,7 @@ const CGU = () => {
     const goBack = () => window.history.back();
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="min-h-screen pt-20">
             <div className="max-w-3xl mx-auto px-4 py-10">
 
                 <button

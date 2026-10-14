@@ -1,60 +1,8 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { LogIn, Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react';
 
-const BUBBLE_TEXTS = ['LOL', 'MDR', '😂', 'HAHA', '💀', '😭', 'XD', 'lmao', '🤣', 'ptdr', '😆', '👏'];
-
-const FloatingBubbles = () => {
-    const bubbles = useMemo(() =>
-            Array.from({ length: 12 }, (_, i) => ({
-                id: i,
-                text: BUBBLE_TEXTS[i % BUBBLE_TEXTS.length],
-                left: `${(i * 8.3 + 2) % 92}%`,
-                delay: `${(i * 0.7) % 6}s`,
-                duration: `${9 + (i % 4) * 1.5}s`,
-                size: 0.75 + (i % 3) * 0.2,
-            }))
-        , []);
-
-    return (
-        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-            <style>{`
-                @keyframes bubbleRise {
-                    0%   { transform: translateY(100vh) scale(0.8); opacity: 0; }
-                    8%   { opacity: 1; }
-                    85%  { opacity: 1; }
-                    100% { transform: translateY(-200px) scale(1.05); opacity: 0; }
-                }
-                @keyframes bubbleWobble {
-                    0%,100% { margin-left: 0; }
-                    25%     { margin-left: 14px; }
-                    75%     { margin-left: -14px; }
-                }
-                .bubble-item {
-                    animation: bubbleRise var(--dur) ease-in var(--delay) infinite,
-                               bubbleWobble calc(var(--dur) * 0.5) ease-in-out var(--delay) infinite;
-                }
-            `}</style>
-            {bubbles.map(b => (
-                <div
-                    key={b.id}
-                    className="bubble-item absolute bottom-0 flex items-center justify-center bg-white bg-opacity-80 rounded-full shadow-md font-bold text-gray-700 border border-gray-200"
-                    style={{
-                        left: b.left,
-                        '--dur': b.duration,
-                        '--delay': b.delay,
-                        width: `${b.size * 56}px`,
-                        height: `${b.size * 56}px`,
-                        fontSize: `${b.size * 0.85}rem`,
-                    }}
-                >
-                    {b.text}
-                </div>
-            ))}
-        </div>
-    );
-};
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -151,8 +99,7 @@ const Login = () => {
 
     if (show2FA) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-16">
-                <FloatingBubbles />
+            <div className="min-h-screen flex items-center justify-center pt-16">
                 <div className="w-full max-w-md px-6 relative" style={{ zIndex: 1 }}>
                     <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
                         <div className="text-center mb-8">
@@ -220,8 +167,7 @@ const Login = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-16">
-            <FloatingBubbles />
+        <div className="min-h-screen flex items-center justify-center pt-16">
             <div className="w-full max-w-md px-6 relative" style={{ zIndex: 1 }}>
                 <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
                     <div className="flex flex-col items-center mb-8">
