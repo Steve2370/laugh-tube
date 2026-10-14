@@ -32,8 +32,8 @@ const closedThisVisit = (): boolean => {
 
 const AppStoreBanner = ({
     appStoreUrl,
-    appName = "LaughTube",
-    appTagline = "L'humour québécois",
+    appName = "Tube à rire",
+    appTagline = "L'humour dans ta poche",
     logoSrc = "/app-icon.png",
 }: AppStoreBannerProps) => {
     const [visible, setVisible] = useState(() => isIPhone() && !isStandalone() && !closedThisVisit());
