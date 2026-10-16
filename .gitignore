@@ -26,3 +26,7 @@ laravel/storage/framework/views/frontend/public/*.mp4
 frontend/public/*.mp4
 frontend/dist/*.mp4
 .env
+
+# Données du serveur, jamais versionnées
+backup_*.sql
+backend/public/uploads/

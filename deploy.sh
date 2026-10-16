@@ -3,11 +3,13 @@
 set -euo pipefail
 
 echo "1) Backup avant tout changement..."
+mkdir -p /opt/backups
 docker exec laughtube_postgres pg_dump -U laughtube_user laughtube \
-  > /opt/Laugh_Tube/backup_pre_deploy_$(date +%Y%m%d_%H%M).sql
+  > /opt/backups/backup_pre_deploy_$(date +%Y%m%d_%H%M).sql
 
 echo "2) Vérification qu'aucun fichier n'a été modifié à la main sur le serveur..."
-if [ -n "$(git status --porcelain)" ]; then
+# Seuls les fichiers suivis comptent : uploads, sauvegardes et builds ne bloquent pas.
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   echo "ERREUR: des fichiers ont été modifiés directement sur le serveur."
   echo "Voir 'git status' / 'git diff' avant de continuer — ne PAS faire git reset --hard"
   echo "sans avoir d'abord sauvegardé ces changements (voir partie 1.2.a du rapport)."
