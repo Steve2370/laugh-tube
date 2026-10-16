@@ -22,6 +22,7 @@ git pull
 echo "4) Rebuild de TOUS les services applicatifs (jamais un seul au choix)..."
 docker compose build backend laravel encoder
 docker compose up -d backend laravel encoder
+docker compose up -d nginx   # applique un changement de docker-compose.yml (ex. healthcheck)
 docker compose restart nginx
 
 echo "5) Migrations Laravel..."
@@ -29,6 +30,13 @@ docker exec laughtube_laravel php artisan migrate --force
 
 echo "6) Rebuild frontend..."
 ./rebuild-frontend.sh
+
+echo "7) Nettoyage Docker (cache de build, anciennes images, volumes anonymes orphelins)..."
+# Ne touche ni aux volumes nommés (base de données) ni aux uploads.
+docker builder prune -f >/dev/null || true
+docker image prune -a -f >/dev/null || true
+docker volume ls -qf dangling=true | grep -E '^[0-9a-f]{64}$' | xargs -r docker volume rm >/dev/null || true
+df -h / | tail -1
 
 echo "Déploiement terminé. Vérifier docker compose ps et les logs avant de considérer"
 echo "le déploiement comme réussi :"
