@@ -10,6 +10,7 @@ class EmailService
     private LogRepository $logRepo;
     private EmailProviderInterface $provider;
     private string $baseUrl;
+    private ?EmailTemplate $template = null;
 
     public function __construct(
         LogRepository $logRepo,
@@ -113,315 +114,120 @@ class EmailService
     }
 
 
-    private function logoHtml(): string
+    private function tpl(): EmailTemplate
     {
-        $logoUrl = $this->baseUrl . '/logo.png';
-        return '<img src="' . $logoUrl . '" alt="LaughTube" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;">';
+        return $this->template ??= new EmailTemplate($this->baseUrl);
     }
-
 
     private function getVerificationEmailTemplate(string $username, string $verificationUrl): string
     {
-        $logo = $this->logoHtml();
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .content{padding:32px;}
-  .btn{display:inline-block;padding:13px 32px;background:#111;color:#fff !important;text-decoration:none;border-radius:6px;font-weight:bold;margin:20px 0;}
-  .link-box{word-break:break-all;background:#f5f5f5;padding:12px;border-radius:4px;font-size:13px;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">{$logo}</div>
-  <div class="content">
-    <h2>Bonjour {$username} !</h2>
-    <p>Merci de vous être inscrit sur <strong>Laugh Tube</strong>. Pour activer votre compte, vérifiez votre adresse email :</p>
-    <p style="text-align:center;"><a href="{$verificationUrl}" class="btn">Vérifier mon email</a></p>
-    <p>Ou copiez ce lien :</p>
-    <p class="link-box">{$verificationUrl}</p>
-    <p><small>Ce lien expire dans <strong>24 heures</strong>. Si vous n'avez pas créé de compte, ignorez cet email.</small></p>
-  </div>
-  <div class="footer">© 2026 Laugh Tube. Tous droits réservés.</div>
-</div>
-</body></html>
-HTML;
+        $t = $this->tpl();
+        $content = $t->icon('mail')
+            . $t->title('Plus qu’un clic, ' . $t->highlight($username) . ' !')
+            . $t->text('Merci de rejoindre <strong>LaughTube</strong>. Confirmez votre adresse e-mail pour activer votre compte et commencer à partager vos meilleures punchlines.')
+            . $t->button($verificationUrl, 'Vérifier mon e-mail')
+            . $t->text('Ce lien expire dans <strong>24 heures</strong>. Vous n’avez pas créé de compte ? Ignorez simplement cet e-mail.', 'center', true)
+            . $t->link($verificationUrl)
+            . $t->signature();
+        return $t->layout('Vérifiez votre adresse e-mail', 'Confirmez votre adresse pour activer votre compte LaughTube.', $content);
     }
 
-    private function getAccountSuspendedTemplate(
-        string $username,
-        string $until,
-        string $reason
-    ): string {
-        $logo = $this->logoHtml();
-        $siteUrl = $this->baseUrl;
-        $replyEmail = 'legal@laughtube.ca';
+    private function getAccountSuspendedTemplate(string $username, string $until, string $reason): string
+    {
+        $t = $this->tpl();
         $untilFormatted = date('d/m/Y à H:i', strtotime($until));
-
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .badge{display:inline-block;background:#dc3545;color:#fff;font-size:11px;font-weight:bold;padding:4px 14px;border-radius:20px;margin-top:12px;letter-spacing:1px;text-transform:uppercase;}
-  .content{padding:32px;}
-  .danger{background:#f8d7da;border-left:4px solid #dc3545;padding:16px;border-radius:0 8px 8px 0;margin:20px 0;}
-  .info-box{background:#f9f9f9;border-radius:8px;padding:16px;margin:16px 0;font-size:14px;}
-  .info-box strong{display:inline-block;width:90px;color:#555;}
-  .reply-box{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px;margin-top:20px;font-size:13px;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">
-    {$logo}
-    <div class="badge">⚠️ Compte suspendu</div>
-  </div>
-  <div class="content">
-    <h2 style="color:#111;">Bonjour {$username},</h2>
-    <div class="danger">
-      <strong>Votre compte LaughTube a été temporairement suspendu.</strong>
-    </div>
-    <div class="info-box">
-      <div><strong>Raison :</strong> {$reason}</div>
-      <div style="margin-top:8px;"><strong>Jusqu'au :</strong> {$untilFormatted}</div>
-    </div>
-    <p>Pendant cette période, vous ne pourrez pas vous connecter, uploader de vidéos, commenter ou interagir avec la communauté.</p>
-    <p>Si vous pensez que cette suspension est une erreur, vous pouvez contacter notre équipe :</p>
-    <div class="reply-box">
-      <strong>Contacter le support :</strong><br>
-      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
-    </div>
-  </div>
-  <div class="footer">© 2026 LaughTube. Tous droits réservés. · <a href="{$siteUrl}" style="color:#999;">laughtube.ca</a></div>
-</div>
-</body></html>
-HTML;
+        $content = $t->badge('Compte suspendu', 'red')
+            . $t->icon('ban')
+            . $t->title('Votre compte est suspendu')
+            . $t->text('Bonjour <strong>' . EmailTemplate::e($username) . '</strong>, votre compte LaughTube a été temporairement suspendu.')
+            . $t->details(['Raison' => $reason, 'Jusqu’au' => $untilFormatted])
+            . $t->text('Pendant cette période, vous ne pourrez pas vous connecter, publier de vidéos, commenter ni interagir avec la communauté.')
+            . $t->callout('<strong>Vous pensez que c’est une erreur ?</strong><br>Écrivez-nous depuis <a href="' . $this->baseUrl . '/#/contact" style="color:#2563eb;font-weight:600;">laughtube.ca/contact</a> ou répondez à cet e-mail.', 'amber')
+            . $t->signature();
+        return $t->layout('Votre compte a été suspendu', 'Votre compte LaughTube est suspendu jusqu’au ' . $untilFormatted . '.', $content);
     }
 
     private function getWelcomeEmailTemplate(string $username): string
     {
-        $logo = $this->logoHtml();
-        $siteUrl = $this->baseUrl;
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .content{padding:32px;}
-  .feature{background:#f9f9f9;padding:14px;margin:10px 0;border-radius:6px;border-left:4px solid #111;}
-  .btn{display:inline-block;padding:13px 32px;background:#111;color:#fff !important;text-decoration:none;border-radius:6px;font-weight:bold;margin:20px 0;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">{$logo}</div>
-  <div class="content">
-    <h2>Bienvenue sur Laugh Tube, {$username} !</h2>
-    <p>Votre email a été vérifié avec succès. Votre compte est maintenant actif !</p>
-    <h3>Ce que vous pouvez faire :</h3>
-    <div class="feature"><strong>Partager vos vidéos</strong><br>Uploadez vos punchlines avec la communauté.</div>
-    <div class="feature"><strong>Suivre des créateurs</strong><br>Découvrez du contenu hilarant de créateurs talentueux.</div>
-    <div class="feature"><strong>Commenter et interagir</strong><br>Rejoignez les discussions et connectez-vous avec d'autres fans.</div>
-    <div class="feature"><strong>Sécurité renforcée</strong><br>Activez la 2FA pour protéger votre compte.</div>
-    <p style="text-align:center;"><a href="{$siteUrl}" class="btn">Commencer maintenant</a></p>
-  </div>
-  <div class="footer">© 2026 Laugh Tube. Tous droits réservés.</div>
-</div>
-</body></html>
-HTML;
+        $t = $this->tpl();
+        $content = $t->icon('party')
+            . $t->title('Bienvenue dans la gang,<br>' . $t->highlight($username) . ' !')
+            . $t->text('Votre adresse est confirmée et votre compte est actif. Il ne reste plus qu’à rire — ou à faire rire.')
+            . $t->features([
+                ['Partagez vos vidéos', 'Publiez vos sketchs, vos stand-ups et vos meilleures punchlines.'],
+                ['Suivez vos humoristes', 'Abonnez-vous aux créateurs qui vous font décrocher la mâchoire.'],
+                ['Stand-up en direct', 'Les humoristes montent sur scène en live, vous êtes au premier rang.'],
+                ['Battles', 'Deux humoristes s’affrontent, le public vote pour le meilleur.'],
+                ['Commentez et réagissez', 'Rejoignez les discussions avec les autres fans d’humour.'],
+                ['Compte protégé', 'Activez la double authentification dans vos paramètres.'],
+            ])
+            . $t->button($this->baseUrl, 'Commencer à rire 😄')
+            . $t->signature('À tantôt sur LaughTube,<br>');
+        return $t->layout('Bienvenue sur LaughTube', 'Votre compte est actif. On vient pour rire !', $content);
     }
 
     private function get2FAEnabledTemplate(string $username): string
     {
-        $logo = $this->logoHtml();
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .content{padding:32px;}
-  .warning{background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;}
-  .success{background:#d4edda;border-left:4px solid #28a745;padding:15px;margin:20px 0;border-radius:4px;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">{$logo}</div>
-  <div class="content">
-    <h2>Bonjour {$username} !</h2>
-    <div class="success">L'authentification à deux facteurs (2FA) a été <strong>activée</strong> sur votre compte.</div>
-    <p>À partir de maintenant, vous devrez entrer un code depuis votre application d'authentification lors de chaque connexion.</p>
-    <div class="warning">
-      <strong>⚠️ Important</strong><br>
-      Conservez vos codes de secours dans un endroit sûr. Ils vous permettront d'accéder à votre compte si vous perdez votre application.
-    </div>
-    <p>Si vous n'avez pas activé la 2FA, contactez-nous immédiatement.</p>
-  </div>
-  <div class="footer">© 2026 Laugh Tube. Tous droits réservés.</div>
-</div>
-</body></html>
-HTML;
+        $t = $this->tpl();
+        $content = $t->icon('shieldcheck')
+            . $t->title('Double authentification ' . $t->highlight('activée', '#16a34a'))
+            . $t->text('Bonjour <strong>' . EmailTemplate::e($username) . '</strong>, votre compte est maintenant mieux protégé.')
+            . $t->callout('À chaque connexion, un code de votre application d’authentification vous sera demandé.', 'green')
+            . $t->callout('<strong>Important :</strong> conservez vos codes de secours en lieu sûr. Ils vous permettront de récupérer votre compte si vous perdez votre téléphone.', 'amber')
+            . $t->text('Vous n’avez pas activé la 2FA ? Contactez-nous immédiatement.', 'center', true)
+            . $t->signature();
+        return $t->layout('Authentification 2FA activée', 'La double authentification est activée sur votre compte LaughTube.', $content);
     }
 
     private function get2FADisabledTemplate(string $username): string
     {
-        $logo = $this->logoHtml();
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .content{padding:32px;}
-  .warning{background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">{$logo}</div>
-  <div class="content">
-    <h2>Bonjour {$username} !</h2>
-    <p>L'authentification à deux facteurs (2FA) a été <strong>désactivée</strong> sur votre compte.</p>
-    <div class="warning">
-      <strong>⚠️ Attention</strong><br>
-      Votre compte est maintenant moins sécurisé. Nous vous recommandons de réactiver la 2FA dans vos paramètres.
-    </div>
-    <p>Si vous n'avez pas effectué cette action, contactez-nous immédiatement et changez votre mot de passe.</p>
-  </div>
-  <div class="footer">© 2026 Laugh Tube. Tous droits réservés.</div>
-</div>
-</body></html>
-HTML;
+        $t = $this->tpl();
+        $content = $t->icon('shieldoff')
+            . $t->title('Double authentification ' . $t->highlight('désactivée', '#d97706'))
+            . $t->text('Bonjour <strong>' . EmailTemplate::e($username) . '</strong>, la 2FA a été désactivée sur votre compte.')
+            . $t->callout('<strong>Attention :</strong> votre compte est maintenant moins protégé. Nous vous recommandons de réactiver la 2FA dans vos paramètres.', 'amber')
+            . $t->button($this->baseUrl . '/#/settings', 'Réactiver la 2FA')
+            . $t->text('Ce n’était pas vous ? Changez votre mot de passe et contactez-nous immédiatement.', 'center', true)
+            . $t->signature();
+        return $t->layout('Authentification 2FA désactivée', 'La double authentification a été désactivée sur votre compte.', $content);
     }
 
     private function getPasswordResetTemplate(string $username, string $resetUrl): string
     {
-        $logo = $this->logoHtml();
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .content{padding:32px;}
-  .btn{display:inline-block;padding:13px 32px;background:#dc3545;color:#fff !important;text-decoration:none;border-radius:6px;font-weight:bold;margin:20px 0;}
-  .link-box{word-break:break-all;background:#f5f5f5;padding:12px;border-radius:4px;font-size:13px;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">{$logo}</div>
-  <div class="content">
-    <h2>Bonjour {$username} !</h2>
-    <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-    <p style="text-align:center;"><a href="{$resetUrl}" class="btn">Réinitialiser mon mot de passe</a></p>
-    <p>Ou copiez ce lien :</p>
-    <p class="link-box">{$resetUrl}</p>
-    <p><strong>Ce lien expire dans 1 heure.</strong></p>
-    <p><small>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</small></p>
-  </div>
-  <div class="footer">© 2026 Laugh Tube. Tous droits réservés.</div>
-</div>
-</body></html>
-HTML;
+        $t = $this->tpl();
+        $content = $t->icon('key')
+            . $t->title('Nouveau mot de passe ?')
+            . $t->text('Bonjour <strong>' . EmailTemplate::e($username) . '</strong>, vous avez demandé à réinitialiser votre mot de passe. Pas de panique, ça arrive aux meilleurs.')
+            . $t->button($resetUrl, 'Choisir un nouveau mot de passe')
+            . $t->text('Ce lien expire dans <strong>1 heure</strong>. Vous n’avez rien demandé ? Ignorez cet e-mail : votre mot de passe reste inchangé.', 'center', true)
+            . $t->link($resetUrl)
+            . $t->signature();
+        return $t->layout('Réinitialisation de votre mot de passe', 'Votre lien pour choisir un nouveau mot de passe (valable 1 heure).', $content);
     }
 
     private function getPasswordChangedTemplate(string $username): string
     {
-        $logo = $this->logoHtml();
-        $siteUrl = $this->baseUrl;
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .content{padding:32px;}
-  .success{background:#d4edda;border-left:4px solid #28a745;padding:15px;margin:20px 0;border-radius:4px;}
-  .warning{background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">{$logo}</div>
-  <div class="content">
-    <h2>Bonjour {$username} !</h2>
-    <div class="success">Votre mot de passe a été modifié avec succès.</div>
-    <div class="warning">
-      <strong>Ce n'était pas vous ?</strong><br>
-      Si vous n'avez pas effectué ce changement, contactez-nous immédiatement et sécurisez votre compte.
-    </div>
-  </div>
-  <div class="footer">© 2026 Laugh Tube. Tous droits réservés.</div>
-</div>
-</body></html>
-HTML;
+        $t = $this->tpl();
+        $content = $t->icon('lock')
+            . $t->title('Mot de passe ' . $t->highlight('modifié', '#16a34a'))
+            . $t->text('Bonjour <strong>' . EmailTemplate::e($username) . '</strong>, le mot de passe de votre compte vient d’être changé.')
+            . $t->callout('<strong>Ce n’était pas vous ?</strong><br>Sécurisez votre compte sans attendre et contactez-nous.', 'red')
+            . $t->button($this->baseUrl . '/#/contact', 'Contacter le support', 'red')
+            . $t->signature();
+        return $t->layout('Votre mot de passe a été modifié', 'Le mot de passe de votre compte LaughTube vient d’être changé.', $content);
     }
 
     private function getAccountDeletionTemplate(string $username, string $deletionDate, string $cancelUrl): string
     {
-        $logo = $this->logoHtml();
-        $siteUrl = $this->baseUrl;
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .content{padding:32px;}
-  .btn{display:inline-block;padding:13px 32px;background:#28a745;color:#fff !important;text-decoration:none;border-radius:6px;font-weight:bold;margin:20px 0;}
-  .danger{background:#f8d7da;border-left:4px solid #dc3545;padding:15px;margin:20px 0;border-radius:4px;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">{$logo}</div>
-  <div class="content">
-    <h2>Bonjour {$username},</h2>
-    <p>Nous sommes désolés de vous voir partir 😢</p>
-    <div class="danger">
-      <strong>Votre compte sera supprimé le {$deletionDate}.</strong><br>
-      Toutes vos vidéos, commentaires, abonnements et données seront perdus définitivement.
-    </div>
-    <p>Vous avez encore 30 jours pour changer d'avis :</p>
-    <strong>Contacter le support :</strong><br>
-      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
-  </div>
-  <div class="footer">© 2026 Laugh Tube. Tous droits réservés.</div>
-</div>
-</body></html>
-HTML;
+        $t = $this->tpl();
+        $content = $t->icon('trash')
+            . $t->title('On vous voit partir… 😢')
+            . $t->text('Bonjour <strong>' . EmailTemplate::e($username) . '</strong>, nous avons bien reçu votre demande de suppression de compte.')
+            . $t->callout('<strong>Votre compte sera supprimé le ' . EmailTemplate::e($deletionDate) . '.</strong><br>Vos vidéos, commentaires, abonnements et données seront alors effacés définitivement.', 'red')
+            . $t->text('Vous avez encore <strong>30 jours</strong> pour changer d’avis. Écrivez-nous et on garde votre place au premier rang.')
+            . $t->button($this->baseUrl . '/#/contact', 'Garder mon compte')
+            . $t->signature();
+        return $t->layout('Confirmation de suppression de compte', 'Votre compte sera supprimé le ' . $deletionDate . '.', $content);
     }
 
     public function sendAdminMessageEmail(
@@ -436,54 +242,22 @@ HTML;
         return $this->send($userId, $email, $fullSubject, $body, 'admin_message', 'legal@laughtube.ca');
     }
 
-    private function getAdminMessageTemplate(
-        string $username,
-        string $subject,
-        string $message
-    ): string {
-        $logo = $this->logoHtml();
-        $messageHtml = nl2br(htmlspecialchars($message));
-        $replyEmail = 'legal@laughtube.ca';
-        $siteUrl = $this->baseUrl;
+    private function getAdminMessageTemplate(string $username, string $subject, string $message): string
+    {
+        return self::adminMessageHtml($this->tpl(), $this->baseUrl, $username, $subject, $message);
+    }
 
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .badge{display:inline-block;background:#fff;color:#111;font-size:11px;font-weight:bold;padding:4px 12px;border-radius:20px;margin-top:12px;letter-spacing:1px;text-transform:uppercase;}
-  .content{padding:32px;}
-  .subject{font-size:20px;font-weight:bold;color:#111;margin-bottom:16px;padding-bottom:16px;border-bottom:2px solid #f0f0f0;}
-  .message-box{background:#f9f9f9;border-left:4px solid #111;padding:20px;border-radius:0 8px 8px 0;margin:20px 0;font-size:15px;line-height:1.7;}
-  .reply-box{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin-top:24px;font-size:13px;}
-  .reply-email{color:#111;font-weight:bold;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">
-    {$logo}
-    <div class="badge">Message de l'administration</div>
-  </div>
-  <div class="content">
-    <p>Bonjour <strong>{$username}</strong>,</p>
-    <p>L'équipe d'administration de LaughTube vous a envoyé le message suivant :</p>
-    <div class="subject">{$subject}</div>
-    <div class="message-box">{$messageHtml}</div>
-    <div class="reply-box">
-      <strong>Pour répondre ou contacter l'équipe :</strong><br>
-      <strong>Contacter le support :</strong><br>
-      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
-    </div>
-  </div>
-  <div class="footer">© 2026 LaughTube. Tous droits réservés. · <a href="{$siteUrl}" style="color:#999;">laughtube.ca</a></div>
-</div>
-</body></html>
-HTML;
+    /** Partagé avec AdminController::sendResendEmail pour un rendu identique. */
+    public static function adminMessageHtml(EmailTemplate $t, string $baseUrl, string $username, string $subject, string $message): string
+    {
+        $content = $t->badge('Message de l’équipe', 'blue')
+            . $t->icon('megaphone')
+            . $t->title(EmailTemplate::e($subject))
+            . $t->text('Bonjour <strong>' . EmailTemplate::e($username) . '</strong>, l’équipe LaughTube vous a envoyé ce message :')
+            . $t->message($message)
+            . $t->callout('<strong>Une question ?</strong> Répondez à cet e-mail ou écrivez-nous depuis <a href="' . rtrim($baseUrl, '/') . '/#/contact" style="color:#2563eb;font-weight:600;">laughtube.ca/contact</a>.', 'blue')
+            . $t->signature();
+        return $t->layout($subject, $subject, $content);
     }
 
     public function sendContactNotificationEmail(
@@ -494,45 +268,14 @@ HTML;
     ): bool {
         $adminEmail = 'legal@laughtube.ca';
         $fullSubject = '[LaughTube Contact] ' . $subject;
-        $messageHtml = nl2br(htmlspecialchars($message));
-        $logo = $this->logoHtml();
-        $baseUrl = $this->baseUrl;
-        $siteUrl = $this->baseUrl;
-
-        $body = <<<HTML
-<!DOCTYPE html><html lang="fr">
-<head><meta charset="UTF-8">
-<style>
-  body{font-family:Arial,sans-serif;background:#f0f0f0;margin:0;padding:0;}
-  .wrap{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .header{background:#ffffff;padding:24px;text-align:center;}
-  .badge{display:inline-block;background:#fff;color:#111;font-size:11px;font-weight:bold;padding:4px 12px;border-radius:20px;margin-top:12px;letter-spacing:1px;text-transform:uppercase;}
-  .content{padding:32px;}
-  .meta{background:#f9f9f9;border-radius:8px;padding:16px;margin-bottom:20px;font-size:13px;}
-  .meta strong{display:inline-block;width:80px;color:#555;}
-  .subject{font-size:18px;font-weight:bold;color:#111;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #f0f0f0;}
-  .message-box{background:#f9f9f9;border-left:4px solid #111;padding:20px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.7;}
-  .footer{text-align:center;padding:16px;font-size:12px;color:#999;background:#f5f5f5;}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">{$logo}<div class="badge">Nouveau message de contact</div></div>
-  <div class="content">
-    <div class="meta">
-      <div><strong>De :</strong> {$senderName} &lt;{$senderEmail}&gt;</div>
-    </div>
-    <div class="subject">{$subject}</div>
-    <div class="message-box">{$messageHtml}</div>
-    <p style="margin-top:20px;font-size:13px;color:#666;">
-      Pour répondre, <strong>Contacter le support :</strong><br>
-      Écrivez-nous à <a href="{$siteUrl}/#/contact" style="color:#111;font-weight:bold;">laughtube.ca/contact</a>
-    </p>
-  </div>
-  <div class="footer">© 2026 LaughTube · <a href="{$baseUrl}" style="color:#999;">laughtube.ca</a></div>
-</div>
-</body></html>
-HTML;
+        $t = $this->tpl();
+        $content = $t->badge('Nouveau message de contact', 'yellow')
+            . $t->icon('message')
+            . $t->title(EmailTemplate::e($subject))
+            . $t->details(['De' => $senderName, 'Courriel' => $senderEmail])
+            . $t->message($message)
+            . $t->text('Répondez directement à cet e-mail pour écrire à l’expéditeur.', 'center', true);
+        $body = $t->layout($fullSubject, 'Message de ' . $senderName . ' : ' . $subject, $content);
 
         return $this->provider->sendEmail($adminEmail, $fullSubject, $body, true, $senderEmail);
     }
