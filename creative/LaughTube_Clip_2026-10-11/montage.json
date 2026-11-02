@@ -1,0 +1,565 @@
+[
+  {
+    "end": 4.4,
+    "kind": "intro",
+    "index": 0,
+    "start_frame": 0,
+    "end_frame": 132,
+    "frames": 132,
+    "duration": 4.4,
+    "start": 0.0
+  },
+  {
+    "end": 8.6,
+    "kind": "site",
+    "src": 0.15,
+    "caption": "Bienvenue sur LaughTube.",
+    "index": 1,
+    "start_frame": 132,
+    "end_frame": 258,
+    "frames": 126,
+    "duration": 4.2,
+    "start": 4.4
+  },
+  {
+    "end": 11.3,
+    "kind": "trio",
+    "src": [
+      10.15,
+      31.1,
+      106.0
+    ],
+    "index": 2,
+    "start_frame": 258,
+    "end_frame": 339,
+    "frames": 81,
+    "duration": 2.7,
+    "start": 8.6
+  },
+  {
+    "end": 14.05,
+    "kind": "art",
+    "image": "creation",
+    "caption": "Une caméra dans la main.",
+    "zoom": 1,
+    "index": 3,
+    "start_frame": 339,
+    "end_frame": 422,
+    "frames": 83,
+    "duration": 2.7666666666666666,
+    "start": 11.3
+  },
+  {
+    "end": 16.25,
+    "kind": "art",
+    "image": "defis",
+    "caption": "Viens montrer ton talent.",
+    "zoom": -1,
+    "index": 4,
+    "start_frame": 422,
+    "end_frame": 488,
+    "frames": 66,
+    "duration": 2.2,
+    "start": 14.066666666666666
+  },
+  {
+    "end": 18.4,
+    "kind": "site",
+    "src": 9.0,
+    "caption": "À chacun son humour.",
+    "index": 5,
+    "start_frame": 488,
+    "end_frame": 552,
+    "frames": 64,
+    "duration": 2.1333333333333333,
+    "start": 16.266666666666666
+  },
+  {
+    "end": 20.95,
+    "kind": "hero",
+    "src": 24.5,
+    "words": [
+      "LE SOURIRE",
+      "EST CONTAGIEUX."
+    ],
+    "size": 158,
+    "index": 6,
+    "start_frame": 552,
+    "end_frame": 628,
+    "frames": 76,
+    "duration": 2.533333333333333,
+    "start": 18.4
+  },
+  {
+    "end": 22.95,
+    "kind": "type",
+    "words": [
+      "MONTE",
+      "LE SON."
+    ],
+    "size": 270,
+    "index": 7,
+    "start_frame": 628,
+    "end_frame": 688,
+    "frames": 60,
+    "duration": 2.0,
+    "start": 20.933333333333334
+  },
+  {
+    "end": 25.45,
+    "kind": "site",
+    "src": 13.2,
+    "caption": "Une nouvelle vidéo. Un nouveau sourire.",
+    "index": 8,
+    "start_frame": 688,
+    "end_frame": 764,
+    "frames": 76,
+    "duration": 2.533333333333333,
+    "start": 22.933333333333334
+  },
+  {
+    "end": 30.6,
+    "kind": "art",
+    "image": "ensemble",
+    "caption": "On crée ensemble.",
+    "zoom": -1,
+    "index": 9,
+    "start_frame": 764,
+    "end_frame": 918,
+    "frames": 154,
+    "duration": 5.133333333333334,
+    "start": 25.466666666666665
+  },
+  {
+    "end": 33.9,
+    "kind": "trio",
+    "src": [
+      30.6,
+      15.0,
+      41.0
+    ],
+    "badge": "ON VIENT POUR RIRE",
+    "index": 10,
+    "start_frame": 918,
+    "end_frame": 1017,
+    "frames": 99,
+    "duration": 3.3,
+    "start": 30.6
+  },
+  {
+    "end": 36.1,
+    "kind": "site",
+    "src": 50.0,
+    "caption": "Des vidéos. Des lives. Des moments à partager.",
+    "index": 11,
+    "start_frame": 1017,
+    "end_frame": 1083,
+    "frames": 66,
+    "duration": 2.2,
+    "start": 33.9
+  },
+  {
+    "end": 38.45,
+    "kind": "trio",
+    "src": [
+      37.0,
+      110.6,
+      81.0
+    ],
+    "index": 12,
+    "start_frame": 1083,
+    "end_frame": 1154,
+    "frames": 71,
+    "duration": 2.3666666666666667,
+    "start": 36.1
+  },
+  {
+    "end": 41.8,
+    "kind": "hero",
+    "src": 41.0,
+    "words": [
+      "TA VOIX.",
+      "TON HUMOUR.",
+      "TON MONDE."
+    ],
+    "size": 192,
+    "index": 13,
+    "start_frame": 1154,
+    "end_frame": 1254,
+    "frames": 100,
+    "duration": 3.3333333333333335,
+    "start": 38.46666666666667
+  },
+  {
+    "end": 45.6,
+    "kind": "site",
+    "src": 4.7,
+    "caption": "On se retrouve sur LaughTube.",
+    "index": 14,
+    "start_frame": 1254,
+    "end_frame": 1368,
+    "frames": 114,
+    "duration": 3.8,
+    "start": 41.8
+  },
+  {
+    "end": 51.55,
+    "kind": "trio",
+    "src": [
+      45.6,
+      80.5,
+      111.0
+    ],
+    "badge": "LE RIRE SE PARTAGE",
+    "index": 15,
+    "start_frame": 1368,
+    "end_frame": 1546,
+    "frames": 178,
+    "duration": 5.933333333333334,
+    "start": 45.6
+  },
+  {
+    "end": 54.0,
+    "kind": "art",
+    "image": "defis",
+    "caption": "Des créateurs en action.",
+    "zoom": 1,
+    "index": 16,
+    "start_frame": 1546,
+    "end_frame": 1620,
+    "frames": 74,
+    "duration": 2.466666666666667,
+    "start": 51.53333333333333
+  },
+  {
+    "end": 56.3,
+    "kind": "art",
+    "image": "defis",
+    "caption": "Des éclats de rire.",
+    "zoom": -1,
+    "detail": true,
+    "index": 17,
+    "start_frame": 1620,
+    "end_frame": 1689,
+    "frames": 69,
+    "duration": 2.3,
+    "start": 54.0
+  },
+  {
+    "end": 60.85,
+    "kind": "site",
+    "src": 16.4,
+    "caption": "Un abonnement. Un commentaire. Une réaction.",
+    "reactions": true,
+    "index": 18,
+    "start_frame": 1689,
+    "end_frame": 1826,
+    "frames": 137,
+    "duration": 4.566666666666666,
+    "start": 56.3
+  },
+  {
+    "end": 62.9,
+    "kind": "type",
+    "words": [
+      "MONTE",
+      "LE SON."
+    ],
+    "size": 270,
+    "red": true,
+    "index": 19,
+    "start_frame": 1826,
+    "end_frame": 1887,
+    "frames": 61,
+    "duration": 2.033333333333333,
+    "start": 60.86666666666667
+  },
+  {
+    "end": 65.65,
+    "kind": "art",
+    "image": "ensemble",
+    "caption": "La communauté est là.",
+    "zoom": 1,
+    "index": 20,
+    "start_frame": 1887,
+    "end_frame": 1970,
+    "frames": 83,
+    "duration": 2.7666666666666666,
+    "start": 62.9
+  },
+  {
+    "end": 67.75,
+    "kind": "site",
+    "src": 40.15,
+    "caption": "Pas besoin d’être une star pour briller.",
+    "index": 21,
+    "start_frame": 1970,
+    "end_frame": 2032,
+    "frames": 62,
+    "duration": 2.066666666666667,
+    "start": 65.66666666666667
+  },
+  {
+    "end": 70.6,
+    "kind": "art",
+    "image": "creation",
+    "caption": "Oser. Créer. Partager.",
+    "zoom": -1,
+    "detail": true,
+    "index": 22,
+    "start_frame": 2032,
+    "end_frame": 2118,
+    "frames": 86,
+    "duration": 2.8666666666666667,
+    "start": 67.73333333333333
+  },
+  {
+    "end": 73.8,
+    "kind": "trio",
+    "src": [
+      70.7,
+      110.6,
+      32.3
+    ],
+    "badge": "ON VIENT POUR RIRE",
+    "index": 23,
+    "start_frame": 2118,
+    "end_frame": 2214,
+    "frames": 96,
+    "duration": 3.2,
+    "start": 70.6
+  },
+  {
+    "end": 76.05,
+    "kind": "site",
+    "src": 50.15,
+    "caption": "Des vidéos. Des lives. Du partage.",
+    "index": 24,
+    "start_frame": 2214,
+    "end_frame": 2282,
+    "frames": 68,
+    "duration": 2.2666666666666666,
+    "start": 73.8
+  },
+  {
+    "end": 78.4,
+    "kind": "trio",
+    "src": [
+      76.1,
+      16.1,
+      41.0
+    ],
+    "index": 25,
+    "start_frame": 2282,
+    "end_frame": 2352,
+    "frames": 70,
+    "duration": 2.3333333333333335,
+    "start": 76.06666666666666
+  },
+  {
+    "end": 81.75,
+    "kind": "hero",
+    "src": 81.0,
+    "words": [
+      "TA VOIX.",
+      "TON HUMOUR.",
+      "TON MONDE."
+    ],
+    "size": 192,
+    "index": 26,
+    "start_frame": 2352,
+    "end_frame": 2452,
+    "frames": 100,
+    "duration": 3.3333333333333335,
+    "start": 78.4
+  },
+  {
+    "end": 86.85,
+    "kind": "trio",
+    "src": [
+      81.9,
+      32.0,
+      102.0
+    ],
+    "index": 27,
+    "start_frame": 2452,
+    "end_frame": 2606,
+    "frames": 154,
+    "duration": 5.133333333333334,
+    "start": 81.73333333333333
+  },
+  {
+    "end": 89.45,
+    "kind": "art",
+    "image": "ensemble",
+    "caption": "Un rire ici. Un rire là.",
+    "zoom": 1,
+    "detail": true,
+    "index": 28,
+    "start_frame": 2606,
+    "end_frame": 2684,
+    "frames": 78,
+    "duration": 2.6,
+    "start": 86.86666666666666
+  },
+  {
+    "end": 91.7,
+    "kind": "art",
+    "image": "ensemble",
+    "caption": "Tout le monde se rassemble.",
+    "zoom": -1,
+    "index": 29,
+    "start_frame": 2684,
+    "end_frame": 2751,
+    "frames": 67,
+    "duration": 2.2333333333333334,
+    "start": 89.46666666666667
+  },
+  {
+    "end": 93.9,
+    "kind": "pause",
+    "src": 107.0,
+    "index": 30,
+    "start_frame": 2751,
+    "end_frame": 2817,
+    "frames": 66,
+    "duration": 2.2,
+    "start": 91.7
+  },
+  {
+    "end": 96.9,
+    "kind": "art",
+    "image": "ensemble",
+    "caption": "LaughTube nous rapproche.",
+    "zoom": 1,
+    "index": 31,
+    "start_frame": 2817,
+    "end_frame": 2907,
+    "frames": 90,
+    "duration": 3.0,
+    "start": 93.9
+  },
+  {
+    "end": 100.15,
+    "kind": "trio",
+    "src": [
+      97.0,
+      15.0,
+      41.0
+    ],
+    "badge": "ON VIENT POUR RIRE",
+    "index": 32,
+    "start_frame": 2907,
+    "end_frame": 3004,
+    "frames": 97,
+    "duration": 3.2333333333333334,
+    "start": 96.9
+  },
+  {
+    "end": 102.4,
+    "kind": "art",
+    "image": "creation",
+    "caption": "Des rêves en vidéo.",
+    "zoom": 1,
+    "index": 33,
+    "start_frame": 3004,
+    "end_frame": 3072,
+    "frames": 68,
+    "duration": 2.2666666666666666,
+    "start": 100.13333333333334
+  },
+  {
+    "end": 104.4,
+    "kind": "site",
+    "src": 0.05,
+    "caption": "Viens nous rejoindre.",
+    "index": 34,
+    "start_frame": 3072,
+    "end_frame": 3132,
+    "frames": 60,
+    "duration": 2.0,
+    "start": 102.4
+  },
+  {
+    "end": 107.6,
+    "kind": "hero",
+    "src": 105.5,
+    "words": [
+      "À TOI",
+      "DE JOUER."
+    ],
+    "size": 250,
+    "index": 35,
+    "start_frame": 3132,
+    "end_frame": 3228,
+    "frames": 96,
+    "duration": 3.2,
+    "start": 104.4
+  },
+  {
+    "end": 110.35,
+    "kind": "trio",
+    "src": [
+      107.6,
+      17.0,
+      112.0
+    ],
+    "index": 36,
+    "start_frame": 3228,
+    "end_frame": 3310,
+    "frames": 82,
+    "duration": 2.7333333333333334,
+    "start": 107.6
+  },
+  {
+    "end": 113.75,
+    "kind": "slogan",
+    "index": 37,
+    "start_frame": 3310,
+    "end_frame": 3412,
+    "frames": 102,
+    "duration": 3.4,
+    "start": 110.33333333333333
+  },
+  {
+    "end": 116.8,
+    "kind": "trio",
+    "src": [
+      113.9,
+      32.0,
+      80.5
+    ],
+    "index": 38,
+    "start_frame": 3412,
+    "end_frame": 3504,
+    "frames": 92,
+    "duration": 3.066666666666667,
+    "start": 113.73333333333333
+  },
+  {
+    "end": 120.0,
+    "kind": "trio",
+    "src": [
+      116.6,
+      41.0,
+      103.9
+    ],
+    "badge": "ON SE RETROUVE SUR LAUGHTUBE",
+    "index": 39,
+    "start_frame": 3504,
+    "end_frame": 3600,
+    "frames": 96,
+    "duration": 3.2,
+    "start": 116.8
+  },
+  {
+    "end": 124.0,
+    "kind": "outro",
+    "index": 40,
+    "start_frame": 3600,
+    "end_frame": 3720,
+    "frames": 120,
+    "duration": 4.0,
+    "start": 120.0
+  }
+]
