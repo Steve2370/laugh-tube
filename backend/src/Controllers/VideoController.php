@@ -306,7 +306,8 @@ readonly class VideoController
                         (SELECT COUNT(*) FROM likes l WHERE l.video_id = v.id) AS likes,
                         (SELECT COUNT(*) FROM dislikes d WHERE d.video_id = v.id) AS dislikes,
                         (SELECT COUNT(*) FROM commentaires c WHERE c.video_id = v.id) AS comments,
-                        EXISTS(SELECT 1 FROM jokair_entries je WHERE je.video_id = v.id AND je.validated IS TRUE) AS is_jokair
+                        EXISTS(SELECT 1 FROM jokair_entries je JOIN jokair_contests jc ON jc.id = je.contest_id WHERE je.video_id = v.id AND je.validated IS TRUE AND jc.status IN ('submissions','voting')) AS is_jokair,
+                        (SELECT jc.edition FROM jokair_entries je JOIN jokair_contests jc ON jc.id = je.contest_id WHERE je.video_id = v.id AND je.validated IS TRUE AND jc.status = 'ended' AND je.rank = 1 LIMIT 1) AS jokair_champion
                      FROM videos v
                      LEFT JOIN video_views vv ON v.id = vv.video_id
                      WHERE v.user_id = $1 AND v.deleted_at IS NULL

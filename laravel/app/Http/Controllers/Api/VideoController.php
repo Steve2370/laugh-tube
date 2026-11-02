@@ -152,7 +152,7 @@ class VideoController extends Controller
             'views_count' => $video->views_count  ?? null,
             'likes_count' => $video->likes_count  ?? 0,
             'comments_count' => $video->commentaires_count ?? 0,
-            'is_jokair' => $video->jokairEntry()->where('validated', true)->exists(),
+            ...$video->jokairBadge(),
         ];
     }
 

@@ -70,7 +70,7 @@ class SearchController extends Controller
             'user_id' => $video->user_id,
             'likes_count' => $video->likes_count ?? 0,
             'comments_count' => $video->commentaires_count ?? 0,
-            'is_jokair' => $video->jokairEntry()->where('validated', true)->exists(),
+            ...$video->jokairBadge(),
         ];
     }
 }

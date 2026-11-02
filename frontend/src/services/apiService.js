@@ -543,6 +543,7 @@ class ApiService {
             comments: v.comments ?? v.nb_commentaires ?? v.comments_count ?? 0,
             user_id: v.user_id ?? v.userId ?? null,
             is_jokair: v.is_jokair ?? false,
+            jokair_champion: v.jokair_champion ?? null,
         }));
     }
 

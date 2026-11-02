@@ -253,6 +253,34 @@ const VideoCard = ({ video, onClick }) => {
                         </div>
                     )}
 
+                    {!video.is_jokair && video.jokair_champion && (
+                        <div
+                            title={`Champion Jok-Air ${video.jokair_champion}`}
+                            style={{
+                                position: 'absolute', top: 8, left: 8, zIndex: 10,
+                                display: 'flex', alignItems: 'center', gap: 5,
+                                background: 'rgba(10,10,15,0.88)',
+                                backdropFilter: 'blur(4px)',
+                                border: '1px solid #F5C842',
+                                borderRadius: 20, padding: '4px 10px',
+                                fontSize: 11, fontWeight: 700, color: '#F5C842',
+                                letterSpacing: '0.04em',
+                                boxShadow: '0 2px 10px rgba(245,200,66,0.35)',
+                            }}
+                        >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                 stroke="#F5C842" strokeWidth="2.2"
+                                 strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M8 21h8"/>
+                                <path d="M12 17v4"/>
+                                <path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>
+                                <path d="M17 5h2a2 2 0 0 1 2 2c0 2-2 4-4 4"/>
+                                <path d="M7 5H5a2 2 0 0 0-2 2c0 2 2 4 4 4"/>
+                            </svg>
+                            CHAMPION JOK-AIR {video.jokair_champion}
+                        </div>
+                    )}
+
                     <img
                         ref={thumbRef}
                         src={getThumbnailUrl(video.id)}

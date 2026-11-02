@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Video extends Model
 {
@@ -72,5 +73,28 @@ class Video extends Model
     public function jokairEntry()
     {
         return $this->hasOne(JokairEntry::class, 'video_id');
+    }
+
+    /**
+     * Badge Jok-Air à afficher sur la vidéo.
+     * - is_jokair / jokair_entry_id : seulement pendant un concours ouvert (soumissions ou votes)
+     * - jokair_champion : édition gagnée (rank = 1 d'un concours terminé), badge permanent
+     */
+    public function jokairBadge(): array
+    {
+        $rows = DB::table('jokair_entries as je')
+            ->join('jokair_contests as jc', 'jc.id', '=', 'je.contest_id')
+            ->where('je.video_id', $this->id)
+            ->where('je.validated', true)
+            ->get(['je.id', 'je.rank', 'jc.status', 'jc.edition']);
+
+        $open = $rows->first(fn ($r) => in_array($r->status, ['submissions', 'voting'], true));
+        $champion = $rows->first(fn ($r) => $r->status === 'ended' && (int) $r->rank === 1);
+
+        return [
+            'is_jokair'       => (bool) $open,
+            'jokair_entry_id' => $open?->id,
+            'jokair_champion' => $champion?->edition,
+        ];
     }
 }
