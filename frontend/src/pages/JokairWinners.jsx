@@ -129,7 +129,7 @@ export default function JokairWinners() {
 
                 <header className="jw-hero">
                     <motion.div className="jw-hero-text" {...rise(0)}>
-                        <span className="jw-eyebrow">Les légendes du Jok-Air</span>
+                        <span className="jw-eyebrow"><Trophy size={14} strokeWidth={2.6} /> Les légendes du Jok-Air</span>
                         <h1 className="jw-title">
                             <span className="jw-outline">Panthéon</span> <span className="jw-red">Jok-Air</span>
                         </h1>

@@ -334,49 +334,49 @@ const SubmitModal = ({ contest, onClose, onSuccess }) => {
     );
 };
 
-const HallOfFame = ({ editions }) => (
-    <div style={{ marginTop: 40 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.35)' }}>
+const HallOfFame = ({ editions }) => {
+    const champions = editions.filter((ed) => ed.winner).length;
+    return (
+        <div style={{ marginTop: 40 }}>
+            <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>
                 Hall of Fame
             </div>
-            {editions.some((ed) => ed.winner) && (
-                <button
-                    type="button"
-                    onClick={() => { window.location.hash = '#/gagnants'; }}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: '#CC0000', color: '#fff', border: 'none',
-                        borderRadius: 999, padding: '8px 16px', cursor: 'pointer',
-                        fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 600,
-                    }}
-                >
-                    <Crown size={15} /> Voir les champions <ChevronRight size={15} />
-                </button>
-            )}
-        </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {editions.map((ed, i) => (
-                <div key={i} style={{
-                    flex: '1 1 140px',
-                    background: ed.winner ? 'rgba(245,200,66,0.07)' : 'rgba(255,255,255,0.03)',
-                    border: `0.5px solid ${ed.winner ? 'rgba(245,200,66,0.25)' : 'rgba(255,255,255,0.07)'}`,
-                    borderRadius: 12, padding: '16px 14px', textAlign: 'center',
-                    opacity: ed.winner ? 1 : 0.35,
-                }}>
-                    <Trophy size={26} style={{ color: ed.winner ? '#F5C842' : 'rgba(255,255,255,0.2)', margin: '0 auto 6px' }} />
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                        Édition {ed.year}
+            <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap',
+                background: 'rgba(245,200,66,0.07)', border: '0.5px solid rgba(245,200,66,0.25)',
+                borderRadius: 12, padding: '18px 20px',
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+                    <Trophy size={28} style={{ color: '#F5C842', flexShrink: 0 }} />
+                    <div>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>
+                            {champions > 0 ? 'Les légendes du Jok-Air' : 'Le premier champion arrive bientôt'}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                            {champions > 0
+                                ? `${champions} champion${champions > 1 ? 's' : ''} couronné${champions > 1 ? 's' : ''} depuis la 1ère édition`
+                                : 'Son nom sera gravé ici à la fin de la 1ère édition.'}
+                        </div>
                     </div>
-                    {ed.winner
-                        ? <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginTop: 4 }}>@{ed.winner}</div>
-                        : <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>—</div>
-                    }
                 </div>
-            ))}
+                {champions > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => { window.location.hash = '#/gagnants'; }}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            background: '#CC0000', color: '#fff', border: 'none',
+                            borderRadius: 999, padding: '9px 18px', cursor: 'pointer',
+                            fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 600,
+                        }}
+                    >
+                        <Crown size={15} /> Voir les champions <ChevronRight size={15} />
+                    </button>
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const JokairPage = () => {
     useJokairSound();

@@ -26,11 +26,13 @@
 .jw-hero { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; }
 .jw-hero-text { display: grid; gap: 18px; min-width: 0; }
 .jw-eyebrow {
-  display: inline-flex; align-items: center; gap: 10px;
-  font-size: 12px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase;
-  color: var(--jw-red-ink);
+  justify-self: start; display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--jw-fg); background: var(--jw-red);
+  border: 2px solid var(--jw-fg); border-radius: 999px;
+  padding: 6px 14px; box-shadow: 3px 3px 0 var(--jw-fg);
+  transform: rotate(-2deg);
 }
-.jw-eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--jw-red); }
 .jw-title {
   margin: 0; font-weight: 800; line-height: .9; letter-spacing: -.035em;
   font-size: clamp(48px, 10vw, 120px); text-wrap: balance;
