@@ -198,10 +198,12 @@ Route::prefix('v2')->group(function () {
 
         Route::get('/contact', [AdminController::class, 'getContact']);
         Route::patch('/contact/{id}', [AdminController::class, 'updateContact']);
+        Route::post('/contact/bulk', [AdminController::class, 'bulkContact']);
 
         Route::get('/messages', [AdminController::class, 'getMessages']);
         Route::post('/messages', [AdminController::class, 'sendMessage']);
         Route::post('/messages/all', [AdminController::class, 'sendMessageAll']);
+        Route::post('/messages/delete', [AdminController::class, 'deleteMessages']);
 
         Route::get('/ads', [AdController::class, 'index']);
         Route::post('/ads', [AdController::class, 'store']);

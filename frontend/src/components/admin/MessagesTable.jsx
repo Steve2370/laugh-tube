@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Send, MessageSquare, Search, User, Clock, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { Send, MessageSquare, Search, User, Users } from 'lucide-react';
 import apiService from '../../services/apiService.js';
 import { useToast } from '../../contexts/ToastContext.jsx';
 
-const MessagesTable = ({ users, messages, onMessageSent }) => {
+const MessagesTable = ({ users, onMessageSent }) => {
     const toast = useToast();
     const [search, setSearch] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
@@ -11,7 +11,6 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const [showHistory, setShowHistory] = useState(false);
     const [showUserList, setShowUserList] = useState(false);
 
     const QUICK_SUBJECTS = [
@@ -238,50 +237,6 @@ const MessagesTable = ({ users, messages, onMessageSent }) => {
                         }
                     </button>
                 </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
-                >
-                    <div className="flex items-center gap-3">
-                        <Clock size={18} className="text-gray-500" />
-                        <span className="font-bold text-gray-900">Historique des messages ({messages.length})</span>
-                    </div>
-                    {showHistory ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
-                </button>
-
-                {showHistory && (
-                    <div className="border-t border-gray-100">
-                        {messages.length === 0 ? (
-                            <p className="text-center py-10 text-gray-400 text-sm">Aucun message envoyé</p>
-                        ) : (
-                            <div className="divide-y divide-gray-100">
-                                {messages.map(msg => (
-                                    <div key={msg.id} className="px-6 py-4">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                    <span className="text-sm font-bold text-gray-900">{msg.recipient_username}</span>
-                                                    <span className="text-xs text-gray-400">{msg.recipient_email}</span>
-                                                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                                                        par {msg.admin_username}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm font-semibold text-gray-700 mb-1">{msg.subject}</p>
-                                                <p className="text-sm text-gray-500 line-clamp-2">{msg.message}</p>
-                                            </div>
-                                            <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
-                                                {formatDate(msg.created_at)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
         </div>
     );

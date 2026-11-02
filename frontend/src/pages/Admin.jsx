@@ -7,7 +7,8 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import MessagesTable from '../components/admin/MessagesTable.jsx';
 import AdminInboxTable from '../components/admin/AdminInboxTable.jsx';
 import JokairAdminPanel from '../components/admin/JokairAdminPanel.jsx';
-import {Flag, MessageCircle, Users, Video, Radio, Trophy} from "lucide-react";
+import SentMessagesTable from '../components/admin/SentMessagesTable.jsx';
+import { Flag, MessageCircle, Users, Video, Trophy, Inbox, PenLine, Send } from "lucide-react";
 
 const TABS = [
     { key: 'reports', label: 'Signalements', icon: Flag },
@@ -36,6 +37,7 @@ function StatCard({ label, value, sub, color = 'blue' }) {
 export default function Admin() {
     const toast = useToast();
     const [activeTab, setActiveTab] = useState('reports');
+    const [msgView, setMsgView] = useState('inbox');
 
     const [users, setUsers] = useState([]);
     const [videos, setVideos] = useState([]);
@@ -44,6 +46,15 @@ export default function Admin() {
     const [error,   setError] = useState(null);
     const [messages, setMessages] = useState([]);
     const [inbox, setInbox] = useState([]);
+
+    const loadMessaging = useCallback(async () => {
+        const [messagesRes, inboxRes] = await Promise.all([
+            apiService.requestV2('/admin/messages').catch(() => null),
+            apiService.requestV2('/admin/contact').catch(() => null),
+        ]);
+        setMessages(messagesRes?.messages ?? []);
+        setInbox(inboxRes?.inbox ?? []);
+    }, []);
 
     const loadAll = useCallback(async () => {
         setLoading(true);
@@ -65,16 +76,7 @@ export default function Admin() {
             setLoading(false);
         }
 
-        try {
-            const messagesRes = await apiService.requestV2('/admin/messages');
-            setMessages(messagesRes.messages ?? []);
-        } catch { setMessages([]); }
-
-        try {
-            const inboxRes = await apiService.requestV2('/admin/contact');
-            setInbox(inboxRes.inbox ?? []);
-        } catch { setInbox([]); }
-
+        await loadMessaging();
     }, []);
 
     useEffect(() => { loadAll(); }, [loadAll]);
@@ -119,6 +121,7 @@ export default function Admin() {
     };
 
     const pendingReports = reports.filter(r => r.statut === 'pending').length;
+    const unreadInbox    = inbox.filter(m => m.statut === 'unread').length;
     const totalViews     = videos.reduce((acc, v) => acc + (v.views ?? 0), 0);
     const formatNum = (n) =>
         n >= 1_000_000 ? (n / 1_000_000).toFixed(1) + 'M' :
@@ -149,7 +152,7 @@ export default function Admin() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                     <StatCard label="Utilisateurs" value={users.length} color="green"/>
                     <StatCard label="Vidéos" value={videos.length} color="green"/>
                     <StatCard label="Vues totales" value={formatNum(totalViews)} color="green"/>
@@ -159,6 +162,18 @@ export default function Admin() {
                         color={pendingReports > 0 ? 'red' : 'green'}
                         sub={pendingReports > 0 ? 'Action requise' : 'Tout est traité'}
                     />
+                    <button
+                        type="button"
+                        onClick={() => { setActiveTab('messages'); setMsgView('inbox'); }}
+                        className="text-left rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900"
+                    >
+                        <StatCard
+                            label="Messages non lus"
+                            value={unreadInbox}
+                            color={unreadInbox > 0 ? 'red' : 'green'}
+                            sub={unreadInbox > 0 ? 'Ouvrir la boîte de réception' : 'Boîte à jour'}
+                        />
+                    </button>
                 </div>
 
                 {error && (
@@ -168,12 +183,12 @@ export default function Admin() {
                 )}
 
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="flex border-b border-gray-100">
+                    <div className="flex border-b border-gray-100 overflow-x-auto">
                         {TABS.map(tab => (
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-colors relative
+                                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-colors relative whitespace-nowrap
                                     ${activeTab === tab.key
                                     ? 'text-gray-900 bg-white'
                                     : 'text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-gray-700'
@@ -184,6 +199,11 @@ export default function Admin() {
                                 {tab.key === 'reports' && pendingReports > 0 && (
                                     <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full leading-none">
                                         {pendingReports}
+                                    </span>
+                                )}
+                                {tab.key === 'messages' && unreadInbox > 0 && (
+                                    <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full leading-none">
+                                        {unreadInbox}
                                     </span>
                                 )}
                                 {activeTab === tab.key && (
@@ -221,9 +241,41 @@ export default function Admin() {
                                     />
                                 )}
                                 {activeTab === 'messages' && (
-                                    <div className="space-y-6">
-                                        <AdminInboxTable inbox={inbox} onRefresh={loadAll} />
-                                        <MessagesTable users={users} messages={messages} onMessageSent={loadAll} />
+                                    <div className="space-y-5">
+                                        <div className="inline-flex flex-wrap gap-1 p-1 bg-gray-100 rounded-xl">
+                                            {[
+                                                { key: 'inbox',   label: 'Boîte de réception', icon: Inbox,   count: unreadInbox, alert: true },
+                                                { key: 'compose', label: 'Nouveau message',    icon: PenLine },
+                                                { key: 'sent',    label: 'Envoyés',            icon: Send,    count: messages.length },
+                                            ].map(v => (
+                                                <button
+                                                    key={v.key}
+                                                    onClick={() => setMsgView(v.key)}
+                                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                                                        msgView === v.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                                                    }`}
+                                                >
+                                                    <v.icon size={15} />
+                                                    {v.label}
+                                                    {v.count > 0 && (
+                                                        <span className={`text-xs px-1.5 py-0.5 rounded-full leading-none tabular-nums ${
+                                                            v.alert ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-600'
+                                                        }`}>
+                                                            {v.count}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {msgView === 'inbox' && <AdminInboxTable inbox={inbox} setInbox={setInbox} />}
+                                        {msgView === 'compose' && (
+                                            <MessagesTable
+                                                users={users}
+                                                onMessageSent={async () => { await loadMessaging(); setMsgView('sent'); }}
+                                            />
+                                        )}
+                                        {msgView === 'sent' && <SentMessagesTable messages={messages} setMessages={setMessages} />}
                                     </div>
                                 )}
                                 {activeTab === 'jokair' && <JokairAdminPanel />}

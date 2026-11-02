@@ -304,4 +304,41 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'Message mis à jour']);
     }
+
+    /**
+     * POST /admin/contact/bulk
+     * Actions groupées sur la boîte de réception : supprimer ou changer le statut.
+     */
+    public function bulkContact(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids'    => 'required|array|min:1|max:500',
+            'ids.*'  => 'integer',
+            'action' => 'required|string|in:delete,unread,read,replied',
+        ]);
+
+        $query = DB::table('contact_messages')->whereIn('id', $validated['ids']);
+
+        $affected = $validated['action'] === 'delete'
+            ? $query->delete()
+            : $query->update(['statut' => $validated['action']]);
+
+        return response()->json(['affected' => $affected]);
+    }
+
+    /**
+     * POST /admin/messages/delete
+     * Supprime des messages de l'historique des messages envoyés.
+     */
+    public function deleteMessages(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids'   => 'required|array|min:1|max:500',
+            'ids.*' => 'integer',
+        ]);
+
+        $deleted = DB::table('admin_messages')->whereIn('id', $validated['ids'])->delete();
+
+        return response()->json(['deleted' => $deleted]);
+    }
 }
