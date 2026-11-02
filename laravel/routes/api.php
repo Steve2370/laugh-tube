@@ -214,6 +214,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/active', [JokairController::class, 'activeContest']);
         Route::get('/{contest}/leaderboard', [JokairController::class, 'leaderboard']);
         Route::get('/hall-of-fame', [JokairController::class, 'hallOfFame']);
+        Route::get('/winners', [JokairController::class, 'winners']);
 
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{contest}/submit', [JokairController::class, 'submitEntry']);

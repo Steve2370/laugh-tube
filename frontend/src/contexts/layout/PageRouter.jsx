@@ -23,6 +23,7 @@ const Classement = lazy(() => import('../../pages/Classement'));
 const StandUp = lazy(() => import('../../pages/StandUp'));
 const BattleRoom = lazy(() => import('../../pages/BattleRoom'));
 const Jokair = lazy(() => import('../../pages/JokairPage.jsx'));
+const JokairWinners = lazy(() => import('../../pages/JokairWinners.jsx'));
 
 const PageRouter = () => {
     const { currentPage } = useNavigation();
@@ -55,6 +56,8 @@ const PageRouter = () => {
                 return <Contact />;
             case 'jokair':
                 return <Jokair />;
+            case 'gagnants':
+                return <JokairWinners />;
             case 'forgot-password':
                 return <ForgotPassword />;
             case 'reset-password':

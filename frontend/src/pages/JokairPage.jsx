@@ -336,8 +336,24 @@ const SubmitModal = ({ contest, onClose, onSuccess }) => {
 
 const HallOfFame = ({ editions }) => (
     <div style={{ marginTop: 40 }}>
-        <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>
-            Hall of Fame
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.35)' }}>
+                Hall of Fame
+            </div>
+            {editions.some((ed) => ed.winner) && (
+                <button
+                    type="button"
+                    onClick={() => { window.location.hash = '#/gagnants'; }}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: '#CC0000', color: '#fff', border: 'none',
+                        borderRadius: 999, padding: '8px 16px', cursor: 'pointer',
+                        fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 600,
+                    }}
+                >
+                    <Crown size={15} /> Voir les champions <ChevronRight size={15} />
+                </button>
+            )}
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {editions.map((ed, i) => (
@@ -387,6 +403,7 @@ const JokairPage = () => {
     } = useJokair();
 
     const voteEnd = contest?.vote_end || null;
+    const nextEdition = hallOfFame.filter((ed) => ed.winner).length + 1;
     const countdown = useCountdown(voteEnd || Date.now() + 86400000 * 30);
 
     const HALL = [
@@ -466,15 +483,18 @@ const JokairPage = () => {
                         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0, lineHeight: 1.6 }}>
                             Humoristes, amateurs ou simple fan. uploade ta vidéo la plus drôle,
                             récolte des votes et grimpe au sommet du classement.
-                            Le champion repart avec <strong style={{ color: '#CC0000' }}>{contest?.prize_1 || 200}$</strong> et un trophée gravé à son nom.
+                            {contest?.prize_1
+                                ? <>Le champion repart avec <strong style={{ color: '#CC0000' }}>{contest.prize_1}$</strong> et un trophée gravé à son nom.</>
+                                : <>Le champion repart avec un trophée gravé à son nom.</>}
                         </p>
                     </div>
 
+                    {contest?.prize_1 > 0 && (
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 28 }}>
                         {[
-                            { place: '1er', amount: `${contest?.prize_1 || 200}$`, color: '#F5C842', icon: <Crown size={18} /> },
-                            { place: '2e',  amount: `${contest?.prize_2 || 75}$`,  color: '#B0B8C8', icon: <Medal size={18} /> },
-                            { place: '3e',  amount: `${contest?.prize_3 || 25}$`,  color: '#C97B3A', icon: <Star size={18}  /> },
+                            { place: '1er', amount: `${contest.prize_1}$`, color: '#F5C842', icon: <Crown size={18} /> },
+                            { place: '2e',  amount: `${contest.prize_2}$`, color: '#B0B8C8', icon: <Medal size={18} /> },
+                            { place: '3e',  amount: `${contest.prize_3}$`, color: '#C97B3A', icon: <Star size={18}  /> },
                         ].map(({ place, amount, color, icon }) => (
                             <div key={place} style={{
                                 display: 'flex', alignItems: 'center', gap: 10,
@@ -490,6 +510,7 @@ const JokairPage = () => {
                             </div>
                         ))}
                     </div>
+                    )}
 
                     {contest?.status === 'voting' && !countdown.done && (
                         <div>
@@ -632,10 +653,10 @@ const JokairPage = () => {
                     }}>
                         <Radio size={40} style={{ color: 'rgba(255,255,255,0.15)', margin: '0 auto 16px' }} />
                         <div style={{ fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
-                            Bientôt disponible
+                            {nextEdition === 1 ? 'La 1ère' : `La ${nextEdition}e`} édition de Jok-Air arrive
                         </div>
                         <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.25)' }}>
-                            Le premier Jok-Air arrive. Reste à l'affût.
+                            Reste à l'affût.
                         </div>
                     </motion.div>
                 )}

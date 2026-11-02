@@ -75,6 +75,48 @@ class JokairController extends Controller
         return response()->json($editions);
     }
 
+    /**
+     * GET /api/v2/jokair/winners
+     * Le 1er (rank = 1) de chaque édition terminée, la plus récente en premier.
+     */
+    public function winners()
+    {
+        $editions = JokairContest::where('status', 'ended')
+            ->with(['entries' => function ($q) {
+                $q->where('rank', 1)
+                  ->with(['user:id,username,avatar_url', 'video:id,title,thumbnail']);
+            }])
+            ->orderByDesc('vote_end')
+            ->get()
+            ->map(function (JokairContest $contest) {
+                $entry = $contest->entries->first();
+                if (!$entry || !$entry->video) {
+                    return null;
+                }
+
+                return [
+                    'contest_id'   => $contest->id,
+                    'edition'      => $contest->edition,
+                    'titre'        => $contest->titre,
+                    'results_date' => optional($contest->results_date)->toDateString(),
+                    'prize'        => $contest->prize_1,
+                    'winner'       => [
+                        'video_id'    => $entry->video_id,
+                        'video_title' => $entry->video->title,
+                        'thumbnail'   => $entry->video->thumbnail,
+                        'votes'       => $entry->vote_count,
+                        'user_id'     => $entry->user_id,
+                        'username'    => $entry->user->username ?? 'Anonyme',
+                        'avatar_url'  => $entry->user->avatar_url ?? null,
+                    ],
+                ];
+            })
+            ->filter()
+            ->values();
+
+        return response()->json(['editions' => $editions]);
+    }
+
 
     public function submitEntry(Request $request, JokairContest $contest)
     {
